@@ -17,7 +17,7 @@ const find = id => H.v.get(id) || H.m.get(id);
 // ── Router
 const pages = {};
 export const page = (name, def) => { pages[name] = def; };
-const ROOTS = ['lifestyle', 'schedule', 'home', 'portal', 'me'];
+const ROOTS = ['home', 'me', 'schedule', 'portal'];
 let stack = [{ page: 'home', params: {} }], last = null;
 try { const s = JSON.parse(sessionStorage.getItem('life-nav') || 'null'); if (Array.isArray(s) && s.length) stack = s; } catch {}
 const keepNav = () => { try { sessionStorage.setItem('life-nav', JSON.stringify(stack)); } catch {} };

@@ -2,8 +2,9 @@
 import { D, commit } from '../store.js';
 import { BLANK, STATS, STAT, CAP, uid } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge } from '../ui.js';
-import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, nodePct, clamp, ratingsPct, lifestyleRank, leadBar, vibe } from '../calc.js';
+import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
+import { northstarForm } from './home.js';
 
 // ── Rated element: { title, desc, level 0–25, levelUp[], history[] }
 const listOf = kind => (kind === 'me' ? D.meStats : D.socialMedia);
@@ -95,18 +96,13 @@ function bindMap(view) {
 }
 
 page('me', {
-  title: 'ME',
+  title: 'STATUS',
   render() {
     const s = D.player.stats, r = D.relationships, one = girl(r.theOne);
     return `${sect('BODY MAP', '+ Stat', () => elementForm('me'))}
     <div class="card mapcard sh-purple">${bodyMap()}${D.meStats.length ? '<p class="hint">Drag a dot to pin it. Tap to open.</p>' : '<p class="hint">Nothing on the map yet. What are the parts of you? Tap + Stat.</p>'}</div>
     ${sect('STATS')}
     <div class="statgrid">${STATS.map(st => `<div class="stat" ${on(() => go('stat', { key: st.key }))}><i>${st.icon}</i><span>${st.label}</span><b>${st.key === 'money' ? money(s.money) : `${r1(s[st.key])}<em>/${CAP}</em>`}</b>${st.key === 'money' ? '' : bar(s[st.key] / CAP * 100, st.key === 'fear' ? 'red' : 'cyan')}</div>`).join('')}</div>
-    ${sect('OVERVIEW')}
-    <div class="grid2">
-      ${[['Σ', 'Total Stats', 'totalstats'], ['◈', 'Abilities', 'abilities'], ['▮', 'Calendar', 'calendar'], ['⬢', 'World', 'world'], ['≡', 'Log', 'log'], ['⌂', 'Save / Load', 'saveload']]
-        .map(([i, t, p]) => `<div class="qa" ${on(() => go(p))}><i>${i}</i><b>${t}</b></div>`).join('')}
-    </div>
     ${sect('RELATIONSHIP SLOTS', 'Open', () => go('life'))}
     ${term('', [['SLOT 1 — THE ONE', one ? esc(one.name) : 'EMPTY', one ? 'green' : 'red'], ['SLOT 2 — COMMONS', r.commons.length || '0'], ['CHASERS', chasers().length], ['SIDELINED', r.sidelined.length]])}`;
   },
@@ -132,26 +128,26 @@ page('stat', {
   },
 });
 
-// ── PORTAL — world select
-const hl = rows => rows.map(([l, v]) => `<div class="whl"><span>${l}</span><b>${v}</b></div>`).join('');
+// ── MENU — every area, grouped, one tap away
 page('portal', {
-  title: 'PORTAL',
+  title: 'MENU',
   render() {
-    const s = D.player.stats, soc = D.meStats.filter(m => /social|circle|friend/i.test(m.title));
-    const digital = D.ratings.find(n => /digital system/i.test(n.name));
-    const rest = D.meStats.filter(m => !soc.includes(m));
-    const rk = lifestyleRank();
-    return `<div class="card hero portalhero"><small>◈ WORLD SELECT</small><h2>Every world is a part of your life. Pick one and push it.</h2></div>
-    ${sect('WORLDS')}
-    <div class="door sh-pink" ${on(() => go('lifestyle'))}><h3>LIFESTYLE</h3>${hl([['lifestyles', D.lifestyles.length], ['friends', D.friends.length], ['platforms', D.socialMedia.length], ...soc.slice(0, 2).map(m => [esc(m.title), `${m.level}/${CAP}`])])}
-      <div class="doorlinks"><button ${on((_, e) => { e.stopPropagation(); go('social'); })}>Social →</button><button ${on((_, e) => { e.stopPropagation(); go('activities'); })}>Activities →</button></div></div>
-    <div class="door sh-gold" ${on(() => go('money'))}><h3>$ MONEY</h3>${hl([['goal', D.moneyGoal ? money(D.moneyGoal) : 'not set'], ['balance', money(s.money)], ['lead bar', r1(leadBar()) + '%']])}</div>
-    <div class="door sh-cyan" ${on(() => go('ratings'))}><h3>⭐ RATINGS</h3>${hl(D.ratings.slice(0, 4).map(n => { const p = nodePct(n); return [esc(n.name), `${n.rating || '–'} · ${p == null ? '—' : Math.round(p) + '%'}`]; }))}
-      ${ratingsPct() != null ? bar(ratingsPct(), 'pot') : ''}</div>
-    ${digital ? row({ icon: '⌘', title: 'DIGITAL SYSTEM', desc: 'Your devices, apps, setup — rated.', val: tierBadge(digital.rating), fn: () => go('ratingdetail', { path: [digital.id] }) }) : ''}
-    ${rest.length ? sect('YOUR STATS') : ''}
-    ${rest.map(m => `<div class="door small sh-purple" ${on(() => openElement('me', m.id))}><h3>${esc(m.title)} <em>${m.level}/${CAP}</em></h3>${bar(m.level / CAP * 100, 'cyan')}
-      ${lastChange(m) ? `<div class="whl"><span>${lastChange(m)}</span></div>` : ''}${m.desc ? `<p>${esc(m.desc)}</p>` : ''}</div>`).join('')}
-    ${!D.meStats.length ? empty('Put stats on your body map (ME) and each one gets a door here.') : ''}`;
+    const s = D.player.stats, one = girl(D.relationships.theOne), rp = ratingsPct(), open = D.manifests.filter(m => !m.achievedAt).length;
+    const t = (icon, label, sub, to, params) => `<div class="mt" ${on(() => go(to, params))}><i>${icon}</i><b>${label}</b><small>${sub}</small></div>`;
+    const grp = (title, tiles) => `<div class="mg"><span>${title}</span><div class="mgrid">${tiles.join('')}</div></div>`;
+    return grp('PEOPLE', [
+      t('♥', 'Relationships', one ? esc(one.name) : 'Slot 1 empty', 'life'), t('≡', 'Roster', `${D.girls.length} girl${D.girls.length === 1 ? '' : 's'} · ${D.friends.length} friend${D.friends.length === 1 ? '' : 's'}`, 'roster'),
+      t('!', 'Meet', `${Math.round(meetBar())}% meet bar`, 'meet'), t('⌘', 'Social media', `${D.socialMedia.length} platforms`, 'socialmedia')])
+    + grp('GROW', [
+      t('▲', 'Activities', 'slots & bench', 'activities'), t('◉', 'Lead gen', r1(leadBar()) + '% bar', 'leadgen'),
+      t('✦', 'The Entity', r1(vibe()) + '% vibe', 'vibe'), t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'),
+      t('★', 'Abilities', `${D.abilities.filter(a => a.unlocked).length}/${D.abilities.length} unlocked`, 'abilities')])
+    + grp('GOALS', [
+      t('◎', 'Quests', `${open} open`, 'manifest'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
+      `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`])
+    + grp('WORLDS', [
+      t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('⬢', 'World map', 'cities & moves', 'world')])
+    + grp('SYSTEM', [
+      t('Σ', 'Total stats', `level ${D.player.level}`, 'totalstats'), t('≣', 'Log', `${D.log.length} entries`, 'log'), t('⇅', 'Save / load', 'backup & import', 'saveload')]);
   },
 });

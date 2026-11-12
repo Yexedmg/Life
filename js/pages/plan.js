@@ -2,8 +2,9 @@
 import { D, commit, ui } from '../store.js';
 import { BLANK, ERA_COLORS, CAP } from '../schema.js';
 import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi } from '../ui.js';
-import { eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
+import { birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
 import { addXP, applyEffects, log, fxText } from '../game.js';
+import { birthdayForm } from './home.js';
 
 // ── Manifest
 function goalForm(m) {
@@ -66,7 +67,9 @@ page('calendar', {
     const now = new Date().getFullYear(), years = [...new Set([now, ...D.eras.flatMap(e => { const a = +e.start.slice(0, 4), b = +e.end.slice(0, 4), o = []; for (let y = a; y <= b; y++) o.push(y); return o; })])].sort();
     const y = years.includes(ui.calYear) ? ui.calYear : now, order = { current: 0, planned: 1, past: 2 };
     const eras = [...D.eras].sort((a, b) => order[eraStatus(a)] - order[eraStatus(b)] || dts(a.start) - dts(b.start));
-    return `${sect('ERAS — MAIN QUEST', '+ Era', () => eraForm())}
+    const bd = birthday();
+    return `${bd ? `<div class="card" ${on(birthdayForm)}><small>○ BIRTHDAY</small><h3>${bd.today ? 'Today. You turned ' + bd.turning + '.' : `Turning ${bd.turning} in ${bd.days} day${bd.days === 1 ? '' : 's'}`}</h3>${bar(bd.pct, 'pink')}<div class="split dim"><span>${Math.round(bd.pct)}% of this year of your life is gone</span></div></div>` : `<div class="card dashed" ${on(birthdayForm)}><small>○ BIRTHDAY</small><p>Set your birthday. See how much of the year is left.</p></div>`}
+    ${sect('ERAS — MAIN QUEST', '+ Era', () => eraForm())}
     ${eras.map(e => { const st = eraStatus(e);
       return `<div class="row" style="border-left:8px solid ${esc(e.color)}" ${on(() => eraForm(e))}><div class="rbody"><b>${esc(e.name)}</b><small>${fmtDate(dts(e.start))} → ${fmtDate(dts(e.end))}</small></div><div class="rval ${st === 'current' ? 'green' : 'muted'}">${st === 'current' ? daysTo(e.end) + 'd left' : st === 'planned' ? 'in ' + daysTo(e.start) + 'd' : 'past'}</div></div>`; }).join('') || empty('No eras. Which chapter of your life is this? Name it, date it.')}
     <div class="sect"><span>THE YEAR</span><select ${onChange(v => setUi('calYear', +v))}>${years.map(x => `<option ${x === y ? 'selected' : ''}>${x}</option>`).join('')}</select></div>
