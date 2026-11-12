@@ -392,3 +392,4 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .vit small { grid-column: 1; grid-row: 2; font-size: 12px; margin: 0; }
 .vit b { grid-column: 2; grid-row: 1 / span 2; font-size: 26px; text-align: right; }
 .vit .bar { grid-column: 1 / -1; grid-row: 3; height: 5px; margin-top: 6px; }
+#tleft { color: var(--muted); }
