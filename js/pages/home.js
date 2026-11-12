@@ -33,7 +33,7 @@ page('home', {
     const best = ch.length ? [...ch].sort((a, b) => b.affinity - a.affinity)[0] : null;
     const gf = one ? vit('♥', 'GIRLFRIEND', esc(one.name), `affinity ${one.affinity}/100`, one.affinity, 'ok', ['life'])
       : r.commons.length ? vit('♥', 'GIRLFRIEND', `${r.commons.length} common`, 'no one in Slot 1', null, '', ['life'])
-      : vit('♥', 'GIRLFRIEND', 'NONE', best ? `closest: ${esc(best.name)} ${best.affinity}/100` : 'nobody in play', best ? best.affinity : 0, 'bad', ['life']);
+      : vit('♥', 'GIRLFRIEND', '0', best ? `closest: ${esc(best.name)} ${best.affinity}/100` : 'nobody in play', best ? best.affinity : 0, 'bad', ['life']);
     const g = G[0];
     return `
     <div class="hud-player" ${on(() => go('totalstats'))}>
