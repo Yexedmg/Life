@@ -1,7 +1,7 @@
 // LIFE — ui. Router, modal, forms, toast, and the small HTML components every page shares.
 // No inline handlers anywhere: on(fn) registers a closure and returns a data attribute.
 import { D, commit, hooks, snapshot, replace, ui, saveUi } from './store.js';
-import { xpForLevel } from './calc.js';
+import { nowNext } from './calc.js';
 import { STATS, TIERS, TIER_COLOR } from './schema.js';
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -42,8 +42,9 @@ export function render() {
     stack = [{ page: 'home', params: {} }]; return render();
   }
   const view = $('#view'), keep = last === cur ? view.scrollTop : (cur.scroll || 0);
-  const p = D.player, need = xpForLevel(p.level), title = typeof def.title === 'function' ? def.title(cur.params) : def.title;
-  $('#top').innerHTML = `<h1>${esc(title || '')}</h1>`;
+  const title = typeof def.title === 'function' ? def.title(cur.params) : def.title;
+  $('#top').innerHTML = `<div class="trow1"><h1>${esc(title || '')}</h1><b id="clock"></b></div><div class="trow2"><span id="tnow"></span><span id="tleft"></span></div><div class="tbar"><i id="tbar"></i></div>`;
+  tickTop();
   $('#backfab').hidden = stack.length <= 1;
   view.innerHTML = body; view.scrollTop = keep; last = cur;
   const root = stack[0].page;
@@ -140,6 +141,19 @@ export const empty = t => `<div class="empty">${t}</div>`;
 export const tierBadge = t => (t ? `<span class="tier" style="--c:${TIER_COLOR[t]}">${t}</span>` : '<span class="tier none">–</span>');
 export const tabs = (items, active, fn) => `<div class="tabs">${items.map(([k, l]) => `<button class="${k === active ? 'active' : ''}" ${on(() => fn(k))}>${l}</button>`).join('')}</div>`;
 export const btn = (label, fn, cls = '') => `<button type="button" class="btn ${cls}" ${on(fn)}>${label}</button>`;
+
+// ── Top bar clock: runs every second on every screen, like the dock is always there.
+const p2 = n => String(n).padStart(2, '0');
+function tickTop() {
+  const c = $('#clock'); if (!c || !D) return;
+  const n = new Date(), secs = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds(), left = 86400 - secs;
+  c.textContent = `${p2(n.getHours())}:${p2(n.getMinutes())}:${p2(n.getSeconds())}`;
+  $('#tleft').textContent = `${Math.floor(left / 3600)}h ${p2(Math.floor(left % 3600 / 60))}m ${p2(left % 60)}s left`;
+  $('#tbar').style.width = secs / 864 + '%';
+  const nn = nowNext();
+  $('#tnow').textContent = nn.cur ? `NOW ${nn.cur.e.name} · until ${nn.cur.r.to}` : nn.next ? `NEXT ${nn.next.r.from} ${nn.next.e.name}` : nn.count ? 'Nothing else planned today' : 'Nothing planned today';
+}
+setInterval(tickTop, 1000);
 
 // ── Global delegation
 export function initUi() {

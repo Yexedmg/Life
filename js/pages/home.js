@@ -23,20 +23,6 @@ export function birthdayForm() {
     onSubmit: v => { D.settings.birthday = v.birthday; } });
 }
 export const goGap = to => (to[0] === '@northstar' ? northstarForm() : go(to[0], to[1]));
-const hm = m => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
-function timeCard() {
-  const n = new Date(), m = n.getHours() * 60 + n.getMinutes(), left = 1440 - m;
-  const es = D.schedule[todayKey()].map(e => ({ e, r: parseRange(e.time) })).filter(x => x.r).sort((a, b) => a.r.start - b.r.start);
-  const inside = r => (r.start <= r.end ? m >= r.start && m < r.end : m >= r.start || m < r.end);
-  const cur = es.find(x => inside(x.r)), rest = es.filter(x => x.r.start > m);
-  return `<div class="timecard" ${on(() => go('schedule'))}>
-    <small>◷ TIME · ${DAYS.indexOf(todayKey()) >= 0 ? todayKey().toUpperCase() : ''}</small>
-    <div class="tleft"><b>${hm(left)}</b><span>left today</span></div>${bar(m / 1440 * 100, 'gold')}
-    <div class="tnow"><span>NOW</span><b>${cur ? `${esc(cur.e.name)} <em>until ${cur.r.to}</em>` : 'Unplanned'}</b></div>
-    ${rest.slice(0, 4).map(x => `<div class="trow"><span>${x.r.from}</span><b>${esc(x.e.name)}</b></div>`).join('')}
-    ${!es.length ? '<p>Nothing planned today. Tap to plan it.</p>' : !rest.length && !cur ? '<p>Nothing else planned today.</p>' : ''}
-  </div>`;
-}
 const vit = (icon, label, val, sub, pct, cls, to) => `<div class="vit ${cls}" ${on(() => go(...to))}><div class="vh"><i>${icon}</i><span>${label}</span></div><b>${val}</b>${pct != null ? bar(pct, cls === 'bad' ? 'red' : 'cyan') : ''}<small>${sub}</small></div>`;
 
 page('home', {
@@ -65,9 +51,7 @@ page('home', {
       ${vit('$', 'MONEY', money(s.money), D.moneyGoal ? `goal ${money(D.moneyGoal)}` : 'no goal set', D.moneyGoal ? s.money / D.moneyGoal * 100 : null, D.moneyGoal ? '' : 'warn', ['money'])}
       ${vit('✦', 'VIBE', r1(vibe()) + '%', `ceiling ${r1(vibeCeiling())}%`, vibeCeiling() ? vibe() / vibeCeiling() * 100 : 0, '', ['vibe'])}
       ${vit('◎', 'QUESTS', qs.length, qs[0] ? esc(qs[0].name) : 'no goals set', null, qs.length ? '' : 'warn', ['manifest'])}
-    </div>
-
-    ${timeCard()}`;
+    </div>`;
   },
 });
 
