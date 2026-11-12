@@ -5,7 +5,7 @@ import { xpForLevel, gaps, girl, chasers, money, vibe, vibeCeiling, leadBar, lea
   daysTo, dts, DAY, today0, clamp, goalEta, fmtMonth, fmtDate, tasksOf, progress, birthday, r1, monthlyIncome } from '../calc.js';
 import { destroy, GIRL } from '../ui.js';
 import { DAYS } from '../schema.js';
-import { parseRange, todayKey } from '../calc.js';
+import { parseRange, todayKey, taken } from '../calc.js';
 
 export function northstarForm() {
   const n = D.northstar;
@@ -46,7 +46,7 @@ page('home', {
     const one = girl(r.theOne), ch = chasers(), nn = nowNext(), G = gaps(), era = currentEra();
     const nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null;
     const best = ch.length ? [...ch].sort((a, b) => b.affinity - a.affinity)[0] : null;
-    const gf = vit(GIRL, 'GIRLS', ch.length, best ? `closest: ${esc(best.name)} ${best.affinity}/100` : one ? `with ${esc(one.name)}` : 'nobody in play', null, ch.length || one ? '' : 'bad', ['roster']);
+    const gf = vit(GIRL, 'GIRLFRIENDS', taken(), `${ch.length} in play`, null, taken() ? '' : 'bad', ['life']);
     const qs = D.manifests.filter(m => !m.achievedAt);
     return `
     <div class="hud-player" ${on(() => go('totalstats'))}>

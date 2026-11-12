@@ -2,7 +2,7 @@
 import { D, commit } from '../store.js';
 import { BLANK, STATS, STAT, CAP, uid } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge, GIRL } from '../ui.js';
-import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, gaps } from '../calc.js';
+import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, gaps, taken } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
 import { northstarForm } from './home.js';
 
@@ -133,7 +133,7 @@ page('portal', {
     const t = (icon, label, sub, to, params) => `<div class="mt" ${on(() => go(to, params))}><i>${icon}</i><b>${label}</b><small>${sub}</small></div>`;
     const grp = (title, tiles) => `<div class="mg"><span>${title}</span><div class="mgrid">${tiles.join('')}</div></div>`;
     return grp('PEOPLE', [
-      t(GIRL, 'Relationships', one ? esc(one.name) : 'Slot 1 empty', 'life'), t('≡', 'Roster', `${D.girls.length} girl${D.girls.length === 1 ? '' : 's'} · ${D.friends.length} friend${D.friends.length === 1 ? '' : 's'}`, 'roster'),
+      t(GIRL, 'Girlfriends', `${taken()} · ${chasers().length} in play`, 'life'), t('≡', 'Roster', `${D.girls.length} girl${D.girls.length === 1 ? '' : 's'} · ${D.friends.length} friend${D.friends.length === 1 ? '' : 's'}`, 'roster'),
       t('!', 'Meet', `${Math.round(meetBar())}% meet bar`, 'meet'), t('⌘', 'Social media', `${D.socialMedia.length} platforms`, 'socialmedia')])
     + grp('GROW', [
       t('▲', 'Activities', 'slots & bench', 'activities'), t('◉', 'Lead gen', r1(leadBar()) + '% bar', 'leadgen'),

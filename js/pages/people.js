@@ -1,7 +1,7 @@
 // People: roster, relationship slots, meet, and the Social world.
 import { D, commit, ui } from '../store.js';
 import { BLANK, CAP } from '../schema.js';
-import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, fold } from '../ui.js';
+import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, fold, GIRL } from '../ui.js';
 import { girl, chasers, taken, meetBar, meetParts, expectedRarity, vibe, vibeCeiling, leadBar, r1, leadMethods } from '../calc.js';
 import { addXP, applyEffects, log, setStatus } from '../game.js';
 import { openElement, elementForm, lastChange } from './me.js';
@@ -68,10 +68,10 @@ page('girls', {
   title: 'GIRLS',
   render() {
     const ch = chasers().length, r = D.relationships, one = girl(r.theOne);
-    return `<div class="card hero sh-pink"><small>♦ ${one ? 'SLOT 1 — ' + esc(one.name).toUpperCase() : 'SLOT 1 — EMPTY'}</small><div class="count"><b>${ch} : 1</b><span>girls in play<br>${taken() ? taken() + ' slot' + (taken() === 1 ? '' : 's') + ' filled' : 'no girlfriend'}</span></div></div>
+    return `<div class="card hero sh-pink"><small>${GIRL} ${one ? 'SLOT 1 — ' + esc(one.name).toUpperCase() : 'SLOT 1 — EMPTY'}</small><div class="count"><b>${ch} : 1</b><span>girls in play<br>${taken() ? taken() + ' slot' + (taken() === 1 ? '' : 's') + ' filled' : 'no girlfriend'}</span></div></div>
     ${row({ icon: '✦', title: 'The Entity', desc: 'Your overall magnetism.', val: r1(vibe()) + '%', fn: () => go('vibe') })}
     ${row({ icon: '≡', title: 'Roster', desc: `${D.girls.length} girls · ${D.friends.length} friends`, fn: () => go('roster') })}
-    ${row({ icon: '♦', title: 'Life', desc: 'Relationship slots, chasers, sidelined.', val: one ? '1' : '<span class="red">EMPTY</span>', fn: () => go('life') })}
+    ${row({ icon: GIRL, title: 'Girlfriends', desc: 'Slots, girls in play, sidelined.', val: one ? '1' : '<span class="red">EMPTY</span>', fn: () => go('life') })}
     ${row({ icon: '!', title: 'Meet', desc: 'Meet bar. Log your approaches.', val: Math.round(meetBar()) + '%', fn: () => go('meet') })}
     ${row({ icon: '◉', title: 'Lead Generation', desc: 'Where they come from.', val: r1(leadBar()) + '%', fn: () => go('leadgen') })}`;
   },
@@ -92,11 +92,11 @@ page('roster', {
   },
 });
 page('life', {
-  title: 'LIFE',
+  title: 'GIRLFRIENDS',
   render() {
     const r = D.relationships, one = girl(r.theOne), ch = chasers().sort((a, b) => b.affinity - a.affinity);
     const list = ids => ids.map(girl).filter(Boolean).map(girlCard).join('');
-    return `<div class="card hero sh-pink"><small>♦ THE RATIO</small><div class="count"><b>${ch.length} : 1</b><span>girls chasing you</span></div></div>
+    return `<div class="card hero sh-pink"><small>${GIRL} THE RATIO</small><div class="count"><b>${ch.length} : 1</b><span>girls chasing you</span></div></div>
     ${sect('SLOT 1 — THE ONE')}
     ${one ? girlCard(one) : `<div class="slot big"><span>EMPTY</span><small>${ch.length ? 'Affinity 90 + looks-like-you 70 gets someone here. Who is closest?' : "Nobody's even in play. This doesn't fill itself."}</small></div>`}
     ${sect('SLOT 2 — THE COMMONS')}
@@ -127,7 +127,7 @@ page('social', {
     const soc = D.meStats.filter(m => /social|circle|friend/i.test(m.title)), ev = leadMethods().find(m => m.id === 'lm-event');
     const area = (i, t, d, fn) => `<div class="qa tall" ${on(fn)}><i>${i}</i><b>${t}</b><small>${d}</small></div>`;
     return `<div class="grid2">
-      ${area('♦', 'Girls', `${D.girls.length} on the roster`, () => go('girls'))}
+      ${area(GIRL, 'Girls', `${D.girls.length} on the roster`, () => go('girls'))}
       ${area('⌘', 'Social life', `${D.socialMedia.length} platforms`, () => go('socialmedia'))}
       ${area('●', 'Circle', `${D.friends.length} friends`, () => { ui.rosterTab = 'friends'; go('roster'); })}
       ${area('!', 'Meet', `${Math.round(meetBar())}% meet bar`, () => go('meet'))}
