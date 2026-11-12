@@ -393,3 +393,5 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .vit b { grid-column: 2; grid-row: 1 / span 2; font-size: 26px; text-align: right; }
 .vit .bar { grid-column: 1 / -1; grid-row: 3; height: 5px; margin-top: 6px; }
 #tleft { color: var(--muted); }
+
+#top .tright { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; } #tweek { font: 700 11px var(--mono); font-style: normal; letter-spacing: .08em; color: var(--text2); }

@@ -43,7 +43,7 @@ export function render() {
   }
   const view = $('#view'), keep = last === cur ? view.scrollTop : (cur.scroll || 0);
   const title = typeof def.title === 'function' ? def.title(cur.params) : def.title;
-  $('#top').innerHTML = `<div class="trow1"><h1>${esc(title || '')}</h1><b id="clock"></b></div><div class="trow2"><span id="tnow"></span><span id="tleft"></span></div><div class="tbar"><i id="tbar"></i></div>`;
+  $('#top').innerHTML = `<div class="trow1"><h1>${esc(title || '')}</h1><span class="tright"><em id="tweek"></em><b id="clock"></b></span></div><div class="trow2"><span id="tnow"></span><span id="tleft"></span></div><div class="tbar"><i id="tbar"></i></div>`;
   tickTop();
   $('#backfab').hidden = stack.length <= 1;
   view.innerHTML = body; view.scrollTop = keep; last = cur;
@@ -148,6 +148,9 @@ function tickTop() {
   const c = $('#clock'); if (!c || !D) return;
   const n = new Date(), secs = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds(), left = 86400 - secs;
   c.textContent = `${p2(n.getHours())}:${p2(n.getMinutes())}:${p2(n.getSeconds())}`;
+  const d = new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // ISO week: the week with Thursday in it
+  const wk = Math.ceil(((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
+  $('#tweek').textContent = `WEEK ${wk} · ${n.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase()}`;
   $('#tleft').textContent = `${Math.floor(left / 3600)}h ${p2(Math.floor(left % 3600 / 60))}m ${p2(left % 60)}s left`;
   $('#tbar').style.width = secs / 864 + '%';
   const nn = nowNext();
