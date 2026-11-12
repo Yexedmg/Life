@@ -43,9 +43,8 @@ export function render() {
   }
   const view = $('#view'), keep = last === cur ? view.scrollTop : (cur.scroll || 0);
   const p = D.player, need = xpForLevel(p.level), title = typeof def.title === 'function' ? def.title(cur.params) : def.title;
-  $('#top').innerHTML = `${stack.length > 1 ? `<button class="back" ${on(back)}>←</button>` : '<span class="logo">LIFE</span>'}
-    <h1>${esc(title || '')}</h1>
-    <button class="lvl" ${on(() => go('totalstats'))}><b>LV ${p.level}</b><i><u style="width:${Math.min(100, p.xp / need * 100)}%"></u></i></button>`;
+  $('#top').innerHTML = `<h1>${esc(title || '')}</h1>`;
+  $('#backfab').hidden = stack.length <= 1;
   view.innerHTML = body; view.scrollTop = keep; last = cur;
   const root = stack[0].page;
   document.querySelectorAll('#dock button').forEach(b => b.classList.toggle('active', b.dataset.tab === root));
@@ -159,6 +158,7 @@ export function initUi() {
     if (onSubmit(v) === false) return;
     closeModal(); commit();
   });
+  $('#backfab').addEventListener('click', back);
   $('#modal-backdrop').addEventListener('click', closeModal);
   document.querySelectorAll('#dock button').forEach(b => b.addEventListener('click', () => { closeModal(); tab(b.dataset.tab); }));
   window.addEventListener('popstate', () => { if (modalFn) { closeModal(); try { history.pushState(null, ''); } catch {} } else if (stack.length > 1) back(); });

@@ -340,3 +340,10 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .slot { min-height: 44px; padding: 10px 12px; }
 .statgrid .stat { padding: 10px 12px; }
 #view > .statgrid + .sect { margin-top: 20px !important; }
+
+/* no top-bar buttons: header is a title, back sits above the dock */
+#top { justify-content: center; padding-bottom: 12px; }
+#top h1 { flex: none; text-align: center; font-size: 17px; }
+.backfab { position: fixed; left: 16px; bottom: calc(72px + var(--sb) + 14px); z-index: 6; padding: 10px 16px; border-radius: 99px; border: 1px solid var(--line); background: rgba(12,17,32,.92); backdrop-filter: blur(8px); font: 700 13px var(--sans); color: var(--text); box-shadow: 0 6px 18px rgba(0,0,0,.4); }
+.backfab[hidden] { display: none; }
+#view { padding-bottom: calc(72px + var(--sb) + 72px); }
