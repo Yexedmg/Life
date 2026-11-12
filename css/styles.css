@@ -364,3 +364,12 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .vit b { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .vit .bar { height: 5px; }
 .vit small { font-size: 9.5px; line-height: 1.3; }
+
+/* home time card */
+.timecard { padding: 16px; border-radius: 18px; border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)); display: flex; flex-direction: column; gap: 10px; cursor: pointer; }
+.timecard small { font: 700 11px var(--mono); letter-spacing: .14em; color: var(--gold); }
+.tleft { display: flex; align-items: baseline; gap: 10px; } .tleft b { font: 800 40px/1 var(--sans); } .tleft span { font: 400 13px var(--mono); color: var(--text2); }
+.tnow { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.06); }
+.tnow span { font: 700 10px var(--mono); letter-spacing: .14em; color: var(--muted); } .tnow b { font: 700 18px var(--sans); overflow-wrap: anywhere; } .tnow em { font: 400 12px var(--mono); font-style: normal; color: var(--text2); }
+.timecard .trow > span { width: 52px; } .timecard .trow > b { flex: 1; text-align: left; font-family: var(--sans); font-size: 14px; }
+.timecard:active { transform: scale(.985); }

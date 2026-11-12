@@ -4,6 +4,8 @@ import { page, go, on, esc, form, bar, sect, row, term, empty, $, isCol, toggleC
 import { xpForLevel, gaps, girl, chasers, money, vibe, vibeCeiling, leadBar, leadCeiling, ratingsPct, actCats, slotted, sum, nowNext, currentEra, nextEra,
   daysTo, dts, DAY, today0, clamp, goalEta, fmtMonth, fmtDate, tasksOf, progress, birthday, r1, monthlyIncome } from '../calc.js';
 import { destroy } from '../ui.js';
+import { DAYS } from '../schema.js';
+import { parseRange, todayKey } from '../calc.js';
 
 export function northstarForm() {
   const n = D.northstar;
@@ -21,7 +23,20 @@ export function birthdayForm() {
     onSubmit: v => { D.settings.birthday = v.birthday; } });
 }
 export const goGap = to => (to[0] === '@northstar' ? northstarForm() : go(to[0], to[1]));
-const sevName = ['NOTE', 'WATCH', 'SERIOUS', 'CRITICAL'];
+const hm = m => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
+function timeCard() {
+  const n = new Date(), m = n.getHours() * 60 + n.getMinutes(), left = 1440 - m;
+  const es = D.schedule[todayKey()].map(e => ({ e, r: parseRange(e.time) })).filter(x => x.r).sort((a, b) => a.r.start - b.r.start);
+  const inside = r => (r.start <= r.end ? m >= r.start && m < r.end : m >= r.start || m < r.end);
+  const cur = es.find(x => inside(x.r)), rest = es.filter(x => x.r.start > m);
+  return `<div class="timecard" ${on(() => go('schedule'))}>
+    <small>◷ TIME · ${DAYS.indexOf(todayKey()) >= 0 ? todayKey().toUpperCase() : ''}</small>
+    <div class="tleft"><b>${hm(left)}</b><span>left today</span></div>${bar(m / 1440 * 100, 'gold')}
+    <div class="tnow"><span>NOW</span><b>${cur ? `${esc(cur.e.name)} <em>until ${cur.r.to}</em>` : 'Unplanned'}</b></div>
+    ${rest.slice(0, 4).map(x => `<div class="trow"><span>${x.r.from}</span><b>${esc(x.e.name)}</b></div>`).join('')}
+    ${!es.length ? '<p>Nothing planned today. Tap to plan it.</p>' : !rest.length && !cur ? '<p>Nothing else planned today.</p>' : ''}
+  </div>`;
+}
 const vit = (icon, label, val, sub, pct, cls, to) => `<div class="vit ${cls}" ${on(() => go(...to))}><div class="vh"><i>${icon}</i><span>${label}</span></div><b>${val}</b>${pct != null ? bar(pct, cls === 'bad' ? 'red' : 'cyan') : ''}<small>${sub}</small></div>`;
 
 page('home', {
@@ -31,10 +46,8 @@ page('home', {
     const one = girl(r.theOne), ch = chasers(), nn = nowNext(), G = gaps(), era = currentEra();
     const nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null;
     const best = ch.length ? [...ch].sort((a, b) => b.affinity - a.affinity)[0] : null;
-    const gf = one ? vit('♥', 'GIRLFRIEND', esc(one.name), `affinity ${one.affinity}/100`, one.affinity, 'ok', ['life'])
-      : r.commons.length ? vit('♥', 'GIRLFRIEND', `${r.commons.length} common`, 'no one in Slot 1', null, '', ['life'])
-      : vit('♥', 'GIRLFRIEND', '0', best ? `closest: ${esc(best.name)} ${best.affinity}/100` : 'nobody in play', best ? best.affinity : 0, 'bad', ['life']);
-    const g = G[0];
+    const gf = vit('♥', 'GIRLS', ch.length, best ? `closest: ${esc(best.name)} ${best.affinity}/100` : one ? `with ${esc(one.name)}` : 'nobody in play', null, ch.length || one ? '' : 'bad', ['roster']);
+    const qs = D.manifests.filter(m => !m.achievedAt);
     return `
     <div class="hud-player" ${on(() => go('totalstats'))}>
       <div class="lv"><small>LEVEL</small><b>${p.level}</b></div>
@@ -51,17 +64,15 @@ page('home', {
       ${gf}
       ${vit('$', 'MONEY', money(s.money), D.moneyGoal ? `goal ${money(D.moneyGoal)}` : 'no goal set', D.moneyGoal ? s.money / D.moneyGoal * 100 : null, D.moneyGoal ? '' : 'warn', ['money'])}
       ${vit('✦', 'VIBE', r1(vibe()) + '%', `ceiling ${r1(vibeCeiling())}%`, vibeCeiling() ? vibe() / vibeCeiling() * 100 : 0, '', ['vibe'])}
-      ${vit('◷', 'TODAY', nn.cur ? esc(nn.cur.e.name) : nn.count ? 'Free now' : 'Nothing', nn.next ? `next ${nn.next.r.from} ${esc(nn.next.e.name)}` : `${nn.count} planned`, null, nn.count ? '' : 'bad', ['schedule'])}
+      ${vit('◎', 'QUESTS', qs.length, qs[0] ? esc(qs[0].name) : 'no goals set', null, qs.length ? '' : 'warn', ['manifest'])}
     </div>
 
-    ${g ? `<div class="gaphero s${g.sev}" ${on(() => goGap(g.to))}><small>${sevName[g.sev]} · NEXT MOVE</small><h2>${esc(g.title)}</h2><p>${esc(g.sub)}</p><span>GO →</span></div>
-      ${G.length > 1 ? `<button class="more" ${on(() => go('gaps'))}>${G.length - 1} more move${G.length === 2 ? "" : "s"} →</button>` : ''}`
-      : `<div class="gaphero s0"><small>ALL CLEAR</small><h2>Nothing missing.</h2><p>Either you are done, or you are not aiming high enough.</p></div>`}`;
+    ${timeCard()}`;
   },
 });
 
 page('gaps', {
-  title: 'NEXT MOVES',
+  title: 'TO DO',
   render() {
     const G = gaps();
     return G.map(g => `<div class="gap s${g.sev}" ${on(() => goGap(g.to))}><i>${['◇', '!', '!!', '!!!'][g.sev]}</i><div><b>${esc(g.title)}</b><small>${esc(g.sub)}</small></div><em>→</em></div>`).join('') || empty('Nothing missing. Either you are done, or you are not aiming high enough.');

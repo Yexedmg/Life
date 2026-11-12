@@ -2,7 +2,7 @@
 import { D, commit } from '../store.js';
 import { BLANK, STATS, STAT, CAP, uid } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge } from '../ui.js';
-import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra } from '../calc.js';
+import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, gaps } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
 import { northstarForm } from './home.js';
 
@@ -140,7 +140,7 @@ page('portal', {
       t('✦', 'The Entity', r1(vibe()) + '% vibe', 'vibe'), t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'),
       t('★', 'Abilities', `${D.abilities.filter(a => a.unlocked).length}/${D.abilities.length} unlocked`, 'abilities')])
     + grp('GOALS', [
-      t('◎', 'Quests', `${open} open`, 'manifest'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
+      t('◎', 'Quests', `${open} open`, 'manifest'), t('!', 'To do', `${gaps().length} items`, 'gaps'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`])
     + grp('WORLDS', [
       t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('⬢', 'World map', 'cities & moves', 'world')])
