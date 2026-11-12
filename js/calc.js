@@ -232,9 +232,11 @@ export function gaps() {
   if (!r.theOne && !r.commons.length) {
     if (ch.length) {
       const top = [...ch].sort((a, b) => b.affinity - a.affinity)[0];
-      add(3, 'No girlfriend.', `${ch.length} in play. Closest: ${top.name} at ${top.affinity}/100. A date moves that number. Scrolling doesn't.`, ['life']);
-    } else add(3, 'No girlfriend. Nobody in play either.', 'Empty roster. Zero leads become zero dates. So why are you being lazy and distracted? Go meet someone.', ['leadgen']);
-  } else if (!r.theOne) add(2, 'Slot 1 — The One — is empty.', `${r.commons.length} in the commons, nobody at the top. Is one of them it, or are you settling?`, ['life']);
+      const dates = Math.max(1, Math.ceil((60 - top.affinity) / 12));
+      add(3, top.affinity >= 60 ? `Make it official with ${top.name}.` : `Take ${top.name} on a date.`,
+        top.affinity >= 60 ? `Affinity ${top.affinity}/100 — she's there. Ask.` : `Affinity ${top.affinity}/100. ${dates} more date${dates === 1 ? '' : 's'} and you can make it official.`, ['life']);
+    } else add(3, 'Meet someone new.', 'Nobody in play yet. Go where people are, start a conversation, then add her to the roster.', ['leadgen']);
+  } else if (!r.theOne) add(2, 'Find The One.', `${r.commons.length} in the commons. Is one of them it?`, ['life']);
 
   if (!D.northstar) add(3, 'No Northstar.', "You're moving without a direction. One sentence. Call it.", ['@northstar']);
   else if (D.northstar.targetDate && daysTo(D.northstar.targetDate) < 0) add(3, 'Your Northstar deadline passed.', `${-daysTo(D.northstar.targetDate)} days ago. Did you hit it? Then set the next one. If not — re-date it and mean it.`, ['@northstar']);

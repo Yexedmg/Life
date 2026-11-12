@@ -54,14 +54,14 @@ page('home', {
       ${vit('◷', 'TODAY', nn.cur ? esc(nn.cur.e.name) : nn.count ? 'Free now' : 'Nothing', nn.next ? `next ${nn.next.r.from} ${esc(nn.next.e.name)}` : `${nn.count} planned`, null, nn.count ? '' : 'bad', ['schedule'])}
     </div>
 
-    ${g ? `<div class="gaphero s${g.sev}" ${on(() => goGap(g.to))}><small>${sevName[g.sev]} · BIGGEST GAP</small><h2>${esc(g.title)}</h2><p>${esc(g.sub)}</p><span>FIX IT →</span></div>
-      ${G.length > 1 ? `<button class="more" ${on(() => go('gaps'))}>${G.length - 1} more gap${G.length === 2 ? '' : 's'} →</button>` : ''}`
+    ${g ? `<div class="gaphero s${g.sev}" ${on(() => goGap(g.to))}><small>${sevName[g.sev]} · NEXT MOVE</small><h2>${esc(g.title)}</h2><p>${esc(g.sub)}</p><span>GO →</span></div>
+      ${G.length > 1 ? `<button class="more" ${on(() => go('gaps'))}>${G.length - 1} more move${G.length === 2 ? "" : "s"} →</button>` : ''}`
       : `<div class="gaphero s0"><small>ALL CLEAR</small><h2>Nothing missing.</h2><p>Either you are done, or you are not aiming high enough.</p></div>`}`;
   },
 });
 
 page('gaps', {
-  title: 'GAPS',
+  title: 'NEXT MOVES',
   render() {
     const G = gaps();
     return G.map(g => `<div class="gap s${g.sev}" ${on(() => goGap(g.to))}><i>${['◇', '!', '!!', '!!!'][g.sev]}</i><div><b>${esc(g.title)}</b><small>${esc(g.sub)}</small></div><em>→</em></div>`).join('') || empty('Nothing missing. Either you are done, or you are not aiming high enough.');
