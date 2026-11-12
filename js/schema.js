@@ -78,13 +78,14 @@ export const BLANK = {
 };
 
 function defaultCategories() {
-  return [['Sports', '[SPT]', 3], ['School / Classes', '[CLS]', 2], ['Combat', '[CMB]', 2],
+  return [['Sports', '[SPT]', 3], ['Part-time Job', '[JOB]', 1], ['School / Classes', '[CLS]', 2], ['Combat', '[CMB]', 2],
     ['Social', '[SOC]', 2], ['Grooming', '[GRM]', 1], ['Other', '[···]', 3]].map(a => BLANK.category(...a));
 }
 function defaultMethods(seed) {
-  const m = [BLANK.method('lm-cold', 'Cold Approach', '!', 2, 20),
+  const m = [BLANK.method('lm-job', 'Part-time Job', '[JOB]', 1, 15), BLANK.method('lm-cold', 'Cold Approach', '!', 2, 20),
     BLANK.method('lm-sports', 'Sports', '[SPT]', 2, 18), BLANK.method('lm-event', 'Event Hosting', '◉', 1, 12),
     BLANK.method('lm-online', 'Online Presence', '⌘', 2, 10)];
+  if (seed) m[0].inventory.push({ ...BLANK.leadItem(), name: 'Albert Heijn vakkenvuller', difficulty: 'easy', roi: 'medium' });
   return m;
 }
 
