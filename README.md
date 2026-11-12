@@ -29,7 +29,7 @@ index.html            shell: header, view, dock, modal
 css/styles.css        the whole brutalist design system
 js/schema.js          THE source of truth: defaults, entity blanks, versioned migrations
 js/store.js           state D + commit() = integrity → save → render
-js/calc.js            every derived number (lead bar, vibe, % of potential, projections, gaps)
+js/calc.js            every derived number (lead bar, vibe, % of potential, to-do list)
 js/game.js            mutations + the integrity pass (mirrors, dangling refs, derived stats)
 js/ui.js              router, modal, forms, toast/undo, shared components
 js/pages/*.js         one file per area

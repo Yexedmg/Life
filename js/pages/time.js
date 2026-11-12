@@ -104,7 +104,7 @@ page('schedule', {
 });
 
 // ── Lifestyle
-const SOURCE = [[/school|class|social/i, 'Socialising/Networking'], [/sport|combat/i, 'Physical Training'], [/job|work/i, 'Income/Work'], [/groom/i, 'Self-Care/Appearance']];
+const SOURCE = [[/school|class|social/i, 'Socialising/Networking'], [/sport|combat/i, 'Physical Training'], [/groom/i, 'Self-Care/Appearance']];
 const sourceLabel = name => SOURCE.find(([re]) => re.test(name))?.[1] || name;
 const lifestyleForm = l => form({ title: l ? 'Edit lifestyle' : 'New lifestyle', sub: 'A team composition for your life. A build.',
   fields: [{ name: 'name', label: 'Name the build', value: l?.name, required: true, placeholder: 'Monk mode, Summer, Grind…' }, { name: 'emoji', label: 'Icon', value: l?.emoji || '◈' }],

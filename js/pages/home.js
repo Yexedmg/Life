@@ -2,7 +2,7 @@
 import { D } from '../store.js';
 import { page, go, on, esc, form, bar, sect, row, term, empty, $, isCol, toggleCol } from '../ui.js';
 import { xpForLevel, gaps, girl, chasers, money, vibe, vibeCeiling, leadBar, leadCeiling, ratingsPct, actCats, slotted, sum, nowNext, currentEra, nextEra,
-  daysTo, dts, DAY, today0, clamp, goalEta, fmtMonth, fmtDate, tasksOf, progress, birthday, r1, monthlyIncome } from '../calc.js';
+  daysTo, dts, DAY, today0, clamp, fmtDate, tasksOf, progress, birthday, r1 } from '../calc.js';
 import { destroy, GIRL } from '../ui.js';
 import { DAYS } from '../schema.js';
 import { parseRange, todayKey, taken } from '../calc.js';

@@ -10,7 +10,7 @@ export const uid = () => Date.now().toString(36) + Math.random().toString(36).sl
 
 export const CAP = 25;
 export const STATS = [
-  { key: 'money', label: 'Money', icon: '$', desc: 'Currency. Earned from work, spent on upgrades.' },
+  { key: 'money', label: 'Money', icon: '$', desc: "What's in the account. Spent on upgrades." },
   { key: 'boldness', label: 'Boldness', icon: '!', desc: 'Raised by approaches that land. Gates the risky moves.' },
   { key: 'fear', label: 'Fear', icon: '~', desc: 'Grows from failure and rejection. Offsets boldness.' },
   { key: 'health', label: 'Health', icon: '+', desc: 'Raised by sports, rest, grooming. Drained by overwork.' },
@@ -78,14 +78,13 @@ export const BLANK = {
 };
 
 function defaultCategories() {
-  return [['Sports', '[SPT]', 3], ['Part-time Job', '[JOB]', 1], ['School / Classes', '[CLS]', 2], ['Combat', '[CMB]', 2],
+  return [['Sports', '[SPT]', 3], ['School / Classes', '[CLS]', 2], ['Combat', '[CMB]', 2],
     ['Social', '[SOC]', 2], ['Grooming', '[GRM]', 1], ['Other', '[···]', 3]].map(a => BLANK.category(...a));
 }
 function defaultMethods(seed) {
-  const m = [BLANK.method('lm-job', 'Part-time Job', '[JOB]', 1, 15), BLANK.method('lm-cold', 'Cold Approach', '!', 2, 20),
+  const m = [BLANK.method('lm-cold', 'Cold Approach', '!', 2, 20),
     BLANK.method('lm-sports', 'Sports', '[SPT]', 2, 18), BLANK.method('lm-event', 'Event Hosting', '◉', 1, 12),
     BLANK.method('lm-online', 'Online Presence', '⌘', 2, 10)];
-  if (seed) m[0].inventory.push({ ...BLANK.leadItem(), name: 'Albert Heijn vakkenvuller', difficulty: 'easy', roi: 'medium' });
   return m;
 }
 

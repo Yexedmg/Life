@@ -104,30 +104,6 @@ export function* walkRatingItems(list = D.ratings, path = []) {
   for (const n of list) { const p = [...path, n.id]; for (const item of n.items) yield { node: n, item, path: p }; yield* walkRatingItems(n.children, p); }
 }
 
-// ── Money: projection engine
-export const monthTs = ym => new Date(ym + '-01T00:00:00').getTime();
-export function streamPoints(s, now = Date.now()) {
-  return [{ t: now, a: s.amount }, ...s.projections.map(p => ({ t: monthTs(p.date), a: +p.amount || 0, id: p.id })).filter(p => p.t > now).sort((a, b) => a.t - b.t)];
-}
-export function streamValueAt(s, t, now = Date.now()) {
-  const p = streamPoints(s, now);
-  if (t <= p[0].t) return p[0].a;
-  for (let i = 0; i < p.length - 1; i++) if (t <= p[i + 1].t) return p[i].a + (p[i + 1].a - p[i].a) * (t - p[i].t) / (p[i + 1].t - p[i].t);
-  return p[p.length - 1].a;
-}
-export const flowing = () => D.incomes.filter(i => i.status !== 'possible');
-export const incomeAt = (t, now = Date.now()) => sum(flowing().map(s => streamValueAt(s, t, now)));
-export const monthlyIncome = () => sum(flowing().map(s => s.amount));
-export const hourly = s => (s.hoursPerWeek > 0 ? s.amount * 12 / (s.hoursPerWeek * 52) : null);
-export function goalEta() {
-  if (!D.moneyGoal) return null;
-  let bal = D.player.stats.money;
-  if (bal >= D.moneyGoal) return { done: true };
-  const now = Date.now(), d = new Date(); d.setDate(1); d.setHours(0, 0, 0, 0);
-  for (let i = 1; i <= 240; i++) { d.setMonth(d.getMonth() + 1); bal += incomeAt(d.getTime(), now); if (bal >= D.moneyGoal) return { date: d.getTime(), months: i }; }
-  return { never: true };
-}
-
 // ── Time
 export function parseRange(str) {
   const m = /^(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})$/.exec((str || '').trim());
@@ -244,11 +220,7 @@ export function gaps() {
   if (!leadMethods().some(m => slotted(m).length)) add(2, 'No lead sources slotted.', 'Nobody finds you by accident. Slot how you actually meet people.', ['leadgen']);
 
   if (!D.moneyGoal) add(2, 'No number.', 'What number are you chasing? Set it.', ['money']);
-  else if (s.money < D.moneyGoal) {
-    const eta = goalEta(), pct = Math.round(clamp(s.money / D.moneyGoal * 100));
-    if (eta.never) add(3, `${money(D.moneyGoal - s.money)} short of the goal.`, flowing().length ? 'At this income you never get there. Raise a stream or add one.' : 'Nothing is flowing. No income, no goal. Put a stream on the board.', ['income']);
-    else add(1, `Money goal: ${pct}%.`, `On track for ${fmtMonth(eta.date)} — ${eta.months} months out. Want it sooner? Raise a stream.`, ['income']);
-  }
+  else if (s.money < D.moneyGoal) add(1, `Money goal: ${Math.round(clamp(s.money / D.moneyGoal * 100))}%.`, `${money(D.moneyGoal - s.money)} to go.`, ['money']);
 
   const era = currentEra(), nx = nextEra();
   if (era) { const left = daysTo(era.end); if (left <= 7) add(2, `"${era.name}" ends in ${left} day${left === 1 ? '' : 's'}.`, 'Finish what this era was for.', ['calendar']); }
