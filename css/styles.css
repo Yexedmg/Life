@@ -355,3 +355,12 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .bar.cyan i { box-shadow: none; }
 #dock button.active::before { box-shadow: none; }
 .btn.good { color: #000; }
+
+/* home vitals: one row of four */
+.vgrid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.vit { padding: 9px 8px; min-height: 0; gap: 5px; border-radius: 12px; }
+.vit .vh { font-size: 8.5px; letter-spacing: 0; gap: 3px; } .vit .vh i { font-size: 11px; }
+.vit .vh span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vit b { font-size: 17px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.vit .bar { height: 5px; }
+.vit small { font-size: 9.5px; line-height: 1.3; }
