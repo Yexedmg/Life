@@ -1,7 +1,7 @@
 // People: roster, relationship slots, meet, and the Social world.
 import { D, commit, ui } from '../store.js';
 import { BLANK, CAP } from '../schema.js';
-import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi } from '../ui.js';
+import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, fold } from '../ui.js';
 import { girl, chasers, taken, meetBar, meetParts, expectedRarity, vibe, vibeCeiling, leadBar, r1, leadMethods } from '../calc.js';
 import { addXP, applyEffects, log, setStatus } from '../game.js';
 import { openElement, elementForm, lastChange } from './me.js';
@@ -116,8 +116,7 @@ page('meet', {
     ${sect('COLD APPROACH — log it the moment it happens')}
     <div class="card"><div class="split"><span>STREAK</span><b>${st.coldApproach}</b></div><div class="split"><span>BOLDNESS vs FEAR</span><b class="${s.fear > s.boldness ? 'red' : 'green'}">${r1(s.boldness)} vs ${r1(s.fear)}</b></div>
       <div class="btns">${btn('It landed', landed, 'good')}${btn('Got rejected', missed, 'warm')}</div></div>
-    ${sect('WHAT MOVES THE BAR')}
-    ${term('', meetParts().map(([l, v]) => [l, (v >= 0 ? '+' : '') + r1(v), v < 0 ? 'red' : v > 0 ? 'green' : '']))}`;
+    ${fold('meet', 'What moves the bar', () => term('', meetParts().map(([l, v]) => [l, (v >= 0 ? '+' : '') + r1(v), v < 0 ? 'red' : v > 0 ? 'green' : ''])))}`;
   },
 });
 

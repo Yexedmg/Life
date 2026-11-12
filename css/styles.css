@@ -334,3 +334,9 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .mt i { font: 700 22px var(--mono); font-style: normal; color: var(--cyan); margin-bottom: 4px; } .mt b { font: 700 16px var(--sans); } .mt small { font: 400 11.5px var(--mono); color: var(--text2); overflow-wrap: anywhere; }
 #view > .mg { margin-top: 20px; } #view > .mg:first-child { margin-top: 0; }
 #bodymap { max-height: 400px; margin: 0 auto; }
+
+/* declutter pass */
+.fold { display: block; width: 100%; text-align: left; padding: 14px 16px; border-radius: var(--r); border: 1px dashed var(--line); font: 700 13px var(--mono); color: var(--text2); }
+.slot { min-height: 44px; padding: 10px 12px; }
+.statgrid .stat { padding: 10px 12px; }
+#view > .statgrid + .sect { margin-top: 20px !important; }

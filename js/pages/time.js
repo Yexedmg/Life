@@ -1,7 +1,7 @@
 // TIME: Time Allocation (the ideal day), the weekly schedule + analytics, and Lifestyles.
 import { D, commit, ui } from '../store.js';
 import { BLANK, DAYS, STAT, SLOT_COLORS } from '../schema.js';
-import { page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol } from '../ui.js';
+import { page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol, fold } from '../ui.js';
 import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum } from '../calc.js';
 import { log } from '../game.js';
 
@@ -45,7 +45,7 @@ export function weekPanel(schedule, key) {
     ${d.acts.map(a => `<div class="row" ${on(() => entryForm(schedule, day, a.e))}><div class="ric time">${esc(parseRange(a.e.time)?.from || '')}<br><small>${esc(parseRange(a.e.time)?.to || '')}</small></div><div class="rbody"><b>${esc(a.name)}</b>
       <small>${esc(a.cat)}${a.e.levelUpRef ? ` · ⤴ levels up ${esc(resolveMove(a.e.levelUpRef)?.el.title || '')}` : ''}</small></div><div class="rval">${a.hrs}h</div></div>`).join('') || empty(`Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`)}
     <div class="btns">${btn('+ Add', () => entryForm(schedule, day), 'good')}</div>
-    ${sect('WEEK OVERVIEW')}
+    ${fold('wk-' + key, `Week analytics · ${W.hours}h planned`, () => `${sect('WEEK OVERVIEW')}
     <div class="wdays">${DAYS.map(k => { const x = st.days[k];
       return `<div class="wday ${k === day ? 'active' : ''}" ${on(() => setUi('day-' + key, k))}><b>${k.toUpperCase()}</b><div class="dots">${'●'.repeat(Math.min(x.acts.length, 8)) || '○'}</div><span>${x.acts.length} · ${x.hours}h</span>
         ${Object.keys(x.byStat).map(s => `<small>${STAT[s].icon} ${pct(x.byStat[s], x.hours)}%</small>`).join('')}<em>${Math.max(0, 24 - x.hours)}h free</em></div>`; }).join('')}</div>
@@ -54,7 +54,7 @@ export function weekPanel(schedule, key) {
       ${d.acts.map(a => `<div class="trow"><span>${esc(a.e.time)} · ${esc(a.name)} ${statChips(a.stats)}</span><b>${a.hrs}h · ${pct(a.hrs, 24)}%</b></div>`).join('')}
       <div class="trow"><span>Not Scheduled — Free/Unplanned</span><b class="muted">${Math.max(0, 24 - d.hours)}h · ${pct(Math.max(0, 24 - d.hours), 24)}%</b></div></div>
     ${sect(`WEEKLY TOTAL · ${W.hours}h of 168h`)}
-    ${group('BY STAT', W.byStat, W.statDetail, k => `${STAT[k].icon} ${STAT[k].label}`)}${group('BY CATEGORY', W.byCat, W.catDetail, k => k)}`;
+    ${group('BY STAT', W.byStat, W.statDetail, k => `${STAT[k].icon} ${STAT[k].label}`)}${group('BY CATEGORY', W.byCat, W.catDetail, k => k)}`)}`;
 }
 
 // ── Time Allocation
@@ -91,7 +91,7 @@ const allocForm = ta => form({ title: ta ? 'Edit day type' : 'New day type', fie
   onDelete: ta && D.timeAllocs.length > 1 ? () => destroy(`${ta.name} — wiped.`, () => { D.timeAllocs = D.timeAllocs.filter(x => x !== ta); }) : null, del: 'Wipe it' });
 
 page('schedule', {
-  title: 'TIME',
+  title: 'PLAN',
   render() {
     const ta = curAlloc(), hrs = sum(ta.slots.map(s => (toMin(s.end) - toMin(s.start)) / 60));
     return `${sect('TIME ALLOCATION — THE IDEAL DAY', '+ Day type', () => allocForm())}

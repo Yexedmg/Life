@@ -1,5 +1,5 @@
 // LIFE — service worker. Network-first so updates land immediately; cache is the offline fallback.
-const CACHE = 'life-v2';
+const CACHE = 'life-v3';
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener('fetch', e => {

@@ -99,12 +99,9 @@ page('me', {
   title: 'STATUS',
   render() {
     const s = D.player.stats, r = D.relationships, one = girl(r.theOne);
-    return `${sect('BODY MAP', '+ Stat', () => elementForm('me'))}
-    <div class="card mapcard sh-purple">${bodyMap()}${D.meStats.length ? '<p class="hint">Drag a dot to pin it. Tap to open.</p>' : '<p class="hint">Nothing on the map yet. What are the parts of you? Tap + Stat.</p>'}</div>
-    ${sect('STATS')}
-    <div class="statgrid">${STATS.map(st => `<div class="stat" ${on(() => go('stat', { key: st.key }))}><i>${st.icon}</i><span>${st.label}</span><b>${st.key === 'money' ? money(s.money) : `${r1(s[st.key])}<em>/${CAP}</em>`}</b>${st.key === 'money' ? '' : bar(s[st.key] / CAP * 100, st.key === 'fear' ? 'red' : 'cyan')}</div>`).join('')}</div>
-    ${sect('RELATIONSHIP SLOTS', 'Open', () => go('life'))}
-    ${term('', [['SLOT 1 — THE ONE', one ? esc(one.name) : 'EMPTY', one ? 'green' : 'red'], ['SLOT 2 — COMMONS', r.commons.length || '0'], ['CHASERS', chasers().length], ['SIDELINED', r.sidelined.length]])}`;
+    return `<div class="statgrid">${STATS.map(st => `<div class="stat" ${on(() => go('stat', { key: st.key }))}><i>${st.icon}</i><span>${st.label}</span><b>${st.key === 'money' ? money(s.money) : `${r1(s[st.key])}<em>/${CAP}</em>`}</b>${st.key === 'money' ? '' : bar(s[st.key] / CAP * 100, st.key === 'fear' ? 'red' : 'cyan')}</div>`).join('')}</div>
+    ${sect('BODY MAP', '+ Stat', () => elementForm('me'))}
+    <div class="card mapcard sh-purple">${bodyMap()}${D.meStats.length ? '<p class="hint">Drag a dot to pin it. Tap to open.</p>' : '<p class="hint">Nothing on the map yet. What are the parts of you? Tap + Stat.</p>'}</div>`;
   },
   after: bindMap,
 });

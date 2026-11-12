@@ -128,6 +128,7 @@ export function banner(big, small) {
 // ── Collapsibles (UI state, not save data)
 export const isCol = id => !!ui.collapsed[id];
 export const toggleCol = id => { if (ui.collapsed[id]) delete ui.collapsed[id]; else ui.collapsed[id] = 1; saveUi(); rerender(); };
+export const fold = (id, label, fn) => { const open = isCol('open-' + id); return `<button class="fold" ${on(() => toggleCol('open-' + id))}>${open ? '▾' : '▸'} ${label}</button>${open ? fn() : ''}`; };
 export const setUi = (k, v) => { ui[k] = v; saveUi(); rerender(); };
 
 // ── Components (callers escape user text)

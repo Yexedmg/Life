@@ -91,14 +91,7 @@ page('money', {
     return `<div class="card hero sh-gold ${g ? '' : 'dashed'}" ${on(goalForm)}><small>$ THE GOAL</small>${g ? `<div class="count"><b>${money(g)}</b><span>${Math.round(clamp(s.money / g * 100))}% there<br>${money(Math.max(0, g - s.money))} to go</span></div>${bar(s.money / g * 100, 'gold')}` : '<h2 class="muted">What number are you chasing?</h2><p>Tap to set it.</p>'}</div>
     ${term('BALANCE', [['IN THE ACCOUNT', money(s.money), 'gold'], ['GOAL ETA', etaText(), e?.never ? 'red' : '']])}
     <div class="btns">${btn('Got paid', () => balForm('Got paid', 1), 'good')}${btn('Spent', () => balForm('Spent', -1), 'warm')}${btn('Set balance', () => balForm('Balance', 0))}</div>
-    ${term('INCOME', [['FLOWING', money(monthlyIncome()) + ' / mo'], ['PER YEAR', money(monthlyIncome() * 12)], ['STREAMS', `${flowing().length} flowing · ${D.incomes.length - flowing().length} possible`]])}
-    ${sect('AREAS')}
-    ${row({ icon: '$', title: 'Income', desc: 'Streams, projections, the road to the goal.', val: money(monthlyIncome()), fn: () => go('income') })}
-    ${row({ icon: '◎', title: 'Manifest', desc: 'Goals → milestones → tasks.', fn: () => go('manifest') })}
-    ${row({ icon: '◉', title: 'Lead Gen', desc: 'Opportunity comes through people.', val: r1(leadBar()) + '%', fn: () => go('leadgen') })}
-    ${row({ icon: '$', title: 'Money Stat', desc: 'The stat page.', fn: () => go('stat', { key: 'money' }) })}
-    ${sect('YOUR MONEY STATS')}
-    ${soc.length ? term('', soc.map(m => [esc(m.title), `${m.level} / ${CAP}`])) : empty('No body-map stat about money yet.')}`;
+    ${row({ icon: '$', title: 'Income', desc: `${flowing().length} flowing · ${D.incomes.length - flowing().length} possible`, val: money(monthlyIncome()) + '<em>/mo</em>', fn: () => go('income') })}`;
   },
 });
 function incomeForm(i, status = 'active') {

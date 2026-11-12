@@ -1,7 +1,7 @@
 // The slot engine's three faces: Activities, Lead Generation, The Entity. One board component for all.
 import { D, commit } from '../store.js';
 import { BLANK, DIFFS, ROIS, ROI_TIER, ROI_COLOR, GAIN, STAT, LEAD_MAX_STARS, LEADS_PER_STAR } from '../schema.js';
-import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol } from '../ui.js';
+import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, fold } from '../ui.js';
 import { actCats, actSections, leadMethods, slotted, isSlotted, slottedActivities, slotHours, sum, parseRange, fxKeys, itemGain, methodGain, leadBar, leadCeiling,
   leadStars, totalLeads, methodRoi, compGain, vibe, vibeCeiling, actVibe, r1, balance, curBorough, scopeOwner } from '../calc.js';
 import { slotItem, unslot, setMaxSlots, removeItem, doActivity, fxText } from '../game.js';
@@ -64,9 +64,9 @@ function categoryForm(cat) {
   form({
     title: cat ? 'Edit category' : 'New category',
     fields: [{ name: 'name', label: 'Name', value: cat?.name, required: true }, { name: 'emoji', label: 'Tag', value: cat?.emoji || '[···]', placeholder: '[SPT]' },
-      ...(cat ? [] : [{ name: 'maxSlots', label: 'Slots', type: 'range', min: 1, max: 10, value: 2 }]),
+      { name: 'maxSlots', label: 'Slots', type: 'range', min: 1, max: 10, value: cat?.maxSlots ?? 2 },
       { name: 'sectionId', label: 'Section', type: 'select', value: cat?.sectionId || '', options: [['', '— Ungrouped —'], ...secs.map(s => [s.id, s.name])] }],
-    onSubmit: v => { if (cat) Object.assign(cat, { name: v.name, emoji: v.emoji, sectionId: v.sectionId || null }); else actCats().push({ ...BLANK.category(v.name, v.emoji || '[···]', v.maxSlots), sectionId: v.sectionId || null }); },
+    onSubmit: v => { if (cat) { Object.assign(cat, { name: v.name, emoji: v.emoji, sectionId: v.sectionId || null }); setMaxSlots(cat, v.maxSlots); } else actCats().push({ ...BLANK.category(v.name, v.emoji || '[···]', v.maxSlots), sectionId: v.sectionId || null }); },
     onDelete: cat ? () => destroy(`${cat.name} — cut, with everything in it.`, () => { const l = actCats(); l.splice(l.indexOf(cat), 1); }) : null,
   });
 }
@@ -79,10 +79,10 @@ function sectionForm(sec) {
 const moveSec = (sec, d) => { const l = actSections(), i = l.indexOf(sec), j = i + d; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; commit(); };
 
 function catCard(cat) {
-  const closed = isCol(cat.id), n = slotted(cat).length;
-  return `<div class="card cat"><div class="cathead" ${on(() => toggleCol(cat.id))}><b>${esc(cat.emoji)} ${esc(cat.name)}</b><span class="${n ? '' : 'red'}">${n}/${cat.maxSlots}</span><i>${closed ? '▸' : '▾'}</i></div>
+  const n = slotted(cat).length, closed = cat.inventory.length ? isCol(cat.id) : !isCol('open-' + cat.id), tid = cat.inventory.length ? cat.id : 'open-' + cat.id;
+  return `<div class="card cat"><div class="cathead" ${on(() => toggleCol(tid))}><b>${esc(cat.emoji)} ${esc(cat.name)}</b><span class="${n ? '' : 'red'}">${n}/${cat.maxSlots}</span><i>${closed ? '▸' : '▾'}</i></div>
     ${closed ? '' : `${slotBoard(cat, { tile: actTile, open: it => activitySheet(cat.id, it.id) })}
-    <div class="catfoot">${stepper('SLOTS', cat.maxSlots, v => setMaxSlots(cat, v), 1, 10)}<button class="sbtn ghost" ${on(() => categoryForm(cat))}>✎</button><button class="sbtn" ${on(() => activityForm(cat))}>+ Item</button></div>`}</div>`;
+    <div class="catfoot"><button class="sbtn ghost" ${on(() => categoryForm(cat))}>✎ Edit</button><button class="sbtn" ${on(() => activityForm(cat))}>+ Item</button></div>`}</div>`;
 }
 page('activities', {
   title: 'ACTIVITIES',
@@ -90,9 +90,8 @@ page('activities', {
     const cats = actCats(), secs = actSections(), total = sum(cats.map(c => c.maxSlots)), filled = sum(cats.map(c => slotted(c).length)), b = balance(), bor = curBorough();
     const kinds = { expansion: 0, maintenance: 0, cost: 0 }; for (const a of slottedActivities()) kinds[a.item.kind]++;
     const loose = cats.filter(c => !c.sectionId);
-    return `<div class="card sh-cyan"><small>WHAT YOU SLOT IS WHAT COUNTS${scopeOwner() !== D ? ` · ${esc(bor.name)}` : ''}</small><div class="split"><h3>${filled} / ${total} slots</h3><b>${r1(slotHours())}h scheduled</b></div>${bar(total ? filled / total * 100 : 0, 'cyan')}
-      <div class="chips"><em class="chip k-expansion">▲ ${kinds.expansion} expansion</em><em class="chip k-maintenance">■ ${kinds.maintenance} maintenance</em><em class="chip k-cost">● ${kinds.cost} cost</em><em class="chip">${cats.length} categories</em></div>
-      <p class="verdict">${b.verdict}</p></div>
+    return `<div class="card sh-cyan"><div class="split"><h3>${filled} / ${total} slots filled${scopeOwner() !== D ? ` · ${esc(bor.name)}` : ''}</h3><b>${r1(slotHours())}h</b></div>${bar(total ? filled / total * 100 : 0, 'cyan')}
+      <p>${b.verdict}</p></div>
     <div class="btns">${btn('+ Category', () => categoryForm(), 'good')}${btn('+ Section', () => sectionForm())}</div>
     ${secs.map((sec, i) => { const mine = cats.filter(c => c.sectionId === sec.id), closed = isCol(sec.id);
       return `<div class="sect"><span ${on(() => toggleCol(sec.id))}>${closed ? '▸' : '▾'} ${esc(sec.name)} · ${mine.length}</span><span class="secbtns">${i > 0 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, -1))}>↑</button>` : ''}${i < secs.length - 1 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, 1))}>↓</button>` : ''}<button class="sbtn ghost" ${on(() => sectionForm(sec))}>✎</button></span></div>
@@ -140,7 +139,7 @@ page('leadgen', {
     ${sect('METHODS', '+ Method', () => methodForm())}
     ${ms.map(m => { const roi = methodRoi(m), n = slotted(m).length;
       return `<div class="row" ${on(() => go('leadmethod', { id: m.id }))}><div class="ric">${esc(m.emoji)}</div><div class="rbody"><b>${esc(m.name)}</b><small>${n}/${m.maxSlots} slotted · ${m.inventory.length} in inventory${roi ? ` · <span style="color:${ROI_COLOR[roi]}">${ROI_TIER[roi]}</span>` : ''}</small></div><div class="rval ${n ? '' : 'muted'}">+${r1(methodGain(m))}%</div><div class="rarr">→</div></div>`; }).join('') || empty('No methods. How do you meet people?')}
-    ${matrixTable()}`;
+    ${fold('matrix', 'How gain is calculated', matrixTable)}`;
   },
 });
 page('leadmethod', {

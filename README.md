@@ -17,11 +17,10 @@ If the old build ran on the same address, its save (`life-rpg-data`) is picked u
 
 | Tab | What it is |
 |---|---|
-| **HOME** | The status screen: level, Northstar countdown, *Where you're at* tiles, **The Gaps** (the app telling you what's missing, worst first), right-now schedule, era, money ETA, side quests |
-| **LIFE** | Activities (the slot engine), Social world, ranked Lifestyles |
-| **TIME** | Time Allocation (the ideal day) and the actual week, with full analytics |
-| **PORTAL** | Worlds: Lifestyle, Money, Ratings, and a door per body-map stat |
-| **ME** | Body map, stats, abilities, calendar, world map, log, save/load |
+| **HOME** | One-screen status: level, Northstar, four vitals, the single biggest gap |
+| **STATUS** | Stats and the body map |
+| **PLAN** | Time Allocation (the ideal day) and the actual week; analytics on demand |
+| **MENU** | Every area as one tile: People, Grow, Goals, Worlds, System |
 
 ## Code map
 
