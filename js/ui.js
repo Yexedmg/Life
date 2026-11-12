@@ -135,6 +135,7 @@ export const sect = (title, btn, fn) => `<div class="sect"><span>${title}</span>
 export const bar = (pct, cls = '') => `<div class="bar ${cls}"><i style="width:${Math.max(0, Math.min(100, pct || 0))}%"></i></div>`;
 export const row = ({ icon = '', title, desc = '', val = '', cls = '', fn }) => `<div class="row ${cls}" ${fn ? on(fn) : ''}>${icon !== '' ? `<div class="ric">${icon}</div>` : ''}<div class="rbody"><b>${title}</b>${desc ? `<small>${desc}</small>` : ''}</div>${val !== '' ? `<div class="rval">${val}</div>` : ''}${fn ? '<div class="rarr">→</div>' : ''}</div>`;
 export const term = (title, rows) => `<div class="term">${title ? `<div class="tt">${title}</div>` : ''}${rows.map(([l, v, c = '']) => `<div class="trow"><span>${l}</span><b class="${c}">${v}</b></div>`).join('')}</div>`;
+export const GIRL = '<svg class="gico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5c-3 0-5 2.2-5 5.2 0 2 .2 3.6-.8 5.3h3.1L6 19h3.2v3.5h1.9V19h1.8v3.5h1.9V19H18l-3.3-7h3.1c-1-1.700-.8-3.300-.8-5.300 0-3-2-5.200-5-5.200z"/><circle cx="12" cy="6.600" r="2.900" fill="#000"/></svg>';
 export const empty = t => `<div class="empty">${t}</div>`;
 export const tierBadge = t => (t ? `<span class="tier" style="--c:${TIER_COLOR[t]}">${t}</span>` : '<span class="tier none">–</span>');
 export const tabs = (items, active, fn) => `<div class="tabs">${items.map(([k, l]) => `<button class="${k === active ? 'active' : ''}" ${on(() => fn(k))}>${l}</button>`).join('')}</div>`;

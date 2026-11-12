@@ -373,3 +373,6 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .tnow span { font: 700 10px var(--mono); letter-spacing: .14em; color: var(--muted); } .tnow b { font: 700 18px var(--sans); overflow-wrap: anywhere; } .tnow em { font: 400 12px var(--mono); font-style: normal; color: var(--text2); }
 .timecard .trow > span { width: 52px; } .timecard .trow > b { flex: 1; text-align: left; font-family: var(--sans); font-size: 14px; }
 .timecard:active { transform: scale(.985); }
+
+.gico { width: 1.25em; height: 1.25em; fill: currentColor; vertical-align: -0.2em; display: inline-block; }
+.vit .vh i .gico { width: 15px; height: 15px; } .mt i .gico { width: 26px; height: 26px; }
