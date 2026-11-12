@@ -57,7 +57,7 @@ function monthGrid(y, m) {
   for (let d = 1; d <= n; d++) {
     const t = new Date(y, m, d).getTime(), s = iso(t), hit = D.eras.filter(e => e.start <= s && e.end >= s);
     const e = hit[0], cls = [t === t0 ? 'today' : '', e && e.start === s ? 'first' : '', e && e.end === s ? 'last' : '', hit.length > 1 ? 'multi' : ''].join(' ');
-    cells += `<i class="${cls}" ${e ? `style="background:${esc(e.color)};color:#12172B"` : ''}>${d}</i>`;
+    cells += `<i class="${cls}" ${e ? `style="background:${esc(e.color)};color:#000"` : ''}>${d}</i>`;
   }
   return `<div class="cmonth"><b>${MONTHS[m].slice(0, 3).toUpperCase()}</b><div class="cgrid"><u>M</u><u>T</u><u>W</u><u>T</u><u>F</u><u>S</u><u>S</u>${cells}</div></div>`;
 }
