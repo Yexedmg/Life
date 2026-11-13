@@ -405,3 +405,11 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .alloc { padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
 .alloc small { letter-spacing: .1em; } .abar { display: flex; height: 14px; border-radius: 99px; overflow: hidden; gap: 2px; } .abar i { display: block; }
 .aleg { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 400 12px var(--mono); color: var(--text2); } .aleg span { display: flex; align-items: center; gap: 6px; } .aleg i { width: 9px; height: 9px; border-radius: 99px; display: block; } .aleg b { color: var(--text); }
+
+/* menu: one column */
+.mgrid { grid-template-columns: 1fr; gap: 8px; }
+.mt { flex-direction: row; align-items: center; gap: 14px; min-height: 0; padding: 13px 16px; }
+.mt i { margin: 0; width: 26px; text-align: center; font-size: 20px; flex-shrink: 0; }
+.mt > div, .mt { }
+.mt b { flex: 1; }
+.mt small { text-align: right; }
