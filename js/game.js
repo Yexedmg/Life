@@ -20,6 +20,7 @@ export function applyEffects(fx) {
     s[k] = k === 'money' ? s[k] + v : clamp(Math.round((s[k] + v) * 10) / 10, 0, CAP);
   }
 }
+export function gain(pillar, amount, note = '') { D.gains.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), t: Date.now(), pillar, amount, note }); if (D.gains.length > 2000) D.gains.shift(); }
 export const fxText = fx => Object.entries(fx || {}).filter(([k, v]) => v && STAT[k]).map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${STAT[k].icon}`).join('  ');
 
 export function doActivity(item) {

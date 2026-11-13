@@ -41,6 +41,12 @@ export const GAIN = {
   medium: { 'low': 2, 'medium-low': 3, 'medium': 5, 'high': 8, 'very-high': 10 },
   hard: { 'low': 3, 'medium-low': 5, 'medium': 7, 'high': 10, 'very-high': 12 },
 };
+// The principle: three pillars everything is measured against.
+export const PILLARS = [
+  { key: 'money', label: 'Money / Career', short: 'Money', color: '#FFCB1C' },
+  { key: 'social', label: 'Social life / Network', short: 'Social', color: '#40E382' },
+  { key: 'girls', label: 'Girls / Status', short: 'Girls', color: '#FF3366' },
+];
 export const LEADS_PER_STAR = 20;
 export const LEAD_MAX_STARS = 18;
 
@@ -50,7 +56,7 @@ const slotsOf = n => Array(n).fill(null);
 // ── Entity blanks: every entity is spread over its blank on load, so no field is ever undefined.
 export const BLANK = {
   category: (name = '', emoji = '[···]', maxSlots = 3) => ({ id: uid(), name, emoji, maxSlots, slots: slotsOf(maxSlots), inventory: [], sectionId: null }),
-  activity: () => ({ id: uid(), name: '', emoji: '', time: '', kind: 'maintenance', realm: 'real', meetBonus: 0, xp: 5, leadgen: false, statEffects: {} }),
+  activity: () => ({ id: uid(), name: '', emoji: '', time: '', kind: 'maintenance', realm: 'real', meetBonus: 0, xp: 5, leadgen: false, statEffects: {}, pillar: '' }),
   section: () => ({ id: uid(), name: '' }),
   method: (id = uid(), name = '', emoji = '◉', maxSlots = 2, maxGain = 15) => ({ id, name, emoji, maxSlots, maxGain, slots: slotsOf(maxSlots), inventory: [] }),
   leadItem: () => ({ id: uid(), name: '', difficulty: 'easy', roi: 'medium', leads: 0 }),
@@ -68,7 +74,7 @@ export const BLANK = {
   milestone: () => ({ id: uid(), name: '', tasks: [] }),
   task: () => ({ id: uid(), name: '', done: false }),
   lifestyle: () => ({ id: uid(), name: '', emoji: '◈', activities: [], schedule: emptyWeek(), createdAt: Date.now() }),
-  entry: () => ({ id: uid(), time: '', name: '', catId: null, activityItemId: null }),
+  entry: () => ({ id: uid(), time: '', name: '', catId: null, activityItemId: null, pillar: '' }),
   timeAlloc: (name = 'Default day') => ({ id: uid(), name, slots: [] }),
   timeSlot: () => ({ id: uid(), title: '', start: '', end: '', color: SLOT_COLORS[0] }),
   element: () => ({ id: uid(), title: '', desc: '', level: 0, levelUp: [], history: [], createdAt: Date.now() }), // body-map stat OR platform
@@ -117,6 +123,8 @@ export function defaults() {
     schedule: emptyWeek(), timeAllocs: [alloc], currentTimeAllocId: alloc.id,
     meStats: [],
     moneyGoal: null, incomes: [],
+    gains: [],            // { id, t, pillar, amount, note } — what each pillar earned you, and when
+    girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],
     log: [],
@@ -217,6 +225,8 @@ export function normalize(raw) {
   o.socialMedia = shapeElements(o.socialMedia);
   o.moneyGoal = o.moneyGoal == null ? null : num(o.moneyGoal) || null;
   o.incomes = fit(BLANK.income, o.incomes).map(i => ({ ...i, amount: num(i.amount), hoursPerWeek: num(i.hoursPerWeek), projections: arr(i.projections) }));
+  o.gains = arr(o.gains).filter(g => g && PILLARS.some(p => p.key === g.pillar) && Number.isFinite(+g.amount)).slice(-2000).map(g => ({ id: g.id || uid(), t: num(g.t, Date.now()), pillar: g.pillar, amount: +g.amount, note: String(g.note || '') }));
+  o.girlsRecurring = Math.max(0, Math.round(num(o.girlsRecurring)));
   o.ratings = shapeRatings(o.ratings);
   o.log = arr(o.log).filter(e => e && e.msg).slice(0, 500).map(e => ({ t: num(e.t, Date.now()), msg: String(e.msg), tag: e.tag || 'event' }));
   return o;

@@ -395,3 +395,13 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 #tleft { color: var(--muted); }
 
 #top .tright { display: flex; align-items: baseline; gap: 10px; white-space: nowrap; } #tweek { font: 700 11px var(--mono); font-style: normal; letter-spacing: .08em; color: var(--text2); }
+
+/* three pillars */
+.pil { padding: 14px 16px; border-radius: var(--r); border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); background: linear-gradient(180deg, color-mix(in srgb, var(--c) 9%, transparent), rgba(255,255,255,.015)); display: flex; flex-direction: column; gap: 8px; cursor: pointer; }
+.pil:active { transform: scale(.985); }
+.pil .ph { display: flex; justify-content: space-between; align-items: center; gap: 10px; font: 700 11px var(--mono); letter-spacing: .1em; color: var(--c); } .pil .ph em { font-style: normal; color: var(--text2); letter-spacing: 0; white-space: nowrap; } .pil .ph .gico { width: 15px; height: 15px; }
+.pil .pm { display: flex; align-items: baseline; gap: 8px; } .pil .pm b { font: 800 28px/1 var(--sans); } .pil .pm span { font: 400 12px var(--mono); color: var(--muted); flex: 1; } .pil .pm strong { font: 700 14px var(--mono); color: var(--text); white-space: nowrap; }
+.pil .bar { height: 5px; } .pil .bar i { box-shadow: none; }
+.alloc { padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.alloc small { letter-spacing: .1em; } .abar { display: flex; height: 14px; border-radius: 99px; overflow: hidden; gap: 2px; } .abar i { display: block; }
+.aleg { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 400 12px var(--mono); color: var(--text2); } .aleg span { display: flex; align-items: center; gap: 6px; } .aleg i { width: 9px; height: 9px; border-radius: 99px; display: block; } .aleg b { color: var(--text); }

@@ -137,6 +137,17 @@ export function nowNext() {
   return { cur: es.find(x => inside(x.r)) || null, next: es.find(x => x.r.start > m) || null, count: D.schedule[todayKey()].length, hours: sum(es.map(x => x.r.hours)) };
 }
 
+// ── Pillars: what each one earns you per week/month, and how much of your planned time it gets
+export const entryPillar = e => e.pillar || findActivity(e.activityItemId)?.item.pillar || '';
+export function pillarTime(schedule = D.schedule) {
+  const h = { money: 0, social: 0, girls: 0, other: 0 };
+  for (const d of DAYS) for (const e of schedule[d]) h[entryPillar(e) || 'other'] += parseRange(e.time)?.hours || 0;
+  const total = h.money + h.social + h.girls + h.other;
+  return { h, total, pct: k => (total ? h[k] / total * 100 : 0) };
+}
+export const gainSum = (pillar, days) => sum(D.gains.filter(g => g.pillar === pillar && g.t >= Date.now() - days * DAY).map(g => g.amount));
+export const pillarRate = pillar => ({ week: gainSum(pillar, 7), perWeek: gainSum(pillar, 28) / 4, month: gainSum(pillar, 30) });
+
 // ── Lifestyle
 export function lifestyleContrib(l) {
   const tot = {}, add = (k, v) => { tot[k] = (tot[k] || 0) + v; };

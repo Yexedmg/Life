@@ -3,7 +3,7 @@ import { D, commit } from '../store.js';
 import { BLANK, TIER_COLOR, TIERS, uid, CAP } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge } from '../ui.js';
 import { nodePct, ratingsPct, findRating, money, fmtDate, clamp } from '../calc.js';
-import { log } from '../game.js';
+import { log, gain } from '../game.js';
 
 // ════════ RATINGS ════════
 const pot = n => { const p = nodePct(n); return p == null ? '<div class="split dim"><span>not rated yet</span></div>' : `${bar(p, 'pot')}<div class="split dim"><span>${Math.round(p)}% of potential</span><span>${Math.round(100 - p)}% gap</span></div>`; };
@@ -69,7 +69,7 @@ page('ratingdetail', {
 // ════════ MONEY ════════
 const goalForm = () => form({ title: 'Money goal', sub: 'How much are you chasing?', fields: [{ name: 'goal', label: 'The number ($)', type: 'number', min: 0, value: D.moneyGoal ?? '' }], submit: 'Call it', onSubmit: v => { D.moneyGoal = v.goal || null; } });
 const balForm = (title, sign) => form({ title, fields: [{ name: 'n', label: sign ? 'How much? ($)' : "What's actually in the account? ($)", type: 'number', value: sign ? '' : D.player.stats.money, required: true }, ...(sign ? [{ name: 'why', label: 'For what?' }] : [])],
-  onSubmit: v => { const s = D.player.stats; if (sign) { s.money += sign * v.n; log(`${sign > 0 ? '+' : '−'}${money(v.n)}${v.why ? ' — ' + v.why : ''}`, 'event'); } else { s.money = v.n; log(`Balance set to ${money(v.n)}`, 'event'); } } });
+  onSubmit: v => { const s = D.player.stats; if (sign) { s.money += sign * v.n; if (sign > 0) gain('money', v.n, v.why); log(`${sign > 0 ? '+' : '−'}${money(v.n)}${v.why ? ' — ' + v.why : ''}`, 'event'); } else { s.money = v.n; log(`Balance set to ${money(v.n)}`, 'event'); } } });
 page('money', {
   title: '$ MONEY',
   render() {

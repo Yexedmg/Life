@@ -3,7 +3,7 @@ import { D, commit, ui } from '../store.js';
 import { BLANK, CAP } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, fold, GIRL } from '../ui.js';
 import { girl, chasers, taken, meetBar, meetParts, expectedRarity, vibe, vibeCeiling, leadBar, r1, leadMethods } from '../calc.js';
-import { addXP, applyEffects, log, setStatus } from '../game.js';
+import { addXP, applyEffects, log, setStatus, gain } from '../game.js';
 import { openElement, elementForm, lastChange } from './me.js';
 
 const rar = n => `<span class="rar r${n}">${'★'.repeat(n)}${'☆'.repeat(5 - n)}</span>`;
@@ -53,7 +53,7 @@ const girlCard = g => `<div class="row" data-name="${esc(g.name.toLowerCase())}"
 function friendForm(f) {
   form({ title: f ? `Edit ${f.name}` : 'New friend', fields: [{ name: 'name', label: 'Name', value: f?.name, required: true }, { name: 'origin', label: 'Where from?', value: f?.origin },
     { name: 'rarity', label: 'Social star — how much do they open up your world?', type: 'seg', value: f?.rarity || 3, options: [1, 2, 3, 4, 5].map(n => [n, n + '★']) }, { name: 'notes', label: 'Notes', type: 'textarea', value: f?.notes }],
-    onSubmit: v => { v.rarity = +v.rarity || 3; if (f) Object.assign(f, v); else { D.friends.push({ ...BLANK.friend(), ...v }); log(`New friend: ${v.name} (${v.rarity}★)`, 'friend'); } },
+    onSubmit: v => { v.rarity = +v.rarity || 3; if (f) Object.assign(f, v); else { D.friends.push({ ...BLANK.friend(), ...v }); gain('social', 1, v.name); log(`New friend: ${v.name} (${v.rarity}★)`, 'friend'); } },
     onDelete: f ? () => destroy(`${f.name} — dropped.`, () => { D.friends = D.friends.filter(x => x !== f); }) : null, del: 'Drop' });
 }
 function friendSheet(id) {

@@ -1,6 +1,6 @@
 // The slot engine's three faces: Activities, Lead Generation, The Entity. One board component for all.
 import { D, commit } from '../store.js';
-import { BLANK, DIFFS, ROIS, ROI_TIER, ROI_COLOR, GAIN, STAT, LEAD_MAX_STARS, LEADS_PER_STAR } from '../schema.js';
+import { PILLARS, BLANK, DIFFS, ROIS, ROI_TIER, ROI_COLOR, GAIN, STAT, LEAD_MAX_STARS, LEADS_PER_STAR } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, fold } from '../ui.js';
 import { actCats, actSections, leadMethods, slotted, isSlotted, slottedActivities, slotHours, sum, parseRange, fxKeys, itemGain, methodGain, leadBar, leadCeiling,
   leadStars, totalLeads, methodRoi, compGain, vibe, vibeCeiling, actVibe, r1, balance, curBorough, scopeOwner } from '../calc.js';
@@ -35,13 +35,14 @@ function activityForm(cat, it) {
       { name: 'from', label: 'From', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' },
       { name: 'kind', label: 'Does it grow you, hold you, or cost you?', type: 'seg', value: it?.kind || 'maintenance', options: Object.entries(KIND).map(([k, v]) => [k, `${v[0]} ${v[1]}`]) },
       { name: 'realm', label: 'Realm', type: 'seg', value: it?.realm || 'real', options: [['real', '⬢ Real'], ['synthetic', '◇ Synthetic']] },
+      { name: 'pillar', label: 'Which pillar does this time go to?', type: 'seg', value: it?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
       { name: 'meetBonus', label: 'Meet bonus — does it put you near people?', type: 'range', min: 0, max: 15, value: it?.meetBonus ?? 0 },
       { name: 'xp', label: 'XP per Do', type: 'number', min: 1, max: 50, step: 1, value: it?.xp ?? 5 },
       { name: 'leadgen', label: '⚡ Generates leads (mirrors into Lead Gen)', type: 'check', value: it?.leadgen },
       { name: 'statEffects', label: 'Stat effects per Do', type: 'fx', value: it?.statEffects || {} }],
     onSubmit: v => {
       if ((v.from || v.to) && !(v.from && v.to)) { toast('Both times, or neither.'); return false; }
-      const data = { name: v.name, time: v.from ? `${v.from}–${v.to}` : '', kind: v.kind || 'maintenance', realm: v.realm || 'real', meetBonus: v.meetBonus || 0, xp: Math.max(1, Math.min(50, v.xp || 5)), leadgen: v.leadgen, statEffects: v.statEffects };
+      const data = { name: v.name, pillar: v.pillar || '', time: v.from ? `${v.from}–${v.to}` : '', kind: v.kind || 'maintenance', realm: v.realm || 'real', meetBonus: v.meetBonus || 0, xp: Math.max(1, Math.min(50, v.xp || 5)), leadgen: v.leadgen, statEffects: v.statEffects };
       if (it) Object.assign(it, data); else cat.inventory.push({ ...BLANK.activity(), ...data });
     },
   });

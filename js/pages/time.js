@@ -1,8 +1,8 @@
 // TIME: Time Allocation (the ideal day), the weekly schedule + analytics, and Lifestyles.
 import { D, commit, ui } from '../store.js';
-import { BLANK, DAYS, STAT, SLOT_COLORS } from '../schema.js';
+import { BLANK, DAYS, STAT, SLOT_COLORS, PILLARS } from '../schema.js';
 import { page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol, fold } from '../ui.js';
-import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum } from '../calc.js';
+import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime } from '../calc.js';
 import { log } from '../game.js';
 
 const moveOptions = () => elements().filter(x => x.el.levelUp.length).map(x => ({ group: `⤴ ${x.el.title}`, options: x.el.levelUp.map(m => [`m|${x.el.id}|${m.id}`, m.text]) }));
@@ -15,7 +15,8 @@ function entryForm(schedule, day, e) {
     title: e ? 'Edit entry' : `${day.toUpperCase()} — add`,
     fields: [{ name: 'src', label: 'What is it?', type: 'select', value: cur, options: [['', '— Custom (name it below) —'],
       ...actCats().filter(c => c.inventory.length).map(c => ({ group: c.name, options: c.inventory.map(i => [`a|${c.id}|${i.id}`, i.name + (i.time ? ` (${i.time})` : '')]) })), ...moveOptions()] },
-      { name: 'name', label: 'Custom name', value: cur ? '' : e?.name }, { name: 'from', label: 'From (empty = the activity\'s own time)', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' }],
+      { name: 'name', label: 'Custom name', value: cur ? '' : e?.name },
+      { name: 'pillar', label: 'Which pillar does this time go to?', type: 'seg', value: e?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] }, { name: 'from', label: 'From (empty = the activity\'s own time)', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' }],
     submit: 'Paint it',
     onSubmit: v => {
       const [t, a, b] = v.src.split('|'), f = t === 'a' ? findActivity(b) : null, mv = t === 'm' ? resolveMove({ statId: a, moveId: b }) : null;
@@ -24,7 +25,7 @@ function entryForm(schedule, day, e) {
       const name = f ? f.item.name : mv ? mv.move.text : v.name;
       if (!name) { toast('Name it, or pick something.'); return false; }
       if (!parseRange(time) || v.from && v.from === v.to) { toast('From and until — both, and not the same.'); return false; }
-      const data = { time, name, catId: f ? a : null, activityItemId: f ? b : null };
+      const data = { time, name, catId: f ? a : null, activityItemId: f ? b : null, pillar: v.pillar || '' };
       if (e) { Object.assign(e, data); delete e.levelUpRef; if (mv) e.levelUpRef = refOf(v.src); }
       else schedule[day].push({ ...BLANK.entry(), ...data, ...(mv ? { levelUpRef: refOf(v.src) } : {}) });
     },
@@ -55,6 +56,14 @@ export function weekPanel(schedule, key) {
       <div class="trow"><span>Not Scheduled — Free/Unplanned</span><b class="muted">${Math.max(0, 24 - d.hours)}h · ${pct(Math.max(0, 24 - d.hours), 24)}%</b></div></div>
     ${sect(`WEEKLY TOTAL · ${W.hours}h of 168h`)}
     ${group('BY STAT', W.byStat, W.statDetail, k => `${STAT[k].icon} ${STAT[k].label}`)}${group('BY CATEGORY', W.byCat, W.catDetail, k => k)}`)}`;
+}
+
+// Where the planned week goes, split across the three pillars.
+export function allocBar(schedule = D.schedule) {
+  const t = pillarTime(schedule), parts = [...PILLARS.map(p => [p.short, t.h[p.key], p.color]), ['Untagged', t.h.other, '#4A4A4A']];
+  if (!t.total) return `<div class="alloc none"><small>TIME SPLIT</small><p>Nothing planned this week, so nothing to split.</p></div>`;
+  return `<div class="alloc"><small>TIME SPLIT · ${t.total}h planned this week</small><div class="abar">${parts.filter(x => x[1]).map(x => `<i style="flex:${x[1]};background:${x[2]}"></i>`).join('')}</div>
+    <div class="aleg">${parts.map(x => `<span><i style="background:${x[2]}"></i>${x[0]} <b>${Math.round(x[1] / t.total * 100)}%</b></span>`).join('')}</div></div>`;
 }
 
 // ── Time Allocation
@@ -99,6 +108,7 @@ page('schedule', {
     <div class="card sh-cyan">${strip(ta)}${ta.slots.length ? `<div class="split dim"><span>${ta.slots.length} blocks</span><span>${r1(hrs)}h painted · ${r1(24 - hrs)}h open</span></div>` : `<p class="hint">Empty day — tap '+ Add' and paint your perfect one.</p>`}
       <div class="catfoot"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎ ${esc(ta.name)}</button><button class="sbtn" ${on(() => slotForm(ta))}>+ Add</button></div></div>
     ${sect('THE ACTUAL WEEK')}
+    ${allocBar()}
     ${weekPanel(D.schedule, 'main')}`;
   },
 });
