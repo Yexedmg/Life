@@ -413,3 +413,11 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .mt > div, .mt { }
 .mt b { flex: 1; }
 .mt small { text-align: right; }
+
+/* menu: bigger rows */
+.mt { padding: 18px 18px; gap: 16px; border-radius: var(--r); }
+.mt i { font-size: 24px; width: 32px; }
+.mt b { font-size: 19px; }
+.mt small { font-size: 13px; }
+.mg > span { font-size: 13px; margin: 14px 2px 10px; }
+.mgrid { gap: 10px; }
