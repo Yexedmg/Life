@@ -12,6 +12,7 @@ export const CAP = 25;
 export const STATS = [
   { key: 'money', label: 'Money', icon: '$', desc: "What's in the account. Spent on upgrades." },
   { key: 'boldness', label: 'Boldness', icon: '!', desc: 'Raised by approaches that land. Gates the risky moves.' },
+  { key: 'initiative', label: 'Initiative', icon: '▶', desc: 'Making the first move. Starting things without waiting to be asked.' },
   { key: 'fear', label: 'Fear', icon: '~', desc: 'Grows from failure and rejection. Offsets boldness.' },
   { key: 'health', label: 'Health', icon: '+', desc: 'Raised by sports, rest, grooming. Drained by overwork.' },
   { key: 'social', label: 'Social', icon: '●', desc: 'Raised by hangouts and parties. Feeds the Meet bar hard.' },
@@ -107,7 +108,7 @@ export function defaults() {
     version: VERSION,
     player: {
       level: 1, xp: 0,
-      stats: { money: 0, boldness: 1, fear: 1, health: 5, social: 1, charm: 1, sexAppeal: 1, power: 1, fight: 1, looks: 1, vibe: 0 },
+      stats: { money: 0, boldness: 1, initiative: 1, fear: 1, health: 5, social: 1, charm: 1, sexAppeal: 1, power: 1, fight: 1, looks: 1, vibe: 0 },
       streaks: { coldApproach: 0 },
     },
     girls: [], friends: [],

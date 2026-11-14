@@ -78,12 +78,13 @@ page('home', {
   title: 'HOME',
   render() {
     const p = D.player, need = xpForLevel(p.level), ns = D.northstar, era = currentEra();
-    const nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt);
+    const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt);
     const all = [...PILLARS, TIME], active = all.filter(f => factorActive(f.key)).length;
     return `
     <div class="hud-player" ${on(() => go('totalstats'))}>
       <div class="lv"><small>LEVEL</small><b>${p.level}</b></div>
       <div class="xp"><div class="split"><span>EXPERIENCE</span><b>${Math.round(p.xp)} / ${need}</b></div>${bar(p.xp / need * 100, 'cyan')}</div>
+      <div class="lv age" ${on((_, e) => { e.stopPropagation(); birthdayForm(); })}><small>AGE</small><b>${bd ? bd.age : '–'}</b><em>${bd ? (bd.today ? 'birthday today' : `${bd.days}d to ${bd.turning}`) : 'tap to set'}</em></div>
     </div>
 
     <div class="north ${ns ? '' : 'none'}" ${on(northstarForm)}>

@@ -185,7 +185,8 @@ export function birthday() {
   const now = new Date(); let next = new Date(now.getFullYear(), b.getMonth(), b.getDate());
   if (next.getTime() < today0()) next = new Date(now.getFullYear() + 1, b.getMonth(), b.getDate());
   const prev = new Date(next.getFullYear() - 1, b.getMonth(), b.getDate());
-  return { next: next.getTime(), turning: next.getFullYear() - b.getFullYear(), days: Math.ceil((next - now) / DAY), pct: clamp((now - prev) / (next - prev) * 100), today: next.getTime() === today0() };
+  const today = next.getTime() === today0(), turning = next.getFullYear() - b.getFullYear();
+  return { age: today ? turning : turning - 1, next: next.getTime(), turning, days: Math.ceil((next - now) / DAY), pct: clamp((now - prev) / (next - prev) * 100), today: next.getTime() === today0() };
 }
 
 // ── Balance (Total Stats)
