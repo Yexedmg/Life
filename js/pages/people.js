@@ -7,7 +7,7 @@ import { addXP, applyEffects, log, setStatus, gain } from '../game.js';
 import { openElement, elementForm, lastChange } from './me.js';
 
 const rar = n => `<span class="rar r${n}">${'★'.repeat(n)}${'☆'.repeat(5 - n)}</span>`;
-const STATUS = { Talking: 'Talking', Dating: 'Dating', Common: 'Common', TheOne: 'THE ONE', Sidelined: 'Sidelined' };
+const STATUS = { Talking: 'Talking', Dating: 'Dating', Common: 'Girlfriend', TheOne: 'Girlfriend', Sidelined: 'Sidelined' };
 
 function girlForm(g, preset = {}) {
   form({
@@ -41,8 +41,7 @@ function girlSheet(id) {
         ${act('Went on a date', () => { g.affinity = Math.min(100, g.affinity + 12); g.dates++; if (g.status === 'Talking') g.status = 'Dating'; applyEffects({ charm: 1 }); log(`Date #${g.dates} with ${g.name}`, 'date'); addXP(8, `date with ${g.name}`); }, 'good')}
         ${act('−5', () => { g.affinity = Math.max(0, g.affinity - 5); })}${act('+5', () => { g.affinity = Math.min(100, g.affinity + 5); })}
       </div><div class="btns">
-        ${active ? gate(g.affinity >= 60, 'Make it official', 'needs affinity 60', () => { setStatus(g, 'Common'); log(`${g.name} — official. Slot 2.`, 'relationship'); addXP(25, `${g.name} said yes`); }, 'warm') : ''}
-        ${g.status !== 'TheOne' && g.status !== 'Sidelined' ? gate(g.affinity >= 90 && g.looksLikeYou >= 70, 'She is The One', 'needs affinity 90 + looks-like-you 70', () => { setStatus(g, 'TheOne'); log(`${g.name} is THE ONE. Slot 1.`, 'relationship'); addXP(80, `${g.name} — The One`); }, 'warm') : ''}
+        ${active ? gate(g.affinity >= 60, 'Make it official', 'needs affinity 60', () => { setStatus(g, 'Common'); log(`${g.name} — official. Girlfriend.`, 'relationship'); addXP(25, `${g.name} said yes`); }, 'warm') : ''}
         ${g.status !== 'Sidelined' ? act('Sideline', () => { setStatus(g, 'Sidelined'); log(`${g.name} sidelined`, 'relationship'); }) : act('Bring back', () => setStatus(g, 'Talking'))}
         ${btn('Edit', () => girlForm(g))}${btn('Release', () => { closeModal(); destroy(`${g.name} — released.`, () => { D.girls = D.girls.filter(x => x.id !== id); }); }, 'danger')}${btn('Close', closeModal)}
       </div>`;
@@ -67,11 +66,11 @@ function friendSheet(id) {
 page('girls', {
   title: 'GIRLS',
   render() {
-    const ch = chasers().length, r = D.relationships, one = girl(r.theOne);
-    return `<div class="card hero sh-pink"><small>${GIRL} ${one ? 'SLOT 1 — ' + esc(one.name).toUpperCase() : 'SLOT 1 — EMPTY'}</small><div class="count"><b>${ch} : 1</b><span>girls in play<br>${taken() ? taken() + ' slot' + (taken() === 1 ? '' : 's') + ' filled' : 'no girlfriend'}</span></div></div>
+    const ch = chasers().length;
+    return `<div class="card hero sh-pink"><small>${GIRL} GIRLS</small><div class="count"><b>${ch} : 1</b><span>girls in play<br>${taken()} girlfriend${taken() === 1 ? '' : 's'}</span></div></div>
     ${row({ icon: '✦', title: 'The Entity', desc: 'Your overall magnetism.', val: r1(vibe()) + '%', fn: () => go('vibe') })}
     ${row({ icon: '≡', title: 'Roster', desc: `${D.girls.length} girls · ${D.friends.length} friends`, fn: () => go('roster') })}
-    ${row({ icon: GIRL, title: 'Girlfriends', desc: 'Slots, girls in play, sidelined.', val: one ? '1' : '<span class="red">EMPTY</span>', fn: () => go('life') })}
+    ${row({ icon: GIRL, title: 'Girlfriends', desc: 'Girlfriends, girls in play, sidelined.', val: taken(), fn: () => go('life') })}
     ${row({ icon: '!', title: 'Meet', desc: 'Meet bar. Log your approaches.', val: Math.round(meetBar()) + '%', fn: () => go('meet') })}
     ${row({ icon: '◉', title: 'Lead Generation', desc: 'Where they come from.', val: r1(leadBar()) + '%', fn: () => go('leadgen') })}`;
   },
@@ -94,7 +93,7 @@ page('roster', {
 page('life', {
   title: 'GIRLFRIENDS',
   render() {
-    const r = D.relationships, one = girl(r.theOne), ch = chasers().sort((a, b) => b.affinity - a.affinity);
+    const r = D.relationships, ch = chasers().sort((a, b) => b.affinity - a.affinity);
     const list = ids => ids.map(girl).filter(Boolean).map(girlCard).join('');
     const P = D.pool, had = girlfriendsEver(), share = P.size ? had / P.size * 100 : 0;
     const poolForm = () => form({ title: 'The pool', sub: `How many women aged ${POOL_MIN_AGE} to ${P.maxAge} live where you live? Look it up once (your national statistics office has it by city and age) and enter it.`,
@@ -105,11 +104,9 @@ page('life', {
     <div class="card dex" ${on(poolForm)}><small>REGISTERED · women ${POOL_MIN_AGE}–${P.maxAge} where you live</small>
       <div class="dexn"><b>${had}</b><i>/</i><span>${P.size ? P.size.toLocaleString('en-US') : '?'}</span></div>
       ${P.size ? `${bar(Math.max(share, had ? 0.5 : 0), 'pink')}<div class="split dim"><span>${had === 1 ? 'girlfriend' : 'girlfriends'}, now and before</span><span>${share < 0.01 && had ? '<0.01' : r1(share * 100) / 100}% of them</span></div>` : '<p>Tap and enter how many are out there. Then you see your number against it.</p>'}</div>
-    ${sect('SLOT 1 — THE ONE')}
-    ${one ? girlCard(one) : `<div class="slot big"><span>EMPTY</span><small>${ch.length ? 'Affinity 90 + looks-like-you 70 gets someone here. Who is closest?' : "Nobody's even in play. This doesn't fill itself."}</small></div>`}
-    ${sect('SLOT 2 — THE COMMONS')}
-    ${list(r.commons) || empty('Empty. Affinity 60 makes it official.')}
-    ${sect(`CHASERS · ${ch.length}`, '+ Met someone', () => girlForm())}
+    ${sect(`GIRLFRIENDS · ${r.commons.length}`)}
+    ${list(r.commons) || empty('None right now. Affinity 60 makes it official.')}
+    ${sect(`IN PLAY · ${ch.length}`, '+ Met someone', () => girlForm())}
     ${ch.map(girlCard).join('') || empty('Nobody talking, nobody dating. Leads first: go generate.')}
     ${r.sidelined.length ? sect(`SIDELINED · ${r.sidelined.length}`) + list(r.sidelined) : ''}`;
   },

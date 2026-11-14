@@ -98,7 +98,7 @@ function bindMap(view) {
 page('me', {
   title: 'STATUS',
   render() {
-    const s = D.player.stats, r = D.relationships, one = girl(r.theOne);
+    const s = D.player.stats;
     return `<div class="statgrid">${STATS.map(st => `<div class="stat" ${on(() => go('stat', { key: st.key }))}><i>${st.icon}</i><span>${st.label}</span><b>${st.key === 'money' ? money(s.money) : `${r1(s[st.key])}<em>/${CAP}</em>`}</b>${st.key === 'money' ? '' : bar(s[st.key] / CAP * 100, st.key === 'fear' ? 'red' : 'cyan')}</div>`).join('')}</div>
     ${sect('BODY MAP', '+ Stat', () => elementForm('me'))}
     <div class="card mapcard sh-purple">${bodyMap()}${D.meStats.length ? '<p class="hint">Drag a dot to pin it. Tap to open.</p>' : '<p class="hint">Nothing on the map yet. What are the parts of you? Tap + Stat.</p>'}</div>`;
@@ -129,7 +129,7 @@ page('stat', {
 page('portal', {
   title: 'MENU',
   render() {
-    const s = D.player.stats, one = girl(D.relationships.theOne), rp = ratingsPct(), open = D.manifests.filter(m => !m.achievedAt).length;
+    const s = D.player.stats, rp = ratingsPct(), open = D.manifests.filter(m => !m.achievedAt).length;
     const t = (icon, label, sub, to, params) => `<div class="mt" ${on(() => go(to, params))}><i>${icon}</i><b>${label}</b><small>${sub}</small></div>`;
     const grp = (title, tiles) => `<div class="mg"><span>${title}</span><div class="mgrid">${tiles.join('')}</div></div>`;
     return grp('PEOPLE', [
@@ -140,7 +140,7 @@ page('portal', {
       t('✦', 'The Entity', r1(vibe()) + '% vibe', 'vibe'), t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'),
       t('★', 'Abilities', `${D.abilities.filter(a => a.unlocked).length}/${D.abilities.length} unlocked`, 'abilities')])
     + grp('GOALS', [
-      t('◎', 'Quests', `${open} open`, 'manifest'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
+      t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Adventures', `${D.adventures.filter(a => !a.doneAt).length} waiting`, 'adventures'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`])
     + grp('WORLDS', [
       t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', `${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'}`, 'wardrobe'), t('⬢', 'World map', 'cities & moves', 'world')])

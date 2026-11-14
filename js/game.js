@@ -56,7 +56,6 @@ export function setLevel(el, to) {
 
 // ── Relationships: girl.status is the truth; D.relationships is derived in integrity().
 export function setStatus(g, status) {
-  if (status === 'TheOne') for (const o of D.girls) if (o.status === 'TheOne' && o !== g) o.status = 'Sidelined';
   g.status = status;
 }
 
@@ -93,9 +92,8 @@ export function integrity() {
   if (!boroughs.some(b => b.id === W.currentBoroughId)) W.currentBoroughId = W.mainBoroughId;
   W.currentCityId = W.cities.find(c => c.boroughs.some(b => b.id === W.currentBoroughId))?.id || W.cities[0]?.id || '';
 
-  let one = null;
-  for (const g of D.girls) if (g.status === 'TheOne') { if (one) g.status = 'Sidelined'; else one = g.id; }
-  D.relationships = { theOne: one, commons: D.girls.filter(g => g.status === 'Common').map(g => g.id), sidelined: D.girls.filter(g => g.status === 'Sidelined').map(g => g.id) };
+  for (const g of D.girls) if (g.status === 'TheOne') g.status = 'Common'; // there is no "The One" — she is a girlfriend
+  D.relationships = { theOne: null, commons: D.girls.filter(g => g.status === 'Common').map(g => g.id), sidelined: D.girls.filter(g => g.status === 'Sidelined').map(g => g.id) };
 
   for (const s of scopes()) syncLifestyleLeads(s);
   syncOnlinePresence();

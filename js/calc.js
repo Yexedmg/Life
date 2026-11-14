@@ -76,7 +76,7 @@ export const vibeCeiling = () => avg([leadCeiling(), ...D.vibeComponents.map(c =
 
 // ── People
 export const chasers = () => D.girls.filter(g => g.status === 'Talking' || g.status === 'Dating');
-export const taken = () => (D.relationships.theOne ? 1 : 0) + D.relationships.commons.length;
+export const taken = () => D.relationships.commons.length;
 export const girl = id => D.girls.find(g => g.id === id) || null;
 export function meetParts() {
   const s = D.player.stats;
