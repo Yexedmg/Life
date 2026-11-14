@@ -143,7 +143,7 @@ page('portal', {
       t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Adventures', `${D.adventures.filter(a => !a.doneAt).length} waiting`, 'adventures'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`])
     + grp('WORLDS', [
-      t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', `${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'}`, 'wardrobe'), t('⬢', 'World map', 'cities & moves', 'world')])
+      t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', `${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'}`, 'wardrobe'), t('▣', 'Car', D.car.has ? esc(D.car.name) : D.car.wantName ? 'want: ' + esc(D.car.wantName) : 'none', 'car'), t('⬢', 'World map', 'cities & moves', 'world')])
     + grp('SYSTEM', [
       t('Σ', 'Total stats', `level ${D.player.level}`, 'totalstats'), t('≣', 'Log', `${D.log.length} entries`, 'log'), t('⇅', 'Save / load', 'backup & import', 'saveload')]);
   },

@@ -47,6 +47,7 @@ page('ratings', {
     const p = ratingsPct();
     return `<div class="card hero sh-gold"><small>⭐ EVERYTHING YOU RUN — RATED S TO F, PUSHED TO ITS POTENTIAL</small><div class="count"><b>${p == null ? '—' : Math.round(p) + '%'}</b><span>of potential<br>100% = everything S</span></div>${p == null ? '' : bar(p, 'pot')}</div>
     <div class="card" ${on(() => go('wardrobe'))}><div class="split"><h3>◆ Wardrobe</h3><b>${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'} →</b></div>${D.outfits.length ? potBar(outfitPct()) : '<div class="split dim"><span>How many complete outfits do you own?</span></div>'}</div>
+    <div class="card" ${on(() => go('car'))}><div class="split"><h3>▣ Car</h3><b>${D.car.has ? esc(D.car.name) : 'none'} →</b></div>${D.car.wantName ? `<div class="split dim"><span>want: ${esc(D.car.wantName)}</span></div>` : ''}</div>
     ${sect('CATEGORIES', '+ Category', () => nodeForm(D.ratings, null, 1))}
     ${D.ratings.map(n => nodeRow(n, [n.id])).join('') || empty('Nothing to rate. What do you run every day?')}`;
   },
@@ -87,6 +88,26 @@ page('wardrobe', {
     <div class="btns">${btn('+ Outfit', () => outfitForm(), 'good')}</div>
     ${order.map(k => `<div class="benchl">${k.toUpperCase()} · ${by[k].length}</div>${by[k].sort((a, b) => TIER_VAL[b.tier] - TIER_VAL[a.tier]).map(o => `<div class="row" ${on(() => outfitForm(o))}><div class="ric">${tierBadge(o.tier)}</div><div class="rbody"><b>${esc(o.name)}</b>${o.pieces ? `<small>${esc(o.pieces)}</small>` : ''}</div></div>`).join('')}`).join('') || empty('Empty wardrobe. How many complete outfits do you own? Add them and rate them.')}
     ${OCC.filter(k => !by[k]).length && D.outfits.length ? `<p class="hint">Nothing for: ${OCC.filter(k => !by[k]).join(', ')}</p>` : ''}`;
+  },
+});
+
+// ════════ CAR ════════
+function carForm() {
+  const c = D.car;
+  form({ title: 'Your car', sub: 'What you drive now, and what you want to drive.',
+    fields: [{ name: 'has', label: 'I have a car', type: 'check', value: c.has }, { name: 'name', label: 'Which one?', value: c.name, placeholder: 'VW Polo 2015' }, { name: 'tier', label: 'How good is it, really?', type: 'tier', value: c.tier },
+      { name: 'wantName', label: 'The car you want', value: c.wantName, placeholder: 'BMW 1 Series' }, { name: 'wantPrice', label: 'What does it cost? ($)', type: 'number', min: 0, value: c.wantPrice || '' }, { name: 'notes', label: 'Notes', type: 'textarea', value: c.notes }],
+    onSubmit: v => { if (v.has && !v.name) { toast('Which car is it?'); return false; } Object.assign(c, { has: v.has, name: v.has ? v.name : '', tier: v.tier || 'C', wantName: v.wantName, wantPrice: Math.max(0, v.wantPrice || 0), notes: v.notes }); } });
+}
+page('car', {
+  title: 'CAR',
+  render() {
+    const c = D.car, bal = D.player.stats.money, pct = c.wantPrice ? clamp(bal / c.wantPrice * 100) : 0;
+    const gotIt = () => { const snap = { ...c }; log(`Got the car: ${c.wantName}`, 'upgrade'); gain('looks', 1, c.wantName); Object.assign(c, { has: true, name: c.wantName, tier: 'A', wantName: '', wantPrice: 0 }); commit(); toast(`${c.name} — it's yours.`, () => { Object.assign(D.car, snap); commit(); }); };
+    return `<div class="card hero ${c.has ? 'sh-cyan' : 'dashed'}"><small>▣ WHAT YOU DRIVE</small>${c.has ? `<h2>${tierBadge(c.tier)} ${esc(c.name)}</h2>` : '<h2 class="muted">No car.</h2>'}${c.notes ? `<p>${esc(c.notes)}</p>` : ''}</div>
+    <div class="card ${c.wantName ? 'sh-gold' : 'dashed'}"><small>✧ THE CAR YOU WANT</small>${c.wantName ? `<h3>${esc(c.wantName)}</h3>${c.wantPrice ? `<div class="split"><span>${money(bal)} of ${money(c.wantPrice)}</span><b>${Math.round(pct)}%</b></div>${bar(pct, 'gold')}<div class="split dim"><span>${bal >= c.wantPrice ? 'You can afford it.' : money(c.wantPrice - bal) + ' to go'}</span></div>` : '<p>No price set.</p>'}
+      <div class="catfoot"><button class="sbtn" ${on(gotIt)}>Got it</button></div>` : '<p>Which car do you want? Tap Edit and name it.</p>'}</div>
+    <div class="btns">${btn('Edit', carForm, 'good')}</div>`;
   },
 });
 
