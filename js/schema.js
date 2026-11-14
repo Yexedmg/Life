@@ -127,6 +127,8 @@ export function defaults() {
     meStats: [],
     moneyGoal: null, incomes: [],
     gains: [],            // { id, t, pillar, amount, note } — what each pillar earned you, and when
+    targets: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },   // what you want per week; 0 = no target
+    baseline: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },  // your count from before the app, added to the total
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],

@@ -151,6 +151,10 @@ export function factorActive(key) {
   if (key === 'girls' && (taken() > 0 || D.girlsRecurring > 0)) return true;
   return gainSum(key, ACTIVE_DAYS) > 0;
 }
+// Calendar weeks, Monday to Sunday — the same week the top bar shows.
+export function weekStart(back = 0) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (d.getDay() + 6) % 7 - back * 7); return d.getTime(); }
+export function weekGain(key, back = 0) { const a = weekStart(back), b = back ? weekStart(back - 1) : Infinity; return sum(D.gains.filter(g => g.pillar === key && g.t >= a && g.t < b).map(g => g.amount)); }
+export const totalGain = key => (D.baseline[key] || 0) + sum(D.gains.filter(g => g.pillar === key).map(g => g.amount));
 export const lastGain = key => D.gains.filter(g => g.pillar === key).at(-1)?.t || null;
 export const gainSum = (pillar, days) => sum(D.gains.filter(g => g.pillar === pillar && g.t >= Date.now() - days * DAY).map(g => g.amount));
 export const pillarRate = pillar => ({ week: gainSum(pillar, 7), perWeek: gainSum(pillar, 28) / 4, month: gainSum(pillar, 30) });

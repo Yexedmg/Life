@@ -60,7 +60,7 @@ function friendSheet(id) {
   modal(() => {
     const f = D.friends.find(x => x.id === id); if (!f) return null;
     return `<h2>${esc(f.name)}</h2><p class="msub">${rar(f.rarity)}${f.origin ? ' · ' + esc(f.origin) : ''} · +${f.rarity * 0.5} Meet bar</p>${f.notes ? `<p class="desc">${esc(f.notes)}</p>` : ''}
-      <div class="btns">${btn('Hung out', () => { applyEffects({ social: f.rarity, charm: 1 }); log(`Hung out with ${f.name}`, 'friend'); addXP(3 + f.rarity, `time with ${f.name}`); commit(); toast(`+${f.rarity} social`); }, 'good')}${btn('Edit', () => friendForm(f))}${btn('Close', closeModal)}</div>`;
+      <div class="btns">${btn('Hung out', () => { applyEffects({ social: f.rarity, charm: 1 }); gain('social', 1, `with ${f.name}`); log(`Hung out with ${f.name}`, 'friend'); addXP(3 + f.rarity, `time with ${f.name}`); commit(); toast(`+${f.rarity} social`); }, 'good')}${btn('Edit', () => friendForm(f))}${btn('Close', closeModal)}</div>`;
   });
 }
 
