@@ -1,6 +1,6 @@
 // Worlds: Ratings (⭐) and Money (balance and goal only — no career detail).
 import { D, commit } from '../store.js';
-import { BLANK, TIER_COLOR, TIERS, uid, CAP } from '../schema.js';
+import { BLANK, TIER_COLOR, TIERS, TIER_VAL, uid, CAP } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge } from '../ui.js';
 import { nodePct, ratingsPct, findRating, money, fmtDate, clamp } from '../calc.js';
 import { log, gain } from '../game.js';
@@ -46,6 +46,7 @@ page('ratings', {
   render() {
     const p = ratingsPct();
     return `<div class="card hero sh-gold"><small>⭐ EVERYTHING YOU RUN — RATED S TO F, PUSHED TO ITS POTENTIAL</small><div class="count"><b>${p == null ? '—' : Math.round(p) + '%'}</b><span>of potential<br>100% = everything S</span></div>${p == null ? '' : bar(p, 'pot')}</div>
+    <div class="card" ${on(() => go('wardrobe'))}><div class="split"><h3>◆ Wardrobe</h3><b>${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'} →</b></div>${D.outfits.length ? potBar(outfitPct()) : '<div class="split dim"><span>How many complete outfits do you own?</span></div>'}</div>
     ${sect('CATEGORIES', '+ Category', () => nodeForm(D.ratings, null, 1))}
     ${D.ratings.map(n => nodeRow(n, [n.id])).join('') || empty('Nothing to rate. What do you run every day?')}`;
   },
@@ -63,6 +64,29 @@ page('ratingdetail', {
     ${sect('ITEMS', '+ Item', () => itemForm(n))}
     ${owned.map(itemRow).join('') || empty("What's the current setup? Add what you actually use.")}
     ${later.length ? `<div class="benchl">◇ ADD LATER</div>${later.map(itemRow).join('')}` : ''}`;
+  },
+});
+
+// ════════ WARDROBE ════════
+const OCC = ['Everyday', 'Going out', 'Date', 'Gym', 'Formal', 'Work'];
+const outfitPct = () => (D.outfits.length ? D.outfits.reduce((n, o) => n + TIER_VAL[o.tier], 0) / (D.outfits.length * 6) * 100 : null);
+const potBar = p => `${bar(p, 'pot')}<div class="split dim"><span>${Math.round(p)}% of potential</span><span>${Math.round(100 - p)}% gap</span></div>`;
+function outfitForm(o) {
+  form({ title: o ? `Edit ${o.name}` : 'New outfit', sub: 'A complete outfit you can put on and walk out in.',
+    fields: [{ name: 'name', label: 'Name it', value: o?.name, required: true, placeholder: 'Black fit, Summer linen…' }, { name: 'tier', label: 'How good is it, really?', type: 'tier', value: o?.tier || 'C' },
+      { name: 'occasion', label: 'What is it for?', type: 'seg', value: o?.occasion || '', options: [['', 'Any'], ...OCC.map(x => [x, x])] }, { name: 'pieces', label: "What's in it?", type: 'textarea', value: o?.pieces, placeholder: 'Jacket, tee, trousers, shoes…' }],
+    onSubmit: v => { const data = { name: v.name, tier: v.tier || 'C', occasion: v.occasion, pieces: v.pieces }; if (o) Object.assign(o, data); else { D.outfits.push({ ...BLANK.outfit(), ...data }); gain('looks', 1, 'new outfit: ' + v.name); log(`New outfit: ${v.name} (${data.tier})`, 'upgrade'); } },
+    onDelete: o ? () => destroy(`${o.name} — out of the wardrobe.`, () => { D.outfits = D.outfits.filter(x => x !== o); }) : null });
+}
+page('wardrobe', {
+  title: 'WARDROBE',
+  render() {
+    const p = outfitPct(), by = {}; for (const o of D.outfits) (by[o.occasion || 'Any'] ||= []).push(o);
+    const order = [...OCC, 'Any'].filter(k => by[k]);
+    return `<div class="card hero sh-purple"><small>◆ WARDROBE — outfits you can actually wear</small><div class="count"><b>${D.outfits.length}</b><span>outfit${D.outfits.length === 1 ? '' : 's'}<br>${order.length} occasion${order.length === 1 ? '' : 's'} covered</span></div>${p == null ? '' : potBar(p)}</div>
+    <div class="btns">${btn('+ Outfit', () => outfitForm(), 'good')}</div>
+    ${order.map(k => `<div class="benchl">${k.toUpperCase()} · ${by[k].length}</div>${by[k].sort((a, b) => TIER_VAL[b.tier] - TIER_VAL[a.tier]).map(o => `<div class="row" ${on(() => outfitForm(o))}><div class="ric">${tierBadge(o.tier)}</div><div class="rbody"><b>${esc(o.name)}</b>${o.pieces ? `<small>${esc(o.pieces)}</small>` : ''}</div></div>`).join('')}`).join('') || empty('Empty wardrobe. How many complete outfits do you own? Add them and rate them.')}
+    ${OCC.filter(k => !by[k]).length && D.outfits.length ? `<p class="hint">Nothing for: ${OCC.filter(k => !by[k]).join(', ')}</p>` : ''}`;
   },
 });
 

@@ -83,6 +83,7 @@ export const BLANK = {
   element: () => ({ id: uid(), title: '', desc: '', level: 0, levelUp: [], history: [], createdAt: Date.now() }), // body-map stat OR platform
   income: () => ({ id: uid(), title: '', desc: '', amount: 0, hoursPerWeek: 0, status: 'active', projections: [], createdAt: Date.now() }),
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
+  outfit: () => ({ id: uid(), name: '', tier: 'C', occasion: '', pieces: '', createdAt: Date.now() }),
   ratingItem: () => ({ id: uid(), name: '', tier: 'C', later: false, upgrade: null, upgrades: [] }),
 };
 
@@ -132,6 +133,7 @@ export function defaults() {
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],
+    outfits: [],          // the wardrobe: complete outfits you can actually put on
     log: [],
     settings: { birthday: '' },
   };
@@ -232,6 +234,7 @@ export function normalize(raw) {
   o.incomes = fit(BLANK.income, o.incomes).map(i => ({ ...i, amount: num(i.amount), hoursPerWeek: num(i.hoursPerWeek), projections: arr(i.projections) }));
   o.gains = arr(o.gains).filter(g => g && PILLARS.some(p => p.key === g.pillar) && Number.isFinite(+g.amount)).slice(-2000).map(g => ({ id: g.id || uid(), t: num(g.t, Date.now()), pillar: g.pillar, amount: +g.amount, note: String(g.note || '') }));
   o.girlsRecurring = Math.max(0, Math.round(num(o.girlsRecurring)));
+  o.outfits = fit(BLANK.outfit, o.outfits).map(x => ({ ...x, tier: TIER_VAL[x.tier] == null ? 'C' : x.tier }));
   o.ratings = shapeRatings(o.ratings);
   o.log = arr(o.log).filter(e => e && e.msg).slice(0, 500).map(e => ({ t: num(e.t, Date.now()), msg: String(e.msg), tag: e.tag || 'event' }));
   return o;
