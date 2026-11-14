@@ -43,11 +43,11 @@ export const GAIN = {
 };
 // The major factors of a life. Time is the sixth: it is what the other five are paid for with.
 export const PILLARS = [
-  { key: 'social', label: 'Social life / Network', short: 'Social', color: '#40E382' },
+  { key: 'social', label: 'Social life / Network', short: 'Social', color: '#4EC8FF' },
   { key: 'girls', label: 'Girls / Status', short: 'Girls', color: '#FF3366' },
   { key: 'money', label: 'Money', short: 'Money', color: '#FFCB1C' },
   { key: 'looks', label: 'Looks / Appearance', short: 'Looks', color: '#C852FF' },
-  { key: 'health', label: 'Health', short: 'Health', color: '#4EC8FF' },
+  { key: 'health', label: 'Health', short: 'Health', color: '#40E382' },
 ];
 export const ACTIVE_DAYS = 14; // a factor is ACTIVE if you logged something real for it this recently
 export const LEADS_PER_STAR = 20;

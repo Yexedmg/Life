@@ -93,6 +93,7 @@ page('home', {
     </div>
 
     <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
+    ${allocBar()}
     ${all.map(factorRow).join('')}
 
     ${sect('QUESTS', quests.length ? 'All' : '+ Quest', () => go('manifest'))}
