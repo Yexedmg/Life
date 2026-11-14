@@ -17,7 +17,7 @@ If the old build ran on the same address, its save (`life-rpg-data`) is picked u
 
 | Tab | What it is |
 |---|---|
-| **HOME** | One-screen status: level, Northstar, four vitals, the single biggest gap |
+| **HOME** | The pause screen: level, Northstar, six life factors each ACTIVE or INACTIVE, and the quest list |
 | **STATUS** | Stats and the body map |
 | **PLAN** | Time Allocation (the ideal day) and the actual week; analytics on demand |
 | **MENU** | Every area as one tile: People, Grow, Goals, Worlds, System |

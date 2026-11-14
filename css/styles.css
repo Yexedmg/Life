@@ -421,3 +421,17 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .mt small { font-size: 13px; }
 .mg > span { font-size: 13px; margin: 14px 2px 10px; }
 .mgrid { gap: 10px; }
+
+/* pause screen: factors + quests */
+.fac { padding: 12px 16px; border-radius: var(--r); border: 1px solid var(--line); border-left: 4px solid var(--c); background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.015)); display: flex; flex-direction: column; gap: 6px; cursor: pointer; margin-top: 8px !important; }
+.fac:active, .quest:active { transform: scale(.985); }
+.fac .fh { display: flex; justify-content: space-between; align-items: center; gap: 10px; font: 700 11px var(--mono); letter-spacing: .1em; color: var(--c); } .fac .fh .gico { width: 14px; height: 14px; }
+.fac .fh em { font: 800 10.5px var(--sans); font-style: normal; letter-spacing: .12em; padding: 3px 9px; border-radius: 99px; }
+.fac.on .fh em { background: var(--green); color: #000; } .fac.off .fh em { background: transparent; color: var(--red); border: 1px solid var(--red); }
+.fac .fm { display: flex; align-items: baseline; gap: 10px; } .fac .fm b { font: 800 24px/1 var(--sans); white-space: nowrap; } .fac .fm small { font: 400 11.5px/1.35 var(--mono); color: var(--text2); min-width: 0; }
+.fac.off { border-left-color: var(--dark); } .fac.off .fh span { color: var(--text2); } .fac.off .fm b { color: var(--text2); }
+.sect > span + span { font: 700 11px var(--mono); letter-spacing: .06em; color: var(--text2); }
+.quest { padding: 12px 16px; border-radius: var(--r); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 7px; cursor: pointer; margin-top: 8px !important; }
+.quest b { font: 700 15px var(--sans); color: var(--text); min-width: 0; overflow-wrap: anywhere; text-align: left; } .quest .bar { height: 6px; } .quest small { color: var(--text2); }
+.fstate { padding: 12px 14px; border-radius: var(--r); display: flex; flex-direction: column; gap: 3px; border: 1px solid var(--line); } .fstate b { font: 800 16px var(--sans); letter-spacing: .1em; } .fstate span { font: 400 11.5px var(--mono); color: var(--text2); }
+.fstate.on { border-color: var(--green); } .fstate.on b { color: var(--green); } .fstate.off { border-color: var(--red); } .fstate.off b { color: var(--red); }

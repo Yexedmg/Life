@@ -41,12 +41,15 @@ export const GAIN = {
   medium: { 'low': 2, 'medium-low': 3, 'medium': 5, 'high': 8, 'very-high': 10 },
   hard: { 'low': 3, 'medium-low': 5, 'medium': 7, 'high': 10, 'very-high': 12 },
 };
-// The principle: three pillars everything is measured against.
+// The major factors of a life. Time is the sixth: it is what the other five are paid for with.
 export const PILLARS = [
-  { key: 'money', label: 'Money / Career', short: 'Money', color: '#FFCB1C' },
   { key: 'social', label: 'Social life / Network', short: 'Social', color: '#40E382' },
   { key: 'girls', label: 'Girls / Status', short: 'Girls', color: '#FF3366' },
+  { key: 'money', label: 'Money', short: 'Money', color: '#FFCB1C' },
+  { key: 'looks', label: 'Looks / Appearance', short: 'Looks', color: '#C852FF' },
+  { key: 'health', label: 'Health', short: 'Health', color: '#4EC8FF' },
 ];
+export const ACTIVE_DAYS = 14; // a factor is ACTIVE if you logged something real for it this recently
 export const LEADS_PER_STAR = 20;
 export const LEAD_MAX_STARS = 18;
 

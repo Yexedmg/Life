@@ -1,6 +1,6 @@
 // LIFE — calc. Every derived number in the game. Reads D, never writes it.
 import { D } from './store.js';
-import { STATS, STAT, DAYS, GAIN, ROIS, TIER_VAL, LEADS_PER_STAR, LEAD_MAX_STARS, CAP } from './schema.js';
+import { STATS, STAT, DAYS, GAIN, ROIS, TIER_VAL, LEADS_PER_STAR, LEAD_MAX_STARS, CAP, PILLARS, ACTIVE_DAYS } from './schema.js';
 
 export const clamp = (n, a = 0, b = 100) => Math.max(a, Math.min(b, n));
 export const sum = a => a.reduce((x, y) => x + y, 0);
@@ -140,11 +140,18 @@ export function nowNext() {
 // ── Pillars: what each one earns you per week/month, and how much of your planned time it gets
 export const entryPillar = e => e.pillar || findActivity(e.activityItemId)?.item.pillar || '';
 export function pillarTime(schedule = D.schedule) {
-  const h = { money: 0, social: 0, girls: 0, other: 0 };
-  for (const d of DAYS) for (const e of schedule[d]) h[entryPillar(e) || 'other'] += parseRange(e.time)?.hours || 0;
-  const total = h.money + h.social + h.girls + h.other;
+  const h = { other: 0 }; for (const p of PILLARS) h[p.key] = 0;
+  for (const d of DAYS) for (const e of schedule[d]) { const k = entryPillar(e); h[k in h ? k : 'other'] += parseRange(e.time)?.hours || 0; }
+  const total = sum(Object.values(h));
   return { h, total, pct: k => (total ? h[k] / total * 100 : 0) };
 }
+// ACTIVE means something real happened lately — logged, not planned. Having a girlfriend or a recurring girl counts.
+export function factorActive(key) {
+  if (key === 'time') return D.schedule[todayKey()].length > 0;
+  if (key === 'girls' && (taken() > 0 || D.girlsRecurring > 0)) return true;
+  return gainSum(key, ACTIVE_DAYS) > 0;
+}
+export const lastGain = key => D.gains.filter(g => g.pillar === key).at(-1)?.t || null;
 export const gainSum = (pillar, days) => sum(D.gains.filter(g => g.pillar === pillar && g.t >= Date.now() - days * DAY).map(g => g.amount));
 export const pillarRate = pillar => ({ week: gainSum(pillar, 7), perWeek: gainSum(pillar, 28) / 4, month: gainSum(pillar, 30) });
 
@@ -211,65 +218,4 @@ export function moveUsage(statId, moveId) {
   };
 }
 
-// ── THE GAPS — what the mirror says back. Plain text; sev 3 = it should sting.
-export function gaps() {
-  const g = [], add = (sev, title, sub, to) => g.push({ sev, title, sub, to });
-  const r = D.relationships, ch = chasers(), s = D.player.stats;
-
-  if (!r.theOne && !r.commons.length) {
-    if (ch.length) {
-      const top = [...ch].sort((a, b) => b.affinity - a.affinity)[0];
-      const dates = Math.max(1, Math.ceil((60 - top.affinity) / 12));
-      add(3, top.affinity >= 60 ? `Make it official with ${top.name}.` : `Take ${top.name} on a date.`,
-        top.affinity >= 60 ? `Affinity ${top.affinity}/100 — she's there. Ask.` : `Affinity ${top.affinity}/100. ${dates} more date${dates === 1 ? '' : 's'} and you can make it official.`, ['life']);
-    } else add(3, 'Meet someone new.', 'Nobody in play yet. Go where people are, start a conversation, then add her to the roster.', ['leadgen']);
-  } else if (!r.theOne) add(2, 'Find The One.', `${r.commons.length} in the commons. Is one of them it?`, ['life']);
-
-  if (!D.northstar) add(3, 'No Northstar.', "You're moving without a direction. One sentence. Call it.", ['@northstar']);
-  else if (D.northstar.targetDate && daysTo(D.northstar.targetDate) < 0) add(3, 'Your Northstar deadline passed.', `${-daysTo(D.northstar.targetDate)} days ago. Did you hit it? Then set the next one. If not — re-date it and mean it.`, ['@northstar']);
-
-  if (!leadMethods().some(m => slotted(m).length)) add(2, 'No lead sources slotted.', 'Nobody finds you by accident. Slot how you actually meet people.', ['leadgen']);
-
-  if (!D.moneyGoal) add(2, 'No number.', 'What number are you chasing? Set it.', ['money']);
-  else if (s.money < D.moneyGoal) add(1, `Money goal: ${Math.round(clamp(s.money / D.moneyGoal * 100))}%.`, `${money(D.moneyGoal - s.money)} to go.`, ['money']);
-
-  const era = currentEra(), nx = nextEra();
-  if (era) { const left = daysTo(era.end); if (left <= 7) add(2, `"${era.name}" ends in ${left} day${left === 1 ? '' : 's'}.`, 'Finish what this era was for.', ['calendar']); }
-  else if (nx) add(1, 'No main quest running.', `"${nx.name}" starts in ${daysTo(nx.start)} days. What is this stretch for until then?`, ['calendar']);
-  else add(2, 'No main quest.', 'Which chapter of your life is this? Name it. Date it.', ['calendar']);
-
-  const open = D.manifests.filter(m => !m.achievedAt);
-  if (!open.length) add(1, 'No goals on the board.', 'Set a goal, detach, and do your best on what\'s required.', ['manifest']);
-  for (const m of open) {
-    const t = tasksOf(m);
-    if (!t.length) add(1, `"${m.name}" has no tasks.`, 'A goal without moves is a wish. Break it down.', ['manifest']);
-    else if (!t.some(x => x.done)) add(1, `"${m.name}" is at 0%.`, 'Not one task done. Start with the smallest.', ['manifest']);
-  }
-
-  if (!D.schedule[todayKey()].length) add(2, 'Nothing scheduled today.', 'Unplanned days get eaten. Paint it.', ['schedule']);
-
-  const cats = actCats(), totalSlots = sum(cats.map(c => c.maxSlots)), filled = sum(cats.map(c => slotted(c).length));
-  if (totalSlots - filled > 0) add(filled ? 1 : 2, `${totalSlots - filled} of ${totalSlots} activity slots are empty.`, filled ? 'Unused capacity. Fill them or cut them.' : 'Nothing is slotted. What do you actually do with your weeks?', ['activities']);
-  const b = balance();
-  if (b.total && (b.costPct >= 30 || b.expPct < 25)) add(b.costPct >= 30 ? 2 : 1, b.costPct >= 30 ? 'Your balance is leaking.' : 'You are coasting.', b.verdict, ['totalstats']);
-
-  const moves = elements().flatMap(x => x.el.levelUp.map(m => moveUsage(x.el.id, m.id)));
-  if (moves.length && !moves.some(u => u.sched || u.alloc)) add(2, `${moves.length} level-up move${moves.length === 1 ? '' : 's'} written. None scheduled.`, "Intentions that aren't in the week don't happen.", ['schedule']);
-
-  if (!D.meStats.length) add(1, 'Nothing on your body map.', 'What are the parts of you? Put them on the map and rate them.', ['me']);
-  else {
-    const w = [...D.meStats].sort((a, b) => a.level - b.level)[0];
-    if (w.level < CAP) add(1, `Weakest part: ${w.title} — ${w.level}/${CAP}.`, w.levelUp.length ? 'You wrote the moves. Are they in your week?' : 'No level-up moves written. What exactly gets this to the next level?', ['me']);
-  }
-
-  const rated = D.ratings.map(n => ({ n, p: nodePct(n) })).filter(x => x.p !== null).sort((a, b) => a.p - b.p)[0];
-  if (rated && rated.p < 50) add(1, `${rated.n.name} is at ${Math.round(rated.p)}% of potential.`, 'Lowest-rated part of your setup. Upgrade it.', ['ratingdetail', { path: [rated.n.id] }]);
-  else if (ratingsPct() === null) add(1, 'Nothing is rated.', 'Everything you run — rate it S to F. You can\'t close a gap you never measured.', ['ratings']);
-
-  if (s.fear > s.boldness) add(1, 'Fear is beating boldness.', `${r1(s.fear)} against ${r1(s.boldness)}. One approach that lands flips it.`, ['meet']);
-
-  for (const { item, path } of walkRatingItems()) if (item.upgrade && item.upgrade.price <= s.money) { add(0, `You can afford ${item.upgrade.name}.`, `${item.name} ➜ ${item.upgrade.name} for ${money(item.upgrade.price)}. Take it.`, ['ratingdetail', { path }]); break; }
-
-  return g.sort((a, b) => b.sev - a.sev);
-}
 export { STATS };

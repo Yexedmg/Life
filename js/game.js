@@ -26,6 +26,7 @@ export const fxText = fx => Object.entries(fx || {}).filter(([k, v]) => v && STA
 export function doActivity(item) {
   applyEffects(item.statEffects);
   log(`Did: ${item.name}${fxText(item.statEffects) ? '  ' + fxText(item.statEffects) : ''}`, 'activity');
+  if (item.pillar && item.pillar !== 'money') gain(item.pillar, 1, item.name);
   addXP(item.xp || 5, item.name);
   toast(`${item.name} — done. +${item.xp || 5} XP`);
 }

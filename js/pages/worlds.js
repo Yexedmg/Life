@@ -30,7 +30,7 @@ function itemSheet(path, id) {
     const node = findRating(path), it = node?.items.find(i => i.id === id); if (!it) return null;
     const u = it.upgrade, bal = D.player.stats.money, can = u && bal >= u.price;
     const buy = () => { D.player.stats.money -= u.price; it.upgrades.push({ t: Date.now(), fromName: it.name, fromTier: it.tier, toName: u.name, toTier: u.tier, price: u.price });
-      log(`Upgraded ${it.name} (${it.tier}) ➜ ${u.name} (${u.tier}) for ${money(u.price)}`, 'upgrade'); it.name = u.name; it.tier = u.tier; it.later = false; it.upgrade = null; commit(); toast('Upgraded. That gap just closed.'); };
+      log(`Upgraded ${it.name} (${it.tier}) ➜ ${u.name} (${u.tier}) for ${money(u.price)}`, 'upgrade'); gain('looks', 1, u.name); it.name = u.name; it.tier = u.tier; it.later = false; it.upgrade = null; commit(); toast('Upgraded. That gap just closed.'); };
     return `<h2>${esc(it.name)}</h2><p class="msub">${esc(node.name)}${it.later ? ' · ◇ planned, not owned yet' : ''}</p>
       ${u ? `<div class="upg"><div><small>CURRENT</small>${tierBadge(it.tier)}<b>${esc(it.name)}</b></div><i>➜</i><div><small>TARGET</small>${tierBadge(u.tier)}<b>${esc(u.name)}</b></div></div>
         ${term('', [['PRICE', money(u.price), 'gold'], ['YOUR BALANCE', money(bal), can ? 'green' : 'red']])}
