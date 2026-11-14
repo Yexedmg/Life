@@ -50,6 +50,7 @@ export const PILLARS = [
   { key: 'looks', label: 'Looks / Appearance', short: 'Looks', color: '#C852FF' },
   { key: 'health', label: 'Health', short: 'Health', color: '#40E382' },
 ];
+export const POOL_MIN_AGE = 18; // the pool counts adults only
 export const ACTIVE_DAYS = 14; // a factor is ACTIVE if you logged something real for it this recently
 export const LEADS_PER_STAR = 20;
 export const LEAD_MAX_STARS = 18;
@@ -131,6 +132,7 @@ export function defaults() {
     gains: [],            // { id, t, pillar, amount, note } — what each pillar earned you, and when
     targets: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },   // what you want per week; 0 = no target
     baseline: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },  // your count from before the app, added to the total
+    pool: { size: 0, maxAge: 24, exes: 0 },   // women aged 18–maxAge where you live (you enter it), and girlfriends you had before
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],
@@ -234,6 +236,7 @@ export function normalize(raw) {
   o.moneyGoal = o.moneyGoal == null ? null : num(o.moneyGoal) || null;
   o.incomes = fit(BLANK.income, o.incomes).map(i => ({ ...i, amount: num(i.amount), hoursPerWeek: num(i.hoursPerWeek), projections: arr(i.projections) }));
   o.gains = arr(o.gains).filter(g => g && PILLARS.some(p => p.key === g.pillar) && Number.isFinite(+g.amount)).slice(-2000).map(g => ({ id: g.id || uid(), t: num(g.t, Date.now()), pillar: g.pillar, amount: +g.amount, note: String(g.note || '') }));
+  o.pool.maxAge = clamp(Math.round(num(o.pool.maxAge, 24)), POOL_MIN_AGE, 99); o.pool.size = Math.max(0, Math.round(num(o.pool.size))); o.pool.exes = Math.max(0, Math.round(num(o.pool.exes)));
   o.girlsRecurring = Math.max(0, Math.round(num(o.girlsRecurring)));
   o.outfits = fit(BLANK.outfit, o.outfits).map(x => ({ ...x, tier: TIER_VAL[x.tier] == null ? 'C' : x.tier }));
   o.ratings = shapeRatings(o.ratings);

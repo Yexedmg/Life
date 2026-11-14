@@ -85,6 +85,7 @@ export function meetParts() {
     ['Slotted activities', sum(slottedActivities().map(a => a.item.meetBonus))], ['Approach streak', D.player.streaks.coldApproach], ['Taken ×2', taken() * 2]];
 }
 export const meetBar = () => clamp(sum(meetParts().map(p => p[1])), 0, 150);
+export const girlfriendsEver = () => taken() + D.pool.exes;
 export const expectedRarity = p => (p >= 100 ? 5 : p >= 80 ? 4 : p >= 50 ? 3 : p >= 25 ? 2 : 1);
 
 // ── Ratings: "% of potential" — Σ value / (count × max)

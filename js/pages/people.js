@@ -1,8 +1,8 @@
 // People: roster, relationship slots, meet, and the Social world.
 import { D, commit, ui } from '../store.js';
-import { BLANK, CAP } from '../schema.js';
+import { BLANK, CAP, POOL_MIN_AGE } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, fold, GIRL } from '../ui.js';
-import { girl, chasers, taken, meetBar, meetParts, expectedRarity, vibe, vibeCeiling, leadBar, r1, leadMethods } from '../calc.js';
+import { girl, chasers, taken, meetBar, meetParts, expectedRarity, vibe, vibeCeiling, leadBar, r1, leadMethods, girlfriendsEver } from '../calc.js';
 import { addXP, applyEffects, log, setStatus, gain } from '../game.js';
 import { openElement, elementForm, lastChange } from './me.js';
 
@@ -96,7 +96,15 @@ page('life', {
   render() {
     const r = D.relationships, one = girl(r.theOne), ch = chasers().sort((a, b) => b.affinity - a.affinity);
     const list = ids => ids.map(girl).filter(Boolean).map(girlCard).join('');
+    const P = D.pool, had = girlfriendsEver(), share = P.size ? had / P.size * 100 : 0;
+    const poolForm = () => form({ title: 'The pool', sub: `How many women aged ${POOL_MIN_AGE} to ${P.maxAge} live where you live? Look it up once (your national statistics office has it by city and age) and enter it.`,
+      fields: [{ name: 'size', label: 'How many are out there?', type: 'number', min: 0, step: 1, value: P.size || '' }, { name: 'maxAge', label: `Up to what age? (from ${POOL_MIN_AGE})`, type: 'number', min: POOL_MIN_AGE, max: 99, step: 1, value: P.maxAge },
+        { name: 'exes', label: 'Girlfriends you had before (not on the roster)', type: 'number', min: 0, step: 1, value: P.exes || '' }],
+      onSubmit: v => { P.size = Math.max(0, Math.round(v.size || 0)); P.maxAge = Math.max(POOL_MIN_AGE, Math.min(99, Math.round(v.maxAge || 24))); P.exes = Math.max(0, Math.round(v.exes || 0)); } });
     return `<div class="card hero sh-pink"><small>${GIRL} THE RATIO</small><div class="count"><b>${ch.length} : 1</b><span>girls chasing you</span></div></div>
+    <div class="card dex" ${on(poolForm)}><small>REGISTERED · women ${POOL_MIN_AGE}–${P.maxAge} where you live</small>
+      <div class="dexn"><b>${had}</b><i>/</i><span>${P.size ? P.size.toLocaleString('en-US') : '?'}</span></div>
+      ${P.size ? `${bar(Math.max(share, had ? 0.5 : 0), 'pink')}<div class="split dim"><span>${had === 1 ? 'girlfriend' : 'girlfriends'}, now and before</span><span>${share < 0.01 && had ? '<0.01' : r1(share * 100) / 100}% of them</span></div>` : '<p>Tap and enter how many are out there. Then you see your number against it.</p>'}</div>
     ${sect('SLOT 1 — THE ONE')}
     ${one ? girlCard(one) : `<div class="slot big"><span>EMPTY</span><small>${ch.length ? 'Affinity 90 + looks-like-you 70 gets someone here. Who is closest?' : "Nobody's even in play. This doesn't fill itself."}</small></div>`}
     ${sect('SLOT 2 — THE COMMONS')}

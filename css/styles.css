@@ -455,3 +455,5 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 /* age on the player card */
 .hud-player { gap: 14px; } .hud-player .lv.age { border-left: 1px solid var(--line); padding-left: 14px; cursor: pointer; }
 .hud-player .lv.age small { color: var(--text2); } .hud-player .lv.age em { font: 400 9.5px var(--mono); font-style: normal; color: var(--muted); white-space: nowrap; margin-top: 2px; }
+
+.dex { cursor: pointer; } .dexn { display: flex; align-items: baseline; gap: 8px; } .dexn b { font: 800 40px/1 var(--sans); color: var(--pink); } .dexn i { font: 400 26px var(--mono); font-style: normal; color: var(--muted); } .dexn span { font: 700 24px var(--mono); color: var(--text2); }
