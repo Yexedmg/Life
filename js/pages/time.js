@@ -62,7 +62,7 @@ export function weekPanel(schedule, key) {
 export function allocBar(schedule = D.schedule) {
   const t = pillarTime(schedule), parts = [...PILLARS.map(p => [p.short, t.h[p.key], p.color]), ['Untagged', t.h.other, '#4A4A4A']];
   if (!t.total) return `<div class="alloc none"><small>PLANNED THIS WEEK</small><p>Nothing planned this week, so there is nothing to split yet.</p></div>`;
-  return `<div class="alloc"><small>${t.total}h planned this week</small><div class="abar">${parts.filter(x => x[1]).map(x => `<i style="flex:${x[1]};background:${x[2]}"></i>`).join('')}</div>
+  return `<div class="alloc"><small>${t.total}h planned this week</small><div class="abar">${parts.filter(x => x[1]).map(x => `<i class="saber" style="flex:${x[1]};background:${x[2]};color:${x[2]}"></i>`).join('')}</div>
     <div class="aleg">${parts.map(x => `<span><i style="background:${x[2]}"></i>${x[0]} <b>${Math.round(x[1] / t.total * 100)}%</b></span>`).join('')}</div></div>`;
 }
 
