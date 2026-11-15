@@ -2,7 +2,7 @@
 import { D, commit, ui } from '../store.js';
 import { BLANK, DAYS, STAT, SLOT_COLORS, PILLARS } from '../schema.js';
 import { page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol, fold } from '../ui.js';
-import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime, fmtDate, dts, daysTo } from '../calc.js';
+import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime, fmtDate, dts, daysTo, entryPillar } from '../calc.js';
 import { log } from '../game.js';
 import { northstarForm } from './home.js';
 
@@ -43,10 +43,11 @@ export function weekPanel(schedule, key) {
     return `<div class="panel"><div class="pt">${title}</div>${keys.map(k => { const id = `wk-${key}-${title}-${k}`, open = isCol(id), ds = [...new Set(detail[k].map(a => a.day))];
       return `<div class="wrow" ${on(() => toggleCol(id))}><div class="split"><span>${open ? '▾' : '▸'} ${esc(label(k))}</span><b>${by[k]}h · ${pct(by[k], W.hours)}%</b></div>${bar(pct(by[k], W.hours), 'cyan')}
         <div class="chips">${ds.map(x => `<em class="chip">${x}</em>`).join('')}</div>${open ? detail[k].map(a => `<div class="trow"><span>${a.day} · ${esc(a.name)}</span><b>${a.hrs}h</b></div>`).join('') : ''}</div>`; }).join('') || '<p>Nothing yet.</p>'}</div>`; };
+  const blocks = d.acts.filter(a => parseRange(a.e.time)).map(a => { const r = parseRange(a.e.time), pl = PILLARS.find(p => p.key === entryPillar(a.e));
+    return { title: a.name, start: r.start, end: r.end, from: r.from, to: r.to, label: `${r.from}–${r.to}`, hrs: a.hrs, color: pl ? pl.color : '#9A9A9A', fn: () => entryForm(schedule, day, a.e),
+      sub: [pl ? pl.short : '', a.cat !== 'Custom' ? esc(a.cat) : '', a.e.levelUpRef ? `⤴ ${esc(resolveMove(a.e.levelUpRef)?.el.title || '')}` : ''].filter(Boolean).join(' · ') }; });
   return `${tabs(DAYS.map(k => [k, `${k.toUpperCase()}${k === todayKey() ? '•' : ''}`]), day, k => setUi('day-' + key, k))}
-    ${d.acts.map(a => `<div class="row" ${on(() => entryForm(schedule, day, a.e))}><div class="ric time">${esc(parseRange(a.e.time)?.from || '')}<br><small>${esc(parseRange(a.e.time)?.to || '')}</small></div><div class="rbody"><b>${esc(a.name)}</b>
-      <small>${esc(a.cat)}${a.e.levelUpRef ? ` · ⤴ levels up ${esc(resolveMove(a.e.levelUpRef)?.el.title || '')}` : ''}</small></div><div class="rval">${a.hrs}h</div></div>`).join('') || empty(`Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`)}
-    <div class="btns">${btn('+ Add', () => entryForm(schedule, day), 'good')}</div>
+    ${dayView(blocks, `Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`, () => entryForm(schedule, day))}
     ${fold('wk-' + key, `Week analytics · ${W.hours}h planned`, () => `${sect('WEEK OVERVIEW')}
     <div class="wdays">${DAYS.map(k => { const x = st.days[k];
       return `<div class="wday ${k === day ? 'active' : ''}" ${on(() => setUi('day-' + key, k))}><b>${k.toUpperCase()}</b><div class="dots">${'●'.repeat(Math.min(x.acts.length, 8)) || '○'}</div><span>${x.acts.length} · ${x.hours}h</span>
@@ -88,14 +89,20 @@ function slotForm(ta, s) {
     onDelete: s ? () => destroy('Block wiped.', () => { ta.slots = ta.slots.filter(x => x !== s); }) : null, del: 'Wipe it',
   });
 }
-function strip(ta) {
-  const X = m => 10 + m / 1440 * 340, slots = [...ta.slots].sort((a, b) => toMin(a.start) - toMin(b.start));
+// One picture for any day, lived or wanted: a 24-hour bar with labelled blocks.
+function dayStrip(blocks) {
+  const X = m => 10 + m / 1440 * 340, list = [...blocks].sort((a, b) => a.start - b.start);
   return `<svg class="strip" viewBox="0 0 360 170"><rect class="track" x="10" y="118" width="340" height="28"/>
     ${[0, 3, 6, 9, 12, 15, 18, 21, 24].map(h => `<line class="tick" x1="${X(h * 60)}" y1="${h % 6 ? 146 : 114}" x2="${X(h * 60)}" y2="${h % 6 ? 151 : 154}"/>${h % 6 ? '' : `<text class="tk" x="${X(h * 60)}" y="166" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h === 24 ? '23:59' : h + ':00'}</text>`}`).join('')}
-    ${slots.map((s, i) => { const x1 = X(toMin(s.start)), x2 = X(toMin(s.end)), cx = (x1 + x2) / 2, ly = 18 + (i % 3) * 32, t = (s.levelUpRef ? '⤴ ' : '') + (s.title.length > 16 ? s.title.slice(0, 15) + '…' : s.title);
-      return `<g ${on(() => slotForm(ta, s))}><rect x="${x1}" y="118" width="${Math.max(2, x2 - x1)}" height="28" fill="${esc(s.color)}"/><line x1="${cx}" y1="${ly + 16}" x2="${cx}" y2="118" stroke="${esc(s.color)}" stroke-width="1.5"/><circle cx="${cx}" cy="118" r="3" fill="${esc(s.color)}"/>
-        <text x="${Math.max(40, Math.min(320, cx))}" y="${ly}" text-anchor="middle" fill="${esc(s.color)}" class="sl">${esc(t)}</text><text x="${Math.max(40, Math.min(320, cx))}" y="${ly + 11}" text-anchor="middle" class="st">${esc(s.start)}–${esc(s.end)}</text></g>`; }).join('')}</svg>`;
+    ${list.map((s, i) => { const end = s.end <= s.start ? 1440 : s.end, x1 = X(s.start), x2 = X(end), cx = (x1 + x2) / 2, ly = 18 + (i % 3) * 32, t = s.title.length > 16 ? s.title.slice(0, 15) + '…' : s.title;
+      return `<g ${on(s.fn)}><rect x="${x1}" y="118" width="${Math.max(2, x2 - x1)}" height="28" fill="${esc(s.color)}"/><line x1="${cx}" y1="${ly + 16}" x2="${cx}" y2="118" stroke="${esc(s.color)}" stroke-width="1.5"/><circle cx="${cx}" cy="118" r="3" fill="${esc(s.color)}"/>
+        <text x="${Math.max(40, Math.min(320, cx))}" y="${ly}" text-anchor="middle" fill="${esc(s.color)}" class="sl">${esc(t)}</text><text x="${Math.max(40, Math.min(320, cx))}" y="${ly + 11}" text-anchor="middle" class="st">${esc(s.label)}</text></g>`; }).join('')}</svg>`;
 }
+// …and one list under it. Same rows for both.
+const dayRows = blocks => [...blocks].sort((a, b) => a.start - b.start).map(s => `<div class="row" ${on(s.fn)}><div class="ric time" style="color:${esc(s.color)}">${esc(s.from)}<br><small>${esc(s.to)}</small></div><div class="rbody"><b>${esc(s.title)}</b>${s.sub ? `<small>${s.sub}</small>` : ''}</div><div class="rval">${s.hrs}h</div></div>`).join('');
+const dayView = (blocks, emptyText, onAdd) => `<div class="card dayc">${dayStrip(blocks)}<div class="split dim"><span>${blocks.length} block${blocks.length === 1 ? '' : 's'}</span><span>${r1(sum(blocks.map(x => x.hrs)))}h filled · ${r1(24 - sum(blocks.map(x => x.hrs)))}h open</span></div></div>
+  ${dayRows(blocks) || empty(emptyText)}
+  <div class="btns">${btn('+ Add', onAdd, 'good')}</div>`;
 const allocForm = ta => form({ title: ta ? 'Edit day type' : 'New day type', fields: [{ name: 'name', label: 'What kind of day?', value: ta?.name, required: true, placeholder: 'Work day, Weekend, Monk day…' }],
   onSubmit: v => { if (ta) ta.name = v.name; else { const n = BLANK.timeAlloc(v.name); D.timeAllocs.push(n); D.currentTimeAllocId = n.id; } },
   onDelete: ta && D.timeAllocs.length > 1 ? () => destroy(`${ta.name} — wiped.`, () => { D.timeAllocs = D.timeAllocs.filter(x => x !== ta); }) : null, del: 'Wipe it' });
@@ -112,20 +119,14 @@ page('schedule', {
 page('future', {
   title: 'FUTURE',
   render() {
-    const ta = curAlloc(), hrs = sum(ta.slots.map(s => (toMin(s.end) - toMin(s.start)) / 60)), ns = D.northstar;
-    const want = D.keyItems.filter(k => !k.has || k.wantName), exp = D.adventures.filter(x => !x.doneAt).sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
-    const quests = D.manifests.filter(m => !m.achievedAt);
+    const ta = curAlloc(), ns = D.northstar, want = D.keyItems.filter(k => !k.has || k.wantName);
+    const blocks = ta.slots.map(x => ({ title: (x.levelUpRef ? '⤴ ' : '') + x.title, start: toMin(x.start), end: toMin(x.end), from: x.start, to: x.end, label: `${x.start}–${x.end}`, hrs: r1((toMin(x.end) - toMin(x.start)) / 60), color: x.color, fn: () => slotForm(ta, x), sub: '' }));
     return `<div class="north ${ns ? '' : 'none'}" ${on(northstarForm)}><small>✦ WHERE IT ALL GOES</small><b>${ns ? esc(ns.text) : 'No direction set. Tap to call it.'}</b>${ns?.targetDate ? `<em>${fmtDate(dts(ns.targetDate))} · ${daysTo(ns.targetDate)} days</em>` : ''}</div>
-    ${sect('THE DAY YOU WILL LIVE', '+ Day type', () => allocForm())}
-    ${tabs(D.timeAllocs.map(t => [t.id, esc(t.name)]), ta.id, id => { D.currentTimeAllocId = id; commit(); })}
-    <div class="card sh-cyan">${strip(ta)}${ta.slots.length ? `<div class="split dim"><span>${ta.slots.length} blocks</span><span>${r1(hrs)}h painted · ${r1(24 - hrs)}h open</span></div>` : `<p class="hint">Empty day — tap '+ Add' and paint the day you want to be living.</p>`}
-      <div class="catfoot"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎ ${esc(ta.name)}</button><button class="sbtn" ${on(() => slotForm(ta))}>+ Add</button></div></div>
-    ${sect('WHAT YOU WILL HAVE', 'Key items', () => go('keyitems'))}
-    ${want.map(k => row({ icon: esc(k.icon), title: esc(k.wantName || k.name), desc: k.has ? `upgrade from ${esc(k.detail || k.name)}` : esc(k.wantName ? k.name : 'not yet'), val: k.wantPrice ? '$' + Math.round(k.wantPrice).toLocaleString('en-US') : '', fn: () => go('keyitems') })).join('') || empty('Every key item obtained, and no upgrade named.')}
-    ${sect('WHAT YOU WILL LIVE', 'Experiences', () => go('adventures'))}
-    ${exp.slice(0, 5).map(x => row({ icon: '✧', title: esc(x.name), desc: x.when ? `${fmtDate(dts(x.when))}${x.withWho ? ' · with ' + esc(x.withWho) : ''}` : esc(x.withWho ? 'with ' + x.withWho : 'no date yet'), fn: () => go('adventures') })).join('') || empty('Nothing you want to live yet.')}
-    ${sect('WHAT YOU ARE GOING AFTER', 'Quests', () => go('manifest'))}
-    ${quests.slice(0, 5).map(m => row({ icon: esc(m.emoji), title: esc(m.name), fn: () => go('manifest') })).join('') || empty('No quests.')}`;
+    <div class="sect"><span>THE DAY YOU LIVE THERE</span><span class="secbtns"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎</button><button class="sbtn" ${on(() => allocForm())}>+ Day type</button></span></div>
+    ${D.timeAllocs.length > 1 ? tabs(D.timeAllocs.map(t => [t.id, esc(t.name)]), ta.id, id => { D.currentTimeAllocId = id; commit(); }) : ''}
+    ${dayView(blocks, 'Empty day — tap \'+ Add\' and paint the day you live in the future.', () => slotForm(ta))}
+    ${sect('WHAT YOU HAVE THERE', 'Key items', () => go('keyitems'))}
+    ${want.map(k => row({ icon: esc(k.icon), title: esc(k.wantName || k.name), desc: k.has ? `today: ${esc(k.detail || k.name)}` : 'today: not yet', val: k.wantPrice ? '$' + Math.round(k.wantPrice).toLocaleString('en-US') : '', fn: () => go('keyitems') })).join('') || empty('Every key item obtained, and no upgrade named.')}`;
   },
 });
 

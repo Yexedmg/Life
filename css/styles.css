@@ -488,3 +488,5 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .arow .abody { flex: 1; min-width: 0; padding: 8px 0; display: flex; flex-direction: column; gap: 1px; cursor: pointer; } .arow .abody b { font: 700 16px var(--sans); overflow-wrap: anywhere; } .arow:not(.on) .abody b { color: var(--text2); font-weight: 500; }
 .arow .abody small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .arow > i { font-style: normal; color: var(--dark); font-size: 20px; padding: 0 8px; }
 .qadd { display: flex; gap: 8px; margin-top: 10px; } .qadd input { flex: 1; min-height: 46px; padding: 9px 12px; } .qadd .sbtn { padding: 0 18px; border-radius: var(--r); }
+
+.dayc { padding: 10px 12px; }
