@@ -1,10 +1,10 @@
 // The slot engine's three faces: Activities, Lead Generation, The Entity. One board component for all.
-import { D, commit } from '../store.js';
+import { D, commit, ui } from '../store.js';
 import { PILLARS, BLANK, DIFFS, ROIS, ROI_TIER, ROI_COLOR, GAIN, STAT, LEAD_MAX_STARS, LEADS_PER_STAR } from '../schema.js';
 import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, fold } from '../ui.js';
 import { actCats, actSections, leadMethods, slotted, isSlotted, slottedActivities, slotHours, sum, parseRange, fxKeys, itemGain, methodGain, leadBar, leadCeiling,
   leadStars, totalLeads, methodRoi, compGain, vibe, vibeCeiling, actVibe, r1, balance, curBorough, scopeOwner } from '../calc.js';
-import { slotItem, unslot, setMaxSlots, removeItem, doActivity, fxText } from '../game.js';
+import { slotItem, unslot, setMaxSlots, removeItem, doActivity, fxText, setActive } from '../game.js';
 
 // ── Generic board: N slots + bench. tile(item) renders, open(item) is the tap action.
 export function slotBoard(c, { tile, open }) {
@@ -52,11 +52,11 @@ function activitySheet(catId, id) {
     const cat = actCats().find(c => c.id === catId), it = cat?.inventory.find(i => i.id === id); if (!it) return null;
     const move = () => form({ title: 'Move to category', fields: [{ name: 'to', label: 'Where does it belong?', type: 'select', value: cat.id, options: actCats().map(c => [c.id, c.name]) }],
       onSubmit: v => { const to = actCats().find(c => c.id === v.to); if (to && to !== cat) { removeItem(cat, it.id); to.inventory.push(it); } } });
-    return `<h2>${esc(it.name)}</h2><p class="msub">${esc(cat.emoji)} ${esc(cat.name)} · ${isSlotted(cat, id) ? 'SLOTTED' : 'on the bench'}</p>
+    return `<h2>${esc(it.name)}</h2><p class="msub">${esc(cat.emoji)} ${esc(cat.name)} · ${isSlotted(cat, id) ? 'ACTIVE' : 'inactive'}</p>
       ${term('', [['KIND', `${KIND[it.kind][0]} ${KIND[it.kind][1]}`], ['REALM', it.realm === 'synthetic' ? '◇ Synthetic' : '⬢ Real'], ['TIME', it.time ? `${esc(it.time)} · ${parseRange(it.time)?.hours}h` : '—'],
-        ['MEET BONUS', `${it.meetBonus} / 15`], ['XP PER DO', it.xp], ['EFFECTS', fxText(it.statEffects) || '—'], ['VIBE WHEN SLOTTED', '+' + r1(actVibe(it))], ['LEADS', it.leadgen ? '⚡ feeds Lifestyle method' : '—']])}
+        ['MEET BONUS', `${it.meetBonus} / 15`], ['XP PER DO', it.xp], ['EFFECTS', fxText(it.statEffects) || '—'], ['VIBE WHEN ACTIVE', '+' + r1(actVibe(it))], ['LEADS', it.leadgen ? '⚡ feeds Lifestyle method' : '—']])}
       ${abChips(id) ? `<div class="chips">${abChips(id)}</div>` : ''}
-      <div class="btns">${btn('Do it', () => { doActivity(it); commit(); }, 'good')}${slotBtns(cat, id)}${btn('Edit', () => activityForm(cat, it))}${btn('Move', move)}
+      <div class="btns">${btn('Do it', () => { doActivity(it); commit(); }, 'good')}${isSlotted(cat, id) ? btn('Make inactive', () => { setActive(cat, id, false); commit(); }, 'warm') : btn('Make active', () => { setActive(cat, id, true); commit(); }, 'good')}${btn('Edit', () => activityForm(cat, it))}${btn('Move', move)}
       ${btn('Cut it', () => { closeModal(); destroy(`${it.name} — cut.`, () => removeItem(cat, id)); }, 'danger')}${btn('Close', closeModal)}</div>`;
   });
 }
@@ -65,9 +65,8 @@ function categoryForm(cat) {
   form({
     title: cat ? 'Edit category' : 'New category',
     fields: [{ name: 'name', label: 'Name', value: cat?.name, required: true }, { name: 'emoji', label: 'Tag', value: cat?.emoji || '[···]', placeholder: '[SPT]' },
-      { name: 'maxSlots', label: 'Slots', type: 'range', min: 1, max: 10, value: cat?.maxSlots ?? 2 },
       { name: 'sectionId', label: 'Section', type: 'select', value: cat?.sectionId || '', options: [['', '— Ungrouped —'], ...secs.map(s => [s.id, s.name])] }],
-    onSubmit: v => { if (cat) { Object.assign(cat, { name: v.name, emoji: v.emoji, sectionId: v.sectionId || null }); setMaxSlots(cat, v.maxSlots); } else actCats().push({ ...BLANK.category(v.name, v.emoji || '[···]', v.maxSlots), sectionId: v.sectionId || null }); },
+    onSubmit: v => { if (cat) Object.assign(cat, { name: v.name, emoji: v.emoji, sectionId: v.sectionId || null }); else actCats().push({ ...BLANK.category(v.name, v.emoji || '[···]', 1), sectionId: v.sectionId || null }); },
     onDelete: cat ? () => destroy(`${cat.name} — cut, with everything in it.`, () => { const l = actCats(); l.splice(l.indexOf(cat), 1); }) : null,
   });
 }
@@ -79,30 +78,37 @@ function sectionForm(sec) {
 }
 const moveSec = (sec, d) => { const l = actSections(), i = l.indexOf(sec), j = i + d; if (j < 0 || j >= l.length) return; [l[i], l[j]] = [l[j], l[i]]; commit(); };
 
-function catCard(cat) {
-  const n = slotted(cat).length, closed = cat.inventory.length ? isCol(cat.id) : !isCol('open-' + cat.id), tid = cat.inventory.length ? cat.id : 'open-' + cat.id;
-  return `<div class="card cat"><div class="cathead" ${on(() => toggleCol(tid))}><b>${esc(cat.emoji)} ${esc(cat.name)}</b><span class="${n ? '' : 'red'}">${n}/${cat.maxSlots}</span><i>${closed ? '▸' : '▾'}</i></div>
-    ${closed ? '' : `${slotBoard(cat, { tile: actTile, open: it => activitySheet(cat.id, it.id) })}
-    <div class="catfoot"><button class="sbtn ghost" ${on(() => categoryForm(cat))}>✎ Edit</button><button class="sbtn" ${on(() => activityForm(cat))}>+ Item</button></div>`}</div>`;
+function quickAdd(active) {
+  return `<div class="qadd"><input type="text" autocomplete="off" placeholder="${active ? 'Write down something you do…' : 'Something you stopped, or want to start…'}"><button class="sbtn" ${on(el => {
+    const input = el.previousElementSibling, name = input.value.trim(); if (!name) return input.focus();
+    const cats = actCats(); let cat = cats.find(c => /^other$/i.test(c.name)) || cats.at(-1);
+    if (!cat) { cat = BLANK.category('Other', '[···]', 1); cats.push(cat); }
+    const it = { ...BLANK.activity(), name }; cat.inventory.push(it); if (active) setActive(cat, it.id, true);
+    ui.focusAdd = active ? 'a' : 'i'; commit();
+  })}>Add</button></div>`;
 }
+const actRow = active => ({ cat, item }) => `<div class="arow ${active ? 'on' : ''}"><button class="adot" ${on(() => { setActive(cat, item.id, !active); commit(); })} aria-label="${active ? 'Make inactive' : 'Make active'}">${active ? '●' : '○'}</button>
+  <div class="abody" ${on(() => activitySheet(cat.id, item.id))}><b>${esc(item.name)}</b><small>${esc(cat.name)}${item.time ? ' · ' + esc(item.time) : ''}${item.pillar ? ' · ' + (PILLARS.find(p => p.key === item.pillar)?.short || '') : ''}${item.leadgen ? ' · ⚡' : ''}</small></div><i>›</i></div>`;
 page('activities', {
   title: 'ACTIVITIES',
   render() {
-    const cats = actCats(), secs = actSections(), total = sum(cats.map(c => c.maxSlots)), filled = sum(cats.map(c => slotted(c).length)), b = balance(), bor = curBorough();
-    const kinds = { expansion: 0, maintenance: 0, cost: 0 }; for (const a of slottedActivities()) kinds[a.item.kind]++;
-    const loose = cats.filter(c => !c.sectionId);
-    return `<div class="card sh-cyan"><div class="split"><h3>${filled} / ${total} slots filled${scopeOwner() !== D ? ` · ${esc(bor.name)}` : ''}</h3><b>${r1(slotHours())}h</b></div>${bar(total ? filled / total * 100 : 0, 'cyan')}
-      <p>${b.verdict}</p></div>
-    <div class="card notes"><div class="nh"><span class="act">● ACTIVE</span><small>write what's running in your life right now</small></div>
-      <textarea rows="5" placeholder="e.g. gym 3x a week, Thursday class, weekend side project" ${onChange(v => { D.activityNotes.active = v; commit(); })}>${esc(D.activityNotes.active)}</textarea></div>
-    <div class="card notes"><div class="nh"><span class="ina">○ INACTIVE</span><small>what you've stopped, or meant to start</small></div>
-      <textarea rows="5" placeholder="e.g. running (stopped in March), Spanish lessons" ${onChange(v => { D.activityNotes.inactive = v; commit(); })}>${esc(D.activityNotes.inactive)}</textarea></div>
-    <div class="btns">${btn('+ Category', () => categoryForm(), 'good')}${btn('+ Section', () => sectionForm())}</div>
-    ${secs.map((sec, i) => { const mine = cats.filter(c => c.sectionId === sec.id), closed = isCol(sec.id);
-      return `<div class="sect"><span ${on(() => toggleCol(sec.id))}>${closed ? '▸' : '▾'} ${esc(sec.name)} · ${mine.length}</span><span class="secbtns">${i > 0 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, -1))}>↑</button>` : ''}${i < secs.length - 1 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, 1))}>↓</button>` : ''}<button class="sbtn ghost" ${on(() => sectionForm(sec))}>✎</button></span></div>
-      ${closed ? '' : mine.map(catCard).join('') || empty('Empty section. Edit a category to move it here.')}`; }).join('')}
-    ${secs.length && loose.length ? sect('UNGROUPED') : ''}${loose.map(catCard).join('')}
-    ${!cats.length ? empty('No categories. What are the areas of your week? Tap + Category.') : ''}`;
+    const cats = actCats(), secs = actSections(), bor = curBorough();
+    const all = cats.flatMap(cat => cat.inventory.map(item => ({ cat, item }))), on_ = all.filter(x => isSlotted(x.cat, x.item.id)), off = all.filter(x => !isSlotted(x.cat, x.item.id));
+    return `<div class="split asum"><span>${on_.length} active · ${off.length} inactive${scopeOwner() !== D ? ` · ${esc(bor.name)}` : ''}</span><b>${r1(slotHours())}h a week</b></div>
+    <div class="sect"><span class="green">● ACTIVE · ${on_.length}</span></div>
+    ${on_.map(actRow(true)).join('') || '<p class="hint">Nothing active. Write down what you actually do.</p>'}
+    <div data-add="a">${quickAdd(true)}</div>
+    <div class="sect"><span>○ INACTIVE · ${off.length}</span></div>
+    ${off.map(actRow(false)).join('') || '<p class="hint">Nothing here. Things you stopped or mean to start go here.</p>'}
+    <div data-add="i">${quickAdd(false)}</div>
+    <p class="hint">Tap ● or ○ to switch. Tap a name for details.</p>
+    ${fold('act-cats', `Categories · ${cats.length}`, () => `${cats.map(cat => `<div class="row" ${on(() => categoryForm(cat))}><div class="rbody"><b>${esc(cat.emoji)} ${esc(cat.name)}</b><small>${slotted(cat).length} active · ${cat.inventory.length - slotted(cat).length} inactive${cat.sectionId ? ' · ' + esc(secs.find(x => x.id === cat.sectionId)?.name || '') : ''}</small></div><div class="rval muted">✎</div></div>`).join('')}
+      ${secs.map((sec, i) => `<div class="row"><div class="rbody" ${on(() => sectionForm(sec))}><b>§ ${esc(sec.name)}</b><small>section</small></div>${i > 0 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, -1))}>↑</button>` : ''}${i < secs.length - 1 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, 1))}>↓</button>` : ''}</div>`).join('')}
+      <div class="btns">${btn('+ Category', () => categoryForm())}${btn('+ Section', () => sectionForm())}</div>`)}`;
+  },
+  after(view) {
+    view.querySelectorAll('.qadd input').forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); i.nextElementSibling.click(); } }));
+    if (ui.focusAdd) { view.querySelector(`[data-add="${ui.focusAdd}"] input`)?.focus(); ui.focusAdd = null; } // keep typing after each Add
   },
 });
 
@@ -201,7 +207,7 @@ page('vibecomp', {
     ${edit ? `<div class="card">${stepper('SLOTS', c.maxSlots, v => setMaxSlots(c, v), 1, 10)}${stepper('MAX GAIN %', c.maxGain, v => { c.maxGain = v; }, 1, 30)}<div class="btns">${btn('Rename / cut component', () => compForm(c))}</div></div>` : ''}
     ${slotBoard(c, { tile: gainTile(c.maxGain), open: it => compSheet(id, it.id) })}
     <div class="btns">${btn('+ Input', addItem, 'good')}</div>
-    ${id === 'vc-vibe' ? `${sect('FED BY YOUR SLOTTED ACTIVITIES', 'Activities', () => go('activities'))}
-      ${acts.length ? term('1 + meet×0.5 + stats×0.3 each', [...acts.map(a => [esc(a.item.name), '+' + r1(actVibe(a.item)), 'green']), ['TOTAL BONUS', '+' + r1(sum(acts.map(a => actVibe(a.item))))]]) : empty('No slotted activities. Slot real activities and this rises on its own.')}` : ''}`;
+    ${id === 'vc-vibe' ? `${sect('FED BY YOUR ACTIVE ACTIVITIES', 'Activities', () => go('activities'))}
+      ${acts.length ? term('1 + meet×0.5 + stats×0.3 each', [...acts.map(a => [esc(a.item.name), '+' + r1(actVibe(a.item)), 'green']), ['TOTAL BONUS', '+' + r1(sum(acts.map(a => actVibe(a.item))))]]) : empty('No active activities. Mark what you really do as active and this rises on its own.')}` : ''}`;
   },
 });

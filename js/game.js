@@ -1,6 +1,6 @@
 // LIFE — game. Mutations and the integrity pass that runs on every commit.
 import { D, hooks } from './store.js';
-import { BLANK, CAP, DAYS, STAT } from './schema.js';
+import { BLANK, CAP, DAYS, STAT, MAX_ACTIVE } from './schema.js';
 import { xpForLevel, clamp, scopes, resolveMove, findActivity, findLeadItem, roiForLevel, vibe } from './calc.js';
 import { toast, banner } from './ui.js';
 
@@ -39,9 +39,16 @@ export function slotItem(c, id, idx) {
   c.slots[idx] = id; return true;
 }
 export function unslot(c, id) { const at = c.slots.indexOf(id); if (at >= 0) c.slots[at] = null; }
-export function setMaxSlots(c, n) {
-  c.maxSlots = clamp(n, 1, 10);
+export function setMaxSlots(c, n, max = 10) {
+  c.maxSlots = clamp(n, 1, max);
   c.slots = c.slots.slice(0, c.maxSlots); while (c.slots.length < c.maxSlots) c.slots.push(null);
+}
+// Activities are simply active or inactive: the slot list grows and shrinks to fit what is active.
+export function setActive(c, id, active) {
+  unslot(c, id);
+  const ids = c.slots.filter(Boolean); if (active) ids.push(id);
+  if (ids.length > MAX_ACTIVE) { toast(`${MAX_ACTIVE} active in one category is the limit.`); ids.pop(); }
+  c.maxSlots = Math.max(1, ids.length); c.slots = ids; while (c.slots.length < c.maxSlots) c.slots.push(null);
 }
 export function removeItem(c, id) { unslot(c, id); c.inventory = c.inventory.filter(i => i.id !== id); }
 

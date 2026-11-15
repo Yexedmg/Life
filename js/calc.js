@@ -196,7 +196,7 @@ export function balance() {
   for (const a of slottedActivities()) k[a.item.kind] = (k[a.item.kind] || 0) + 1;
   k.expansion += sum(leadMethods().map(m => slotted(m).length)); // lead slots always count as expansion
   const total = k.expansion + k.maintenance + k.cost, e = total ? k.expansion / total * 100 : 0, c = total ? k.cost / total * 100 : 0;
-  const verdict = !total ? 'Nothing slotted. There is no balance to judge yet.'
+  const verdict = !total ? 'Nothing active yet.'
     : c >= 50 ? 'You are draining yourself. Cut back on indulgences and costs.'
     : c >= 30 ? 'Heavy on cost — indulgences are eating into your balance. Careful.'
     : e >= 70 ? "Heavy on expansion — you are pushing growth hard. Don't burn out."

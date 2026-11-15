@@ -474,12 +474,17 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .st-e button { font: 700 11px var(--mono); color: var(--red); padding: 6px 4px; } .st-e p { font-size: 14px; color: var(--text2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .qdesc { font: 400 13.5px/1.4 var(--sans); color: var(--text2); font-style: italic; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-/* level and age numbers: a mono face so the 1 has a clear foot */
-.hud-player .lv b { font-family: var(--mono); font-weight: 700; font-size: 44px; letter-spacing: -.02em; }
 
-/* activities: free writing for active / inactive */
-.notes { display: flex; flex-direction: column; gap: 8px; margin-top: 10px !important; }
-.notes .nh { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.notes .nh span { font: 800 13px var(--sans); letter-spacing: .1em; } .notes .act { color: var(--green); } .notes .ina { color: var(--text2); }
-.notes .nh small { font: 400 11px var(--mono); color: var(--muted); }
-.notes textarea { min-height: 120px; font: 400 15px/1.5 var(--sans); }
+
+/* big numbers: Inter's default 1 is a plain stroke with a small flag and no foot */
+:root { --num: 'Inter', -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+.hud-player .lv b, .count b, .fac .fc b, .lvlset > div b, .dexn b, .rng output, .tleft b, .pil .pm b { font-family: var(--num); font-weight: 800; letter-spacing: -.02em; }
+.hud-player .lv b { font-size: 44px; }
+
+/* activities: two plain lists */
+.asum { padding: 2px 2px 0; } .sect .green { color: var(--green); }
+.arow { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line2); margin-top: 0 !important; min-height: 54px; }
+.arow .adot { width: 44px; height: 54px; font: 400 20px var(--mono); color: var(--muted); flex-shrink: 0; } .arow.on .adot { color: var(--green); }
+.arow .abody { flex: 1; min-width: 0; padding: 8px 0; display: flex; flex-direction: column; gap: 1px; cursor: pointer; } .arow .abody b { font: 700 16px var(--sans); overflow-wrap: anywhere; } .arow:not(.on) .abody b { color: var(--text2); font-weight: 500; }
+.arow .abody small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .arow > i { font-style: normal; color: var(--dark); font-size: 20px; padding: 0 8px; }
+.qadd { display: flex; gap: 8px; margin-top: 10px; } .qadd input { flex: 1; min-height: 46px; padding: 9px 12px; } .qadd .sbtn { padding: 0 18px; border-radius: var(--r); }

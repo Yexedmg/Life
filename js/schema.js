@@ -1,7 +1,7 @@
 // LIFE — schema. The single source of truth for defaults, entity shapes and migrations.
 // normalize() ALWAYS runs: on fresh installs, on loads, on imports, on undo.
 
-export const VERSION = 2;
+export const VERSION = 3;
 export const SAVE_KEY = 'life-save';
 export const LEGACY_KEY = 'life-rpg-data'; // the pre-rebuild app; read once, never written
 export const UI_KEY = 'life-ui';
@@ -50,6 +50,7 @@ export const PILLARS = [
   { key: 'looks', label: 'Looks / Appearance', short: 'Looks', color: '#C852FF' },
   { key: 'health', label: 'Health', short: 'Health', color: '#40E382' },
 ];
+export const MAX_ACTIVE = 50; // most active items one category can hold
 export const POOL_MIN_AGE = 18; // the pool counts adults only
 export const ACTIVE_DAYS = 14; // a factor is ACTIVE if you logged something real for it this recently
 export const LEADS_PER_STAR = 20;
@@ -136,7 +137,6 @@ export function defaults() {
     targets: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },   // what you want per week; 0 = no target
     baseline: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },  // your count from before the app, added to the total
     pool: { size: 0, maxAge: 24, exes: 0 },   // women aged 18–maxAge where you live (you enter it), and girlfriends you had before
-    activityNotes: { active: '', inactive: '' },   // free writing: what is active, what is inactive
     factorStory: { social: [], girls: [], money: [], looks: [], health: [] },   // "where this stands", step by step, per factor
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
@@ -169,6 +169,18 @@ const MIGRATIONS = [
     if (c && typeof c === 'object') Object.assign(items[0], { has: !!c.has, detail: c.name || '', tier: c.tier || 'C', wantName: c.wantName || '', wantPrice: +c.wantPrice || 0, notes: c.notes || '' });
     if (!Array.isArray(s.keyItems)) s.keyItems = items;
   },
+  function v2_notes_to_activities(s) { // text typed into the short-lived Active / Inactive boxes becomes real activities
+    const n = s.activityNotes; if (!n || typeof n !== 'object') return;
+    const lines = t => String(t || '').split('\n').map(x => x.trim()).filter(Boolean);
+    if (!lines(n.active).length && !lines(n.inactive).length) return;
+    if (!Array.isArray(s.activityCategories)) s.activityCategories = [];
+    let cat = s.activityCategories.find(c => c && /^other$/i.test(c.name || ''));
+    if (!cat) { cat = BLANK.category('Other', '[···]', 1); s.activityCategories.push(cat); }
+    cat.inventory = arr(cat.inventory); cat.slots = arr(cat.slots).filter(Boolean);
+    for (const name of lines(n.inactive)) cat.inventory.push({ ...BLANK.activity(), name });
+    for (const name of lines(n.active)) { const it = { ...BLANK.activity(), name }; cat.inventory.push(it); cat.slots.push(it.id); }
+    cat.maxSlots = Math.max(1, cat.slots.length);
+  },
 ];
 
 const arr = a => (Array.isArray(a) ? a : []);
@@ -191,7 +203,7 @@ function fill(def, src) {
 }
 
 function shapeSlots(c) {
-  c.maxSlots = clamp(Math.round(num(c.maxSlots, 2)), 1, 10);
+  c.maxSlots = clamp(Math.round(num(c.maxSlots, 2)), 1, MAX_ACTIVE);
   c.slots = arr(c.slots).slice(0, c.maxSlots);
   while (c.slots.length < c.maxSlots) c.slots.push(null);
   return c;
@@ -240,7 +252,6 @@ export function normalize(raw) {
   o.eras = fit(BLANK.era, o.eras).filter(e => e.start && e.end);
   const steps = l => arr(l).filter(e => e && e.text).map(e => ({ id: e.id || uid(), t: num(e.t, Date.now()), text: String(e.text) }));
   for (const p of PILLARS) o.factorStory[p.key] = steps(o.factorStory[p.key]);
-  o.activityNotes = { active: String(o.activityNotes?.active ?? ''), inactive: String(o.activityNotes?.inactive ?? '') };
   o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, story: steps(m.story), milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks) })) }));
   o.abilities = fit(BLANK.ability, o.abilities).map(a => ({ ...a, assignments: arr(a.assignments) }));
   o.lifestyles = fit(BLANK.lifestyle, o.lifestyles).map(l => ({ ...l, activities: arr(l.activities), schedule: shapeWeek(l.schedule) }));

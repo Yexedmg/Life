@@ -136,7 +136,7 @@ page('portal', {
       t(GIRL, 'Girlfriends', `${taken()} · ${chasers().length} in play`, 'life'), t('≡', 'Roster', `${D.girls.length} girl${D.girls.length === 1 ? '' : 's'} · ${D.friends.length} friend${D.friends.length === 1 ? '' : 's'}`, 'roster'),
       t('!', 'Meet', `${Math.round(meetBar())}% meet bar`, 'meet'), t('⌘', 'Social media', `${D.socialMedia.length} platforms`, 'socialmedia')])
     + grp('GROW', [
-      t('▲', 'Activities', 'slots & bench', 'activities'), t('◉', 'Lead gen', r1(leadBar()) + '% bar', 'leadgen'),
+      t('▲', 'Activities', `${slottedActivities().length} active`, 'activities'), t('◉', 'Lead gen', r1(leadBar()) + '% bar', 'leadgen'),
       t('✦', 'The Entity', r1(vibe()) + '% vibe', 'vibe'), t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'),
       t('★', 'Abilities', `${D.abilities.filter(a => a.unlocked).length}/${D.abilities.length} unlocked`, 'abilities')])
     + grp('GOALS', [
