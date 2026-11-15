@@ -473,3 +473,6 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .st-e { border-top: 1px dashed var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; } .st-e > div { display: flex; align-items: center; gap: 10px; } .st-e b { font: 700 12px var(--mono); } .st-e small { flex: 1; color: var(--muted); }
 .st-e button { font: 700 11px var(--mono); color: var(--red); padding: 6px 4px; } .st-e p { font-size: 14px; color: var(--text2); white-space: pre-wrap; overflow-wrap: anywhere; }
 .qdesc { font: 400 13.5px/1.4 var(--sans); color: var(--text2); font-style: italic; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* level and age numbers: a mono face so the 1 has a clear foot */
+.hud-player .lv b { font-family: var(--mono); font-weight: 700; font-size: 44px; letter-spacing: -.02em; }
