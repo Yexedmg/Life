@@ -2,8 +2,9 @@
 import { D, commit, ui } from '../store.js';
 import { BLANK, DAYS, STAT, SLOT_COLORS, PILLARS } from '../schema.js';
 import { page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol, fold } from '../ui.js';
-import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime } from '../calc.js';
+import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime, fmtDate, dts, daysTo } from '../calc.js';
 import { log } from '../game.js';
+import { northstarForm } from './home.js';
 
 const moveOptions = () => elements().filter(x => x.el.levelUp.length).map(x => ({ group: `⤴ ${x.el.title}`, options: x.el.levelUp.map(m => [`m|${x.el.id}|${m.id}`, m.text]) }));
 const refOf = v => { const [t, a, b] = (v || '').split('|'); return t === 'm' ? { statId: a, moveId: b } : null; };
@@ -102,14 +103,29 @@ const allocForm = ta => form({ title: ta ? 'Edit day type' : 'New day type', fie
 page('schedule', {
   title: 'PLAN',
   render() {
-    const ta = curAlloc(), hrs = sum(ta.slots.map(s => (toMin(s.end) - toMin(s.start)) / 60));
-    return `${sect('TIME ALLOCATION — THE IDEAL DAY', '+ Day type', () => allocForm())}
-    ${tabs(D.timeAllocs.map(t => [t.id, esc(t.name)]), ta.id, id => { D.currentTimeAllocId = id; commit(); })}
-    <div class="card sh-cyan">${strip(ta)}${ta.slots.length ? `<div class="split dim"><span>${ta.slots.length} blocks</span><span>${r1(hrs)}h painted · ${r1(24 - hrs)}h open</span></div>` : `<p class="hint">Empty day — tap '+ Add' and paint your perfect one.</p>`}
-      <div class="catfoot"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎ ${esc(ta.name)}</button><button class="sbtn" ${on(() => slotForm(ta))}>+ Add</button></div></div>
-    ${sect('THE ACTUAL WEEK')}
-    ${allocBar()}
+    return `${allocBar()}
     ${weekPanel(D.schedule, 'main')}`;
+  },
+});
+
+// FUTURE — where you live ahead of time: the day you want, and what you will have and live.
+page('future', {
+  title: 'FUTURE',
+  render() {
+    const ta = curAlloc(), hrs = sum(ta.slots.map(s => (toMin(s.end) - toMin(s.start)) / 60)), ns = D.northstar;
+    const want = D.keyItems.filter(k => !k.has || k.wantName), exp = D.adventures.filter(x => !x.doneAt).sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
+    const quests = D.manifests.filter(m => !m.achievedAt);
+    return `<div class="north ${ns ? '' : 'none'}" ${on(northstarForm)}><small>✦ WHERE IT ALL GOES</small><b>${ns ? esc(ns.text) : 'No direction set. Tap to call it.'}</b>${ns?.targetDate ? `<em>${fmtDate(dts(ns.targetDate))} · ${daysTo(ns.targetDate)} days</em>` : ''}</div>
+    ${sect('THE DAY YOU WILL LIVE', '+ Day type', () => allocForm())}
+    ${tabs(D.timeAllocs.map(t => [t.id, esc(t.name)]), ta.id, id => { D.currentTimeAllocId = id; commit(); })}
+    <div class="card sh-cyan">${strip(ta)}${ta.slots.length ? `<div class="split dim"><span>${ta.slots.length} blocks</span><span>${r1(hrs)}h painted · ${r1(24 - hrs)}h open</span></div>` : `<p class="hint">Empty day — tap '+ Add' and paint the day you want to be living.</p>`}
+      <div class="catfoot"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎ ${esc(ta.name)}</button><button class="sbtn" ${on(() => slotForm(ta))}>+ Add</button></div></div>
+    ${sect('WHAT YOU WILL HAVE', 'Key items', () => go('keyitems'))}
+    ${want.map(k => row({ icon: esc(k.icon), title: esc(k.wantName || k.name), desc: k.has ? `upgrade from ${esc(k.detail || k.name)}` : esc(k.wantName ? k.name : 'not yet'), val: k.wantPrice ? '$' + Math.round(k.wantPrice).toLocaleString('en-US') : '', fn: () => go('keyitems') })).join('') || empty('Every key item obtained, and no upgrade named.')}
+    ${sect('WHAT YOU WILL LIVE', 'Experiences', () => go('adventures'))}
+    ${exp.slice(0, 5).map(x => row({ icon: '✧', title: esc(x.name), desc: x.when ? `${fmtDate(dts(x.when))}${x.withWho ? ' · with ' + esc(x.withWho) : ''}` : esc(x.withWho ? 'with ' + x.withWho : 'no date yet'), fn: () => go('adventures') })).join('') || empty('Nothing you want to live yet.')}
+    ${sect('WHAT YOU ARE GOING AFTER', 'Quests', () => go('manifest'))}
+    ${quests.slice(0, 5).map(m => row({ icon: esc(m.emoji), title: esc(m.name), fn: () => go('manifest') })).join('') || empty('No quests.')}`;
   },
 });
 
