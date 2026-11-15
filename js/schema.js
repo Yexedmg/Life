@@ -1,7 +1,7 @@
 // LIFE — schema. The single source of truth for defaults, entity shapes and migrations.
 // normalize() ALWAYS runs: on fresh installs, on loads, on imports, on undo.
 
-export const VERSION = 1;
+export const VERSION = 2;
 export const SAVE_KEY = 'life-save';
 export const LEGACY_KEY = 'life-rpg-data'; // the pre-rebuild app; read once, never written
 export const UI_KEY = 'life-ui';
@@ -86,10 +86,12 @@ export const BLANK = {
   income: () => ({ id: uid(), title: '', desc: '', amount: 0, hoursPerWeek: 0, status: 'active', projections: [], createdAt: Date.now() }),
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
   adventure: () => ({ id: uid(), name: '', when: '', withWho: '', pillar: '', notes: '', doneAt: null, createdAt: Date.now() }),
+  keyItem: (name = '', icon = '◆') => ({ id: uid(), name, icon, has: false, detail: '', tier: 'C', wantName: '', wantPrice: 0, notes: '', gotAt: null }),
   outfit: () => ({ id: uid(), name: '', tier: 'C', occasion: '', pieces: '', createdAt: Date.now() }),
   ratingItem: () => ({ id: uid(), name: '', tier: 'C', later: false, upgrade: null, upgrades: [] }),
 };
 
+function defaultKeyItems() { return [BLANK.keyItem('Car', '▣'), BLANK.keyItem("Driver's licence", '▤'), BLANK.keyItem('Own place', '⌂')]; }
 function defaultCategories() {
   return [['Sports', '[SPT]', 3], ['Part-time Job', '[JOB]', 1], ['School / Classes', '[CLS]', 2], ['Combat', '[CMB]', 2],
     ['Social', '[SOC]', 2], ['Grooming', '[GRM]', 1], ['Other', '[···]', 3]].map(a => BLANK.category(...a));
@@ -138,7 +140,7 @@ export function defaults() {
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],
     adventures: [],       // experiences you want to live: a Christmas market, a trip, a night out
-    car: { has: false, name: '', tier: 'C', notes: '', wantName: '', wantPrice: 0 },   // the car you drive, and the one you want
+    keyItems: defaultKeyItems(),   // crucial equipment, like key items in a game: you have it or you don't
     outfits: [],          // the wardrobe: complete outfits you can actually put on
     log: [],
     settings: { birthday: '' },
@@ -159,6 +161,11 @@ const MIGRATIONS = [
     }
     for (const f of arr(s.friends)) if (f.rarity == null) f.rarity = f.socialStar || 1;
     for (const m of arr(s.manifests)) for (const ms of arr(m.milestones)) ms.tasks = arr(ms.tasks);
+  },
+  function v1_car_to_key_items(s) { // the single car becomes the first key item
+    const items = defaultKeyItems(), c = s.car;
+    if (c && typeof c === 'object') Object.assign(items[0], { has: !!c.has, detail: c.name || '', tier: c.tier || 'C', wantName: c.wantName || '', wantPrice: +c.wantPrice || 0, notes: c.notes || '' });
+    if (!Array.isArray(s.keyItems)) s.keyItems = items;
   },
 ];
 
@@ -241,7 +248,7 @@ export function normalize(raw) {
   o.gains = arr(o.gains).filter(g => g && PILLARS.some(p => p.key === g.pillar) && Number.isFinite(+g.amount)).slice(-2000).map(g => ({ id: g.id || uid(), t: num(g.t, Date.now()), pillar: g.pillar, amount: +g.amount, note: String(g.note || '') }));
   o.pool.maxAge = clamp(Math.round(num(o.pool.maxAge, 24)), POOL_MIN_AGE, 99); o.pool.size = Math.max(0, Math.round(num(o.pool.size))); o.pool.exes = Math.max(0, Math.round(num(o.pool.exes)));
   o.girlsRecurring = Math.max(0, Math.round(num(o.girlsRecurring)));
-  if (TIER_VAL[o.car.tier] == null) o.car.tier = 'C'; o.car.wantPrice = Math.max(0, num(o.car.wantPrice));
+  o.keyItems = fit(BLANK.keyItem, o.keyItems).map(k => ({ ...k, has: !!k.has, tier: TIER_VAL[k.tier] == null ? 'C' : k.tier, wantPrice: Math.max(0, num(k.wantPrice)) }));
   o.adventures = fit(BLANK.adventure, o.adventures);
   o.outfits = fit(BLANK.outfit, o.outfits).map(x => ({ ...x, tier: TIER_VAL[x.tier] == null ? 'C' : x.tier }));
   o.ratings = shapeRatings(o.ratings);

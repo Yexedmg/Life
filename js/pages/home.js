@@ -97,6 +97,9 @@ page('home', {
     ${allocBar()}
     ${all.map(factorRow).join('')}
 
+    <div class="sect"><span>KEY ITEMS</span><span>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length}</span></div>
+    <div class="kstrip" ${on(() => go('keyitems'))}>${D.keyItems.map(k => `<div class="${k.has ? 'has' : ''}"><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>
+
     ${sect('QUESTS', quests.length ? 'All' : '+ Quest', () => go('manifest'))}
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
       return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('')

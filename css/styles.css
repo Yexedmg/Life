@@ -457,3 +457,10 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .hud-player .lv.age small { color: var(--text2); } .hud-player .lv.age em { font: 400 9.5px var(--mono); font-style: normal; color: var(--muted); white-space: nowrap; margin-top: 2px; }
 
 .dex { cursor: pointer; } .dexn { display: flex; align-items: baseline; gap: 8px; } .dexn b { font: 800 40px/1 var(--sans); color: var(--pink); } .dexn i { font: 400 26px var(--mono); font-style: normal; color: var(--muted); } .dexn span { font: 700 24px var(--mono); color: var(--text2); }
+
+/* key items */
+.kstrip { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; cursor: pointer; margin-top: 8px !important; } .kstrip::-webkit-scrollbar { display: none; }
+.kstrip > div { flex: 0 0 96px; padding: 12px 8px; border-radius: var(--r); border: 1px dashed var(--dark); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; opacity: .55; }
+.kstrip > div i { font: 700 24px var(--mono); font-style: normal; color: var(--muted); } .kstrip > div span { font: 700 11px/1.2 var(--sans); color: var(--text2); }
+.kstrip > div.has { border: 1px solid var(--gold); opacity: 1; background: linear-gradient(180deg, rgba(255,203,28,.12), rgba(255,203,28,.02)); } .kstrip > div.has i { color: var(--gold); } .kstrip > div.has span { color: var(--text); }
+.kitem h3 i { font-style: normal; color: var(--muted); margin-right: 4px; } .kitem.has { border-color: color-mix(in srgb, var(--gold) 50%, transparent); } .kitem.has h3 i { color: var(--gold); } .kitem .tier { min-width: 20px; height: 20px; font-size: 11px; margin-right: 4px; }

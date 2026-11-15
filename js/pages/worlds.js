@@ -47,7 +47,7 @@ page('ratings', {
     const p = ratingsPct();
     return `<div class="card hero sh-gold"><small>⭐ EVERYTHING YOU RUN — RATED S TO F, PUSHED TO ITS POTENTIAL</small><div class="count"><b>${p == null ? '—' : Math.round(p) + '%'}</b><span>of potential<br>100% = everything S</span></div>${p == null ? '' : bar(p, 'pot')}</div>
     <div class="card" ${on(() => go('wardrobe'))}><div class="split"><h3>◆ Wardrobe</h3><b>${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'} →</b></div>${D.outfits.length ? potBar(outfitPct()) : '<div class="split dim"><span>How many complete outfits do you own?</span></div>'}</div>
-    <div class="card" ${on(() => go('car'))}><div class="split"><h3>▣ Car</h3><b>${D.car.has ? esc(D.car.name) : 'none'} →</b></div>${D.car.wantName ? `<div class="split dim"><span>want: ${esc(D.car.wantName)}</span></div>` : ''}</div>
+    <div class="card" ${on(() => go('keyitems'))}><div class="split"><h3>◆ Key items</h3><b>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length} →</b></div></div>
     ${sect('CATEGORIES', '+ Category', () => nodeForm(D.ratings, null, 1))}
     ${D.ratings.map(n => nodeRow(n, [n.id])).join('') || empty('Nothing to rate. What do you run every day?')}`;
   },
@@ -91,23 +91,37 @@ page('wardrobe', {
   },
 });
 
-// ════════ CAR ════════
-function carForm() {
-  const c = D.car;
-  form({ title: 'Your car', sub: 'What you drive now, and what you want to drive.',
-    fields: [{ name: 'has', label: 'I have a car', type: 'check', value: c.has }, { name: 'name', label: 'Which one?', value: c.name, placeholder: 'VW Polo 2015' }, { name: 'tier', label: 'How good is it, really?', type: 'tier', value: c.tier },
-      { name: 'wantName', label: 'The car you want', value: c.wantName, placeholder: 'BMW 1 Series' }, { name: 'wantPrice', label: 'What does it cost? ($)', type: 'number', min: 0, value: c.wantPrice || '' }, { name: 'notes', label: 'Notes', type: 'textarea', value: c.notes }],
-    onSubmit: v => { if (v.has && !v.name) { toast('Which car is it?'); return false; } Object.assign(c, { has: v.has, name: v.has ? v.name : '', tier: v.tier || 'C', wantName: v.wantName, wantPrice: Math.max(0, v.wantPrice || 0), notes: v.notes }); } });
+// ════════ KEY ITEMS ════════
+// Crucial equipment. Like a game's key items: you either have it or you don't, and some doors stay shut until you do.
+function keyItemForm(k) {
+  form({ title: k ? k.name : 'New key item', sub: 'A piece of equipment that changes what you can do.',
+    fields: [{ name: 'name', label: 'What is it?', value: k?.name, required: true, placeholder: 'Car, licence, own place…' }, { name: 'icon', label: 'Icon', value: k?.icon || '◆' },
+      { name: 'has', label: 'I have it', type: 'check', value: k?.has }, { name: 'detail', label: 'Which one do you have?', value: k?.detail, placeholder: 'VW Polo 2015' }, { name: 'tier', label: 'How good is it, really?', type: 'tier', value: k?.tier || 'C' },
+      { name: 'wantName', label: k?.has ? 'The upgrade you want' : 'The one you want', value: k?.wantName, placeholder: 'BMW 1 Series' }, { name: 'wantPrice', label: 'What does it cost? ($)', type: 'number', min: 0, value: k?.wantPrice || '' },
+      { name: 'notes', label: 'Notes', type: 'textarea', value: k?.notes }],
+    onSubmit: v => { const data = { name: v.name, icon: v.icon || '◆', has: v.has, detail: v.has ? v.detail : '', tier: v.tier || 'C', wantName: v.wantName, wantPrice: Math.max(0, v.wantPrice || 0), notes: v.notes };
+      if (k) { if (v.has && !k.has) data.gotAt = Date.now(); Object.assign(k, data); } else D.keyItems.push({ ...BLANK.keyItem(), ...data, gotAt: v.has ? Date.now() : null }); },
+    onDelete: k ? () => destroy(`${k.name} — removed from key items.`, () => { D.keyItems = D.keyItems.filter(x => x !== k); }) : null });
 }
-page('car', {
-  title: 'CAR',
+function gotKeyItem(k) {
+  const snap = JSON.stringify(D.keyItems), what = k.wantName || k.name;
+  Object.assign(k, { has: true, detail: k.wantName || k.detail, tier: k.wantName ? 'A' : k.tier, wantName: '', wantPrice: 0, gotAt: Date.now() });
+  log(`Key item obtained: ${k.name}${k.detail ? ' — ' + k.detail : ''}`, 'upgrade'); commit();
+  toast(`${what} — obtained.`, () => { D.keyItems = JSON.parse(snap); commit(); });
+}
+page('keyitems', {
+  title: 'KEY ITEMS',
   render() {
-    const c = D.car, bal = D.player.stats.money, pct = c.wantPrice ? clamp(bal / c.wantPrice * 100) : 0;
-    const gotIt = () => { const snap = { ...c }; log(`Got the car: ${c.wantName}`, 'upgrade'); gain('looks', 1, c.wantName); Object.assign(c, { has: true, name: c.wantName, tier: 'A', wantName: '', wantPrice: 0 }); commit(); toast(`${c.name} — it's yours.`, () => { Object.assign(D.car, snap); commit(); }); };
-    return `<div class="card hero ${c.has ? 'sh-cyan' : 'dashed'}"><small>▣ WHAT YOU DRIVE</small>${c.has ? `<h2>${tierBadge(c.tier)} ${esc(c.name)}</h2>` : '<h2 class="muted">No car.</h2>'}${c.notes ? `<p>${esc(c.notes)}</p>` : ''}</div>
-    <div class="card ${c.wantName ? 'sh-gold' : 'dashed'}"><small>✧ THE CAR YOU WANT</small>${c.wantName ? `<h3>${esc(c.wantName)}</h3>${c.wantPrice ? `<div class="split"><span>${money(bal)} of ${money(c.wantPrice)}</span><b>${Math.round(pct)}%</b></div>${bar(pct, 'gold')}<div class="split dim"><span>${bal >= c.wantPrice ? 'You can afford it.' : money(c.wantPrice - bal) + ' to go'}</span></div>` : '<p>No price set.</p>'}
-      <div class="catfoot"><button class="sbtn" ${on(gotIt)}>Got it</button></div>` : '<p>Which car do you want? Tap Edit and name it.</p>'}</div>
-    <div class="btns">${btn('Edit', carForm, 'good')}</div>`;
+    const have = D.keyItems.filter(k => k.has), bal = D.player.stats.money;
+    const card = k => { const pct = k.wantPrice ? clamp(bal / k.wantPrice * 100) : 0;
+      return `<div class="card kitem ${k.has ? 'has' : 'dashed'}"><div class="split" ${on(() => keyItemForm(k))}><h3><i>${esc(k.icon)}</i> ${esc(k.name)}</h3><b class="${k.has ? 'green' : 'red'}">${k.has ? 'OBTAINED' : 'MISSING'}</b></div>
+        ${k.has ? `<div class="split dim" ${on(() => keyItemForm(k))}><span>${tierBadge(k.tier)} ${esc(k.detail || 'no detail')}</span><span>${k.gotAt ? fmtDate(k.gotAt) : ''}</span></div>` : ''}
+        ${k.wantName || (!k.has && k.wantPrice) ? `<div class="split"><span>${k.has ? 'upgrade' : 'want'}: ${esc(k.wantName || k.name)}</span><b>${k.wantPrice ? money(k.wantPrice) : ''}</b></div>${k.wantPrice ? `${bar(pct, 'gold')}<div class="split dim"><span>${bal >= k.wantPrice ? 'You can afford it.' : money(k.wantPrice - bal) + ' to go'}</span><span>${Math.round(pct)}%</span></div>` : ''}` : ''}
+        ${k.notes ? `<p>${esc(k.notes)}</p>` : ''}
+        <div class="catfoot"><button class="sbtn ghost" ${on(() => keyItemForm(k))}>✎ Edit</button>${!k.has || k.wantName ? `<button class="sbtn" ${on(() => gotKeyItem(k))}>Got it</button>` : ''}</div></div>`; };
+    return `<div class="card hero sh-gold"><small>◆ KEY ITEMS — crucial equipment</small><div class="count"><b>${have.length}</b><span>/ ${D.keyItems.length} obtained</span></div>${bar(D.keyItems.length ? have.length / D.keyItems.length * 100 : 0, 'gold')}</div>
+    <div class="btns">${btn('+ Key item', () => keyItemForm(), 'good')}</div>
+    ${D.keyItems.map(card).join('') || empty('No key items. What equipment changes what you can do? A car, a licence, your own place.')}`;
   },
 });
 
