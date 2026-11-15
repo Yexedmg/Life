@@ -17,7 +17,7 @@ function entryForm(schedule, day, e) {
       ...actCats().filter(c => c.inventory.length).map(c => ({ group: c.name, options: c.inventory.map(i => [`a|${c.id}|${i.id}`, i.name + (i.time ? ` (${i.time})` : '')]) })), ...moveOptions()] },
       { name: 'name', label: 'Custom name', value: cur ? '' : e?.name },
       { name: 'pillar', label: 'Which category is it?', type: 'seg', value: e?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] }, { name: 'from', label: 'From (empty = the activity\'s own time)', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' }],
-    submit: 'Paint it',
+    submit: 'Save',
     onSubmit: v => {
       const [t, a, b] = v.src.split('|'), f = t === 'a' ? findActivity(b) : null, mv = t === 'm' ? resolveMove({ statId: a, moveId: b }) : null;
       let time = v.from && v.to ? `${v.from}–${v.to}` : '';
@@ -72,12 +72,12 @@ const curAlloc = () => D.timeAllocs.find(t => t.id === D.currentTimeAllocId) || 
 function slotForm(ta, s) {
   const cur = s?.levelUpRef ? `m|${s.levelUpRef.statId}|${s.levelUpRef.moveId}` : '';
   form({
-    title: s ? 'Edit block' : 'Paint a block', sub: 'The ideal shape of this kind of day.',
+    title: s ? 'Edit block' : 'Add a block', sub: 'The ideal shape of this kind of day.',
     fields: [{ name: 'title', label: 'What is this time for?', value: s?.title }, { name: 'start', label: 'From', type: 'time', value: s?.start }, { name: 'end', label: 'Until', type: 'time', value: s?.end },
       { name: 'pillar', label: 'Which category is it?', type: 'seg', value: s?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
       { name: 'color', label: 'Colour (only used with no category)', type: 'color', value: s?.color || SLOT_COLORS[ta.slots.length % SLOT_COLORS.length], options: SLOT_COLORS.map(c => [c, c]) },
       { name: 'ref', label: '⤴ Level-up move (optional — fills the title)', type: 'select', value: cur, options: [['', '— None —'], ...moveOptions()] }],
-    submit: 'Paint it',
+    submit: 'Save',
     onSubmit: v => {
       const ref = refOf(v.ref), title = v.title || (ref && resolveMove(ref)?.move.text);
       if (!title) { toast('Give it a title.'); return false; }
@@ -123,7 +123,7 @@ page('future', {
     const blocks = ta.slots.map(x => ({ title: (x.levelUpRef ? '⤴ ' : '') + x.title, start: toMin(x.start), end: toMin(x.end), from: x.start, to: x.end, label: `${x.start}–${x.end}`, hrs: r1((toMin(x.end) - toMin(x.start)) / 60), color: PILLARS.find(p => p.key === x.pillar)?.color || x.color, tag: PILLARS.find(p => p.key === x.pillar)?.short || '', fn: () => slotForm(ta, x), sub: '' }));
     return `<div class="sect"><span>YOUR IDEAL DAY</span><span class="secbtns"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎</button><button class="sbtn" ${on(() => allocForm())}>+ Day type</button></span></div>
     ${D.timeAllocs.length > 1 ? tabs(D.timeAllocs.map(t => [t.id, esc(t.name)]), ta.id, id => { D.currentTimeAllocId = id; commit(); }) : ''}
-    ${dayView(blocks, 'Empty day — tap \'+ Add\' and paint your ideal day.', () => slotForm(ta))}
+    ${dayView(blocks, 'Empty day — tap \'+ Add\' and set your ideal day.', () => slotForm(ta))}
     ${sect('KEY ITEMS FOR THIS DAY', 'Key items', () => go('keyitems'))}
     ${want.map(k => row({ icon: esc(k.icon), title: esc(k.wantName || k.name), desc: k.has ? `today: ${esc(k.detail || k.name)}` : 'today: not yet', val: k.wantPrice ? '$' + Math.round(k.wantPrice).toLocaleString('en-US') : '', fn: () => go('keyitems') })).join('') || empty('Every key item obtained, and no upgrade named.')}`;
   },
