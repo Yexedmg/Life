@@ -476,3 +476,10 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 
 /* level and age numbers: a mono face so the 1 has a clear foot */
 .hud-player .lv b { font-family: var(--mono); font-weight: 700; font-size: 44px; letter-spacing: -.02em; }
+
+/* activities: free writing for active / inactive */
+.notes { display: flex; flex-direction: column; gap: 8px; margin-top: 10px !important; }
+.notes .nh { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.notes .nh span { font: 800 13px var(--sans); letter-spacing: .1em; } .notes .act { color: var(--green); } .notes .ina { color: var(--text2); }
+.notes .nh small { font: 400 11px var(--mono); color: var(--muted); }
+.notes textarea { min-height: 120px; font: 400 15px/1.5 var(--sans); }

@@ -1,7 +1,7 @@
 // The slot engine's three faces: Activities, Lead Generation, The Entity. One board component for all.
 import { D, commit } from '../store.js';
 import { PILLARS, BLANK, DIFFS, ROIS, ROI_TIER, ROI_COLOR, GAIN, STAT, LEAD_MAX_STARS, LEADS_PER_STAR } from '../schema.js';
-import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, fold } from '../ui.js';
+import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, fold } from '../ui.js';
 import { actCats, actSections, leadMethods, slotted, isSlotted, slottedActivities, slotHours, sum, parseRange, fxKeys, itemGain, methodGain, leadBar, leadCeiling,
   leadStars, totalLeads, methodRoi, compGain, vibe, vibeCeiling, actVibe, r1, balance, curBorough, scopeOwner } from '../calc.js';
 import { slotItem, unslot, setMaxSlots, removeItem, doActivity, fxText } from '../game.js';
@@ -93,6 +93,10 @@ page('activities', {
     const loose = cats.filter(c => !c.sectionId);
     return `<div class="card sh-cyan"><div class="split"><h3>${filled} / ${total} slots filled${scopeOwner() !== D ? ` · ${esc(bor.name)}` : ''}</h3><b>${r1(slotHours())}h</b></div>${bar(total ? filled / total * 100 : 0, 'cyan')}
       <p>${b.verdict}</p></div>
+    <div class="card notes"><div class="nh"><span class="act">● ACTIVE</span><small>write what's running in your life right now</small></div>
+      <textarea rows="5" placeholder="e.g. gym 3x a week, Thursday class, weekend side project" ${onChange(v => { D.activityNotes.active = v; commit(); })}>${esc(D.activityNotes.active)}</textarea></div>
+    <div class="card notes"><div class="nh"><span class="ina">○ INACTIVE</span><small>what you've stopped, or meant to start</small></div>
+      <textarea rows="5" placeholder="e.g. running (stopped in March), Spanish lessons" ${onChange(v => { D.activityNotes.inactive = v; commit(); })}>${esc(D.activityNotes.inactive)}</textarea></div>
     <div class="btns">${btn('+ Category', () => categoryForm(), 'good')}${btn('+ Section', () => sectionForm())}</div>
     ${secs.map((sec, i) => { const mine = cats.filter(c => c.sectionId === sec.id), closed = isCol(sec.id);
       return `<div class="sect"><span ${on(() => toggleCol(sec.id))}>${closed ? '▸' : '▾'} ${esc(sec.name)} · ${mine.length}</span><span class="secbtns">${i > 0 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, -1))}>↑</button>` : ''}${i < secs.length - 1 ? `<button class="sbtn ghost" ${on(() => moveSec(sec, 1))}>↓</button>` : ''}<button class="sbtn ghost" ${on(() => sectionForm(sec))}>✎</button></span></div>

@@ -136,6 +136,7 @@ export function defaults() {
     targets: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },   // what you want per week; 0 = no target
     baseline: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },  // your count from before the app, added to the total
     pool: { size: 0, maxAge: 24, exes: 0 },   // women aged 18–maxAge where you live (you enter it), and girlfriends you had before
+    activityNotes: { active: '', inactive: '' },   // free writing: what is active, what is inactive
     factorStory: { social: [], girls: [], money: [], looks: [], health: [] },   // "where this stands", step by step, per factor
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
@@ -239,6 +240,7 @@ export function normalize(raw) {
   o.eras = fit(BLANK.era, o.eras).filter(e => e.start && e.end);
   const steps = l => arr(l).filter(e => e && e.text).map(e => ({ id: e.id || uid(), t: num(e.t, Date.now()), text: String(e.text) }));
   for (const p of PILLARS) o.factorStory[p.key] = steps(o.factorStory[p.key]);
+  o.activityNotes = { active: String(o.activityNotes?.active ?? ''), inactive: String(o.activityNotes?.inactive ?? '') };
   o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, story: steps(m.story), milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks) })) }));
   o.abilities = fit(BLANK.ability, o.abilities).map(a => ({ ...a, assignments: arr(a.assignments) }));
   o.lifestyles = fit(BLANK.lifestyle, o.lifestyles).map(l => ({ ...l, activities: arr(l.activities), schedule: shapeWeek(l.schedule) }));
