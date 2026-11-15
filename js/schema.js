@@ -82,7 +82,7 @@ export const BLANK = {
   lifestyle: () => ({ id: uid(), name: '', emoji: '◈', activities: [], schedule: emptyWeek(), createdAt: Date.now() }),
   entry: () => ({ id: uid(), time: '', name: '', catId: null, activityItemId: null, pillar: '' }),
   timeAlloc: (name = 'Default day') => ({ id: uid(), name, slots: [] }),
-  timeSlot: () => ({ id: uid(), title: '', start: '', end: '', color: SLOT_COLORS[0] }),
+  timeSlot: () => ({ id: uid(), title: '', start: '', end: '', color: SLOT_COLORS[0], pillar: '' }),
   element: () => ({ id: uid(), title: '', desc: '', level: 0, levelUp: [], history: [], createdAt: Date.now() }), // body-map stat OR platform
   income: () => ({ id: uid(), title: '', desc: '', amount: 0, hoursPerWeek: 0, status: 'active', projections: [], createdAt: Date.now() }),
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
