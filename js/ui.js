@@ -43,7 +43,7 @@ export function render() {
   }
   const view = $('#view'), keep = last === cur ? view.scrollTop : (cur.scroll || 0);
   const title = typeof def.title === 'function' ? def.title(cur.params) : def.title;
-  $('#top').innerHTML = `<div class="trow1"><h1>${esc(title || '')}</h1><span class="tright"><em id="tweek"></em><b id="clock"></b></span></div><div class="trow2"><span id="tnow"></span><span id="tleft"></span></div><div class="tbar"><i id="tbar"></i></div>`;
+  $('#top').innerHTML = `<div class="trow1"><h1 style="font-size:${(title || '').length > 16 ? 12 : 16}px">${esc(title || '')}</h1><span class="tright"><em id="tweek"></em><b id="clock"></b></span></div><div class="trow2"><span id="tnow"></span><span id="tleft"></span></div><div class="tbar"><i id="tbar"></i></div>`;
   tickTop();
   $('#backfab').hidden = stack.length <= 1;
   view.innerHTML = body; view.scrollTop = keep; last = cur;

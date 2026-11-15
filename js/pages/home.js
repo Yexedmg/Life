@@ -81,7 +81,7 @@ page('home', {
   title: 'HOME',
   render() {
     const p = D.player, need = xpForLevel(p.level), ns = D.northstar, era = currentEra();
-    const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
+    const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = D.adventures.filter(a => !a.doneAt).length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
     const all = [...PILLARS, TIME], active = all.filter(f => factorActive(f.key)).length;
     return `
     <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
@@ -101,11 +101,23 @@ page('home', {
     <div class="sect"><span>KEY ITEMS</span><span>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length}</span></div>
     <div class="kstrip" ${on(() => go('keyitems'))}>${D.keyItems.map(k => `<div class="${k.has ? 'has' : ''}"><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>
 
-    ${sect('QUESTS', quests.length ? 'All' : '+ Quest', () => go('manifest'))}
+    <div class="sect"><span>QUESTS &amp; EXPERIENCES</span><span>${openQ} open · ${waitE} waiting</span></div>
+    <div class="qcard" ${on(() => go('questlog'))}>
+      <div class="qrow"><b>◎ Quests</b><span>${openQ} open</span></div>${quests[0] ? `<small>▸ ${esc(quests[0].name)}${storyNow(quests[0].story) ? ' — ' + esc(storyNow(quests[0].story)) : ''}</small>` : '<small>No quests yet.</small>'}
+      <div class="qrow"><b>✧ Experiences</b><span>${waitE} waiting</span></div>${adv[0] ? `<small>▸ ${esc(adv[0].name)}${adv[0].when ? ' · ' + (daysTo(adv[0].when) < 0 ? 'overdue' : daysTo(adv[0].when) === 0 ? 'today' : 'in ' + daysTo(adv[0].when) + 'd') : ''}</small>` : '<small>Nothing you want to live yet.</small>'}
+      <em>Open →</em>
+    </div>`;
+  },
+});
+
+page('questlog', {
+  title: 'QUESTS & EXPERIENCES',
+  render() {
+    const quests = D.manifests.filter(m => !m.achievedAt), exp = D.adventures.filter(a => !a.doneAt).sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
+    return `<div class="qcard" ${on(() => go('manifest'))}><div class="qrow"><b>◎ Quests</b><span>${quests.length} open</span></div><em>All quests →</em></div>
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
-      return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('')
-      || empty('No quests. What are you going after?')}
-    ${sect('EXPERIENCES', adv.length ? 'All' : '+ Experience', () => go('adventures'))}
-    ${adv.slice(0, 3).map(a => `<div class="quest" ${on(() => go('adventures'))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet. Add one.')}`;
+      return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
+    <div class="qcard" ${on(() => go('adventures'))}><div class="qrow"><b>✧ Experiences</b><span>${exp.length} waiting</span></div><em>All experiences →</em></div>
+    ${exp.slice(0, 5).map(a => `<div class="quest" ${on(() => go('adventures'))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet.')}`;
   },
 });
