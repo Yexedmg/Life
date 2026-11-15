@@ -86,7 +86,7 @@ page('home', {
     return `
     <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
     ${allocBar()}
-    ${all.map(factorRow).join('')}
+    <div class="fcar">${all.map(factorRow).join('')}</div>
     <div class="hud-player" ${on(() => go('totalstats'))}>
       <div class="lv"><small>LEVEL</small><b>${p.level}</b></div>
       <div class="xp"><div class="split"><span>EXPERIENCE</span><b>${Math.round(p.xp)} / ${need}</b></div>${bar(p.xp / need * 100, 'cyan')}</div>

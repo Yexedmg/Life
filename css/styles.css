@@ -507,3 +507,8 @@ em.cat { font: 700 10.5px var(--mono); font-style: normal; letter-spacing: .06em
 
 /* home: the life factors lead; the level bar is shorter */
 .hud-player .xp .bar { max-width: 150px; }
+
+/* life factors: swipe sideways through them, like an item menu */
+.fcar { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin: 8px -14px 0; padding: 2px 14px 6px; }
+.fcar::-webkit-scrollbar { display: none; }
+.fcar > .fac { flex: 0 0 84%; scroll-snap-align: start; margin-top: 0 !important; min-width: 0; }
