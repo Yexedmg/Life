@@ -99,7 +99,7 @@ function dayStrip(blocks) {
         <text x="${Math.max(40, Math.min(320, cx))}" y="${ly}" text-anchor="middle" fill="${esc(s.color)}" class="sl">${esc(t)}</text><text x="${Math.max(40, Math.min(320, cx))}" y="${ly + 11}" text-anchor="middle" class="st">${esc((s.tag ? s.tag.toUpperCase() + ' · ' : '') + s.label)}</text></g>`; }).join('')}</svg>`;
 }
 // …and one list under it. Same rows for both.
-const dayRows = blocks => [...blocks].sort((a, b) => a.start - b.start).map(s => `<div class="row" ${on(s.fn)}><div class="ric time" style="color:${esc(s.color)}">${esc(s.from)}<br><small>${esc(s.to)}</small></div><div class="rbody"><b>${esc(s.title)}</b><small><em class="cat" style="--c:${esc(s.color)}">${esc(s.tag || 'No category')}</em>${s.sub ? ' ' + s.sub : ''}</small></div><div class="rval">${s.hrs}h</div></div>`).join('');
+const dayRows = blocks => [...blocks].sort((a, b) => a.start - b.start).map(s => `<div class="row dayrow" style="--c:${esc(s.color)}" ${on(s.fn)}><div class="ric time" style="color:${esc(s.color)}">${esc(s.from)}<br><small>${esc(s.to)}</small></div><div class="rbody"><b>${esc(s.title)}</b>${s.sub ? `<small>${s.sub}</small>` : ''}</div><div class="rval">${s.hrs}h</div></div>`).join('');
 const dayView = (blocks, emptyText, onAdd) => `<div class="card dayc">${dayStrip(blocks)}<div class="split dim"><span>${blocks.length} block${blocks.length === 1 ? '' : 's'}</span><span>${r1(sum(blocks.map(x => x.hrs)))}h filled · ${r1(24 - sum(blocks.map(x => x.hrs)))}h open</span></div></div>
   ${dayRows(blocks) || empty(emptyText)}
   <div class="btns">${btn('+ Add', onAdd, 'good')}</div>`;
