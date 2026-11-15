@@ -84,21 +84,19 @@ page('home', {
     const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
     const all = [...PILLARS, TIME], active = all.filter(f => factorActive(f.key)).length;
     return `
+    <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
+    ${allocBar()}
+    ${all.map(factorRow).join('')}
     <div class="hud-player" ${on(() => go('totalstats'))}>
       <div class="lv"><small>LEVEL</small><b>${p.level}</b></div>
       <div class="xp"><div class="split"><span>EXPERIENCE</span><b>${Math.round(p.xp)} / ${need}</b></div>${bar(p.xp / need * 100, 'cyan')}</div>
       <div class="lv age" ${on((_, e) => { e.stopPropagation(); birthdayForm(); })}><small>AGE</small><b>${bd ? bd.age : '–'}</b><em>${bd ? (bd.today ? 'birthday today' : `${bd.days}d to ${bd.turning}`) : 'tap to set'}</em></div>
     </div>
-
     <div class="north ${ns ? '' : 'none'}" ${on(northstarForm)}>
       <small>✦ NORTHSTAR${era ? ` · ${esc(era.name).toUpperCase()}` : ''}</small>
       <b>${ns ? esc(ns.text) : 'No direction set. Tap to call it.'}</b>
       ${nsDays != null ? `<em class="${nsDays < 0 ? 'red' : ''}">${Math.abs(nsDays)} days ${nsDays < 0 ? 'overdue' : 'left'}</em>` : ''}
     </div>
-
-    <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
-    ${allocBar()}
-    ${all.map(factorRow).join('')}
 
     <div class="sect"><span>KEY ITEMS</span><span>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length}</span></div>
     <div class="kstrip" ${on(() => go('keyitems'))}>${D.keyItems.map(k => `<div class="${k.has ? 'has' : ''}"><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>

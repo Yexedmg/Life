@@ -504,3 +504,6 @@ em.cat { font: 700 10.5px var(--mono); font-style: normal; letter-spacing: .06em
 
 /* day rows: the category is a coloured edge, not a word */
 .row.dayrow { border-left: 6px solid var(--c); padding-left: 10px; }
+
+/* home: the life factors lead; the level bar is shorter */
+.hud-player .xp .bar { max-width: 150px; }
