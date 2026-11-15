@@ -494,9 +494,3 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 /* category tag on a day block */
 em.cat { font: 700 10.5px var(--mono); font-style: normal; letter-spacing: .06em; text-transform: uppercase; color: var(--c); border: 1px solid color-mix(in srgb, var(--c) 55%, transparent); border-radius: 99px; padding: 1px 8px; }
 .strip .st { font-size: 8px; }
-
-/* no sideways drift: the page scrolls only up and down, and the seven days fit the width */
-#view { overflow-x: hidden; overscroll-behavior-x: none; touch-action: pan-y; }
-.wdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; overflow: visible; }
-.wday { flex: none; width: auto; min-width: 0; padding: 6px 4px; font-size: 9.5px; overflow: hidden; }
-.wday b { font-size: 10.5px; } .wday .dots { font-size: 6px; letter-spacing: 0; } .wday small { font-size: 9px; }
