@@ -517,3 +517,17 @@ em.cat { font: 700 10.5px var(--mono); font-style: normal; letter-spacing: .06em
 .qcard { padding: 14px 16px; border-radius: var(--r); border: 1px solid var(--line); background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.015)); display: flex; flex-direction: column; gap: 6px; cursor: pointer; margin-top: 8px !important; }
 .qcard:active { transform: scale(.985); } .qcard .qrow { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; } .qcard .qrow b { font: 700 15px var(--sans); } .qcard .qrow span { font: 400 12px var(--mono); color: var(--text2); }
 .qcard small { color: var(--text2); font-size: 12.5px; overflow-wrap: anywhere; } .qcard em { font: 700 12px var(--mono); font-style: normal; color: var(--muted); align-self: flex-end; }
+
+/* home: swipe between pages, like a multi-photo post */
+.carousel { display: flex; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; overscroll-behavior-x: contain; scrollbar-width: none; margin: 4px -14px 0; align-items: flex-start; }
+.carousel::-webkit-scrollbar { display: none; }
+.slide { flex: 0 0 100%; min-width: 0; scroll-snap-align: start; padding: 0 14px; box-sizing: border-box; }
+.slide > .sect:first-child { margin-top: 0 !important; }
+.dots { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.dots i { width: 6px; height: 6px; border-radius: 99px; background: var(--dark); transition: width .2s, background .2s; }
+.dots i.on { background: var(--text); width: 18px; }
+.kgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; cursor: pointer; }
+.kgrid > div { padding: 12px 8px; border-radius: var(--r); border: 1px dashed var(--dark); display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; opacity: .55; }
+.kgrid > div i { font: 700 24px var(--mono); font-style: normal; color: var(--muted); } .kgrid > div span { font: 700 11px/1.2 var(--sans); color: var(--text2); }
+.kgrid > div.has { border: 1px solid var(--gold); opacity: 1; background: linear-gradient(180deg, rgba(255,203,28,.12), rgba(255,203,28,.02)); } .kgrid > div.has i { color: var(--gold); } .kgrid > div.has span { color: var(--text); }
+.slide .fac:first-of-type, .slide .qcard:first-of-type { margin-top: 10px !important; }

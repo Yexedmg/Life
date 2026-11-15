@@ -84,9 +84,26 @@ page('home', {
     const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = D.adventures.filter(a => !a.doneAt).length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
     const all = [...PILLARS, TIME], active = all.filter(f => factorActive(f.key)).length;
     return `
-    <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
-    ${allocBar()}
-    <div class="fcar">${all.map(factorRow).join('')}</div>
+    <div class="carousel" id="hcar">
+      <section class="slide">
+        <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
+        ${allocBar()}
+        ${all.map(factorRow).join('')}
+      </section>
+      <section class="slide">
+        <div class="sect"><span>KEY ITEMS</span><span>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length}</span></div>
+    <div class="kgrid" ${on(() => go('keyitems'))}>${D.keyItems.map(k => `<div class="${k.has ? 'has' : ''}"><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>
+      </section>
+      <section class="slide">
+        <div class="sect"><span>QUESTS &amp; EXPERIENCES</span><span>${openQ} open · ${waitE} waiting</span></div>
+    <div class="qcard" ${on(() => go('questlog'))}>
+      <div class="qrow"><b>◎ Quests</b><span>${openQ} open</span></div>${quests[0] ? `<small>▸ ${esc(quests[0].name)}${storyNow(quests[0].story) ? ' — ' + esc(storyNow(quests[0].story)) : ''}</small>` : '<small>No quests yet.</small>'}
+      <div class="qrow"><b>✧ Experiences</b><span>${waitE} waiting</span></div>${adv[0] ? `<small>▸ ${esc(adv[0].name)}${adv[0].when ? ' · ' + (daysTo(adv[0].when) < 0 ? 'overdue' : daysTo(adv[0].when) === 0 ? 'today' : 'in ' + daysTo(adv[0].when) + 'd') : ''}</small>` : '<small>Nothing you want to live yet.</small>'}
+      <em>Open →</em>
+      </section>
+    </div>
+    <div class="dots"><i class="on"></i><i></i><i></i></div>
+
     <div class="hud-player" ${on(() => go('totalstats'))}>
       <div class="lv"><small>LEVEL</small><b>${p.level}</b></div>
       <div class="xp"><div class="split"><span>EXPERIENCE</span><b>${Math.round(p.xp)} / ${need}</b></div>${bar(p.xp / need * 100, 'cyan')}</div>
@@ -98,15 +115,12 @@ page('home', {
       ${nsDays != null ? `<em class="${nsDays < 0 ? 'red' : ''}">${Math.abs(nsDays)} days ${nsDays < 0 ? 'overdue' : 'left'}</em>` : ''}
     </div>
 
-    <div class="sect"><span>KEY ITEMS</span><span>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length}</span></div>
-    <div class="kstrip" ${on(() => go('keyitems'))}>${D.keyItems.map(k => `<div class="${k.has ? 'has' : ''}"><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>
-
-    <div class="sect"><span>QUESTS &amp; EXPERIENCES</span><span>${openQ} open · ${waitE} waiting</span></div>
-    <div class="qcard" ${on(() => go('questlog'))}>
-      <div class="qrow"><b>◎ Quests</b><span>${openQ} open</span></div>${quests[0] ? `<small>▸ ${esc(quests[0].name)}${storyNow(quests[0].story) ? ' — ' + esc(storyNow(quests[0].story)) : ''}</small>` : '<small>No quests yet.</small>'}
-      <div class="qrow"><b>✧ Experiences</b><span>${waitE} waiting</span></div>${adv[0] ? `<small>▸ ${esc(adv[0].name)}${adv[0].when ? ' · ' + (daysTo(adv[0].when) < 0 ? 'overdue' : daysTo(adv[0].when) === 0 ? 'today' : 'in ' + daysTo(adv[0].when) + 'd') : ''}</small>` : '<small>Nothing you want to live yet.</small>'}
-      <em>Open →</em>
-    </div>`;
+    `;
+  },
+  after(view) {
+    const c = view.querySelector('#hcar'), dots = view.querySelectorAll('.dots i'); if (!c) return;
+    const upd = () => { const i = Math.round(c.scrollLeft / Math.max(1, c.clientWidth)); dots.forEach((d, n) => d.classList.toggle('on', n === i)); };
+    c.addEventListener('scroll', upd, { passive: true }); upd();
   },
 });
 
