@@ -9,6 +9,7 @@ import { commit } from '../store.js';
 import { modal, closeModal, toast, btn } from '../ui.js';
 import { gain } from '../game.js';
 import { allocBar } from './time.js';
+import { storyBlock, storyNow } from '../story.js';
 import { parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain } from '../calc.js';
 
 export function northstarForm() {
@@ -48,6 +49,7 @@ function factorRow(p) {
   return `<div class="fac ${on_ ? 'on' : 'off'}" style="--c:${p.color}" ${on(() => (p.key === 'time' ? go('schedule') : factorSheet(p.key)))}>
     <div class="fh"><span>${p.key === 'girls' ? GIRL + ' ' : ''}${p.label.toUpperCase()}</span><em>${on_ ? 'ACTIVE' : 'INACTIVE'}</em></div>
     <div class="fc">${cells.map(c => `<div><b>${c[0]}</b><small>${c[1]}</small></div>`).join('')}</div>
+    ${p.key !== 'time' && storyNow(D.factorStory[p.key]) ? `<p class="qdesc">${esc(storyNow(D.factorStory[p.key]))}</p>` : ''}
     ${tg ? `<div class="bar"><i style="width:${Math.min(100, weekGain(p.key) / tg * 100)}%;background:${p.color}"></i></div>` : ''}</div>`;
 }
 function factorSheet(key) {
@@ -63,6 +65,7 @@ function factorSheet(key) {
       fields: [{ name: 'n', label: q, type: 'number', min: 0, value: key === 'money' ? '' : 1, required: true }, { name: 'note', label: 'Note (optional)' }],
       submit: 'Log it', onSubmit: v => { if (!(v.n > 0)) { toast('More than zero.'); return false; } gain(key, v.n, v.note); if (key === 'money') D.player.stats.money += v.n; setTimeout(() => factorSheet(key)); } });
     return `<h2>${esc(p.label)}</h2>
+      ${storyBlock(D.factorStory[key], 'f-' + key, p.label, () => factorSheet(key))}
       <div class="fstate ${act ? 'on' : 'off'}"><b>${act ? 'ACTIVE' : 'INACTIVE'}</b><span>${last ? 'last logged ' + fmtDate(last) : 'nothing ever logged'} · active means something real in the last ${ACTIVE_DAYS} days${key === 'girls' ? ', or a girlfriend / recurring girl' : ''}</span></div>
       ${term('YOUR NUMBERS', [['THIS WEEK', tg ? `${unit(wk)} / ${unit(tg)}` : unit(wk), tg && wk >= tg ? 'green' : ''], ['LAST WEEK', unit(weekGain(key, 1))], ['PER WEEK · 4-week average', unit(r.perWeek)], ['LAST 30 DAYS', unit(r.month)], ['IN TOTAL', unit(totalGain(key)), 'gold'], ['SHARE OF PLANNED TIME', `${Math.round(t.pct(key))}% · ${t.h[key]}h of ${t.total}h`]])}
       <div class="panel"><div class="pt">WEEK BY WEEK${tg ? ` · target ${unit(tg)}` : ''}</div><div class="wkbars">${weeks.map((v, i) => `<div><i style="height:${Math.max(3, v / wmax * 100)}%;background:${tg && v >= tg ? 'var(--green)' : p.color};opacity:${i === 7 ? 1 : .55}"></i><small>${i === 7 ? 'now' : '-' + (7 - i)}</small></div>`).join('')}</div></div>
@@ -102,7 +105,7 @@ page('home', {
 
     ${sect('QUESTS', quests.length ? 'All' : '+ Quest', () => go('manifest'))}
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
-      return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('')
+      return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('')
       || empty('No quests. What are you going after?')}
     ${sect('EXPERIENCES', adv.length ? 'All' : '+ Experience', () => go('adventures'))}
     ${adv.slice(0, 3).map(a => `<div class="quest" ${on(() => go('adventures'))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet. Add one.')}`;

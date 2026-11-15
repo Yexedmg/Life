@@ -464,3 +464,12 @@ input, select, textarea { border-width: 1px; background: rgba(0,0,0,.3); }
 .kstrip > div i { font: 700 24px var(--mono); font-style: normal; color: var(--muted); } .kstrip > div span { font: 700 11px/1.2 var(--sans); color: var(--text2); }
 .kstrip > div.has { border: 1px solid var(--gold); opacity: 1; background: linear-gradient(180deg, rgba(255,203,28,.12), rgba(255,203,28,.02)); } .kstrip > div.has i { color: var(--gold); } .kstrip > div.has span { color: var(--text); }
 .kitem h3 i { font-style: normal; color: var(--muted); margin-right: 4px; } .kitem.has { border-color: color-mix(in srgb, var(--gold) 50%, transparent); } .kitem.has h3 i { color: var(--gold); } .kitem .tier { min-width: 20px; height: 20px; font-size: 11px; margin-right: 4px; }
+
+/* "where this stands" */
+.story { border: 1px solid color-mix(in srgb, var(--cyan) 30%, transparent); border-radius: var(--r); padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,.03); }
+.story .st-h { display: flex; justify-content: space-between; align-items: center; font: 700 11px var(--mono); letter-spacing: .12em; color: var(--text2); }
+.story > p { font: 400 15px/1.45 var(--sans); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; -webkit-user-select: text; user-select: text; } .story > small { color: var(--muted); }
+.story .fold { padding: 10px 12px; font-size: 12px; }
+.st-e { border-top: 1px dashed var(--line); padding-top: 8px; display: flex; flex-direction: column; gap: 4px; } .st-e > div { display: flex; align-items: center; gap: 10px; } .st-e b { font: 700 12px var(--mono); } .st-e small { flex: 1; color: var(--muted); }
+.st-e button { font: 700 11px var(--mono); color: var(--red); padding: 6px 4px; } .st-e p { font-size: 14px; color: var(--text2); white-space: pre-wrap; overflow-wrap: anywhere; }
+.qdesc { font: 400 13.5px/1.4 var(--sans); color: var(--text2); font-style: italic; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }

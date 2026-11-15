@@ -5,6 +5,7 @@ import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, b
 import { birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
 import { addXP, applyEffects, log, fxText, gain } from '../game.js';
 import { birthdayForm } from './home.js';
+import { storyBlock, storyNow } from '../story.js';
 
 // ── Manifest
 function goalForm(m) {
@@ -29,7 +30,7 @@ page('manifest', {
     const goal = m => { const all = tasksOf(m), pr = progress(all), closed = isCol(m.id);
       return `<div class="card ${m.achievedAt ? 'sh-green' : ''}"><div class="cathead" ${on(() => toggleCol(m.id))}><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span><i>${closed ? '▸' : '▾'}</i></div>${bar(pr, 'green')}
       ${m.achievedAt ? `<div class="split dim"><span>🎯 ACHIEVED</span><span>${fmtDate(m.achievedAt)}</span></div>` : ''}
-      ${closed ? '' : `${m.milestones.map(ms => { const mp = progress(ms.tasks), mc = isCol(ms.id), done = ms.tasks.length && mp === 100;
+      ${closed ? (storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : '') : `${storyBlock(m.story, m.id, m.name)}${m.milestones.map(ms => { const mp = progress(ms.tasks), mc = isCol(ms.id), done = ms.tasks.length && mp === 100;
         return `<div class="ms"><div class="mshead"><span ${on(() => toggleCol(ms.id))}>${mc ? '▸' : '▾'} ${done ? '✓ ' : ''}${esc(ms.name)}</span><em>${ms.tasks.filter(t => t.done).length}/${ms.tasks.length}</em>
           <button class="sbtn ghost" ${on(() => nameForm('Edit milestone', 'Milestone', ms, m.milestones, BLANK.milestone))}>✎</button><button class="sbtn" ${on(() => nameForm('New task', "What's required?", null, ms.tasks, BLANK.task, () => { m.achievedAt = null; }))}>+ Task</button></div>
           ${mc ? '' : ms.tasks.map(t => `<div class="task ${t.done ? 'done' : ''}"><button ${on(() => toggleTask(m, t))}>${t.done ? '■' : '□'}</button><span ${on(() => toggleTask(m, t))}>${esc(t.name)}</span><button class="x" ${on(() => nameForm('Edit task', 'Task', t, ms.tasks, BLANK.task))}>✎</button></div>`).join('') || '<p class="hint">No tasks. What does this milestone actually require?</p>'}</div>`; }).join('')}

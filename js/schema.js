@@ -75,7 +75,7 @@ export const BLANK = {
   nextMove: () => ({ id: uid(), name: '', statEffects: {}, city: null }),
   ability: () => ({ id: uid(), name: '', desc: '', unlocked: false, assignments: [] }),
   era: () => ({ id: uid(), name: '', start: '', end: '', color: ERA_COLORS[0], createdAt: Date.now() }),
-  manifest: () => ({ id: uid(), name: '', emoji: '◎', milestones: [], achievedAt: null, createdAt: Date.now() }),
+  manifest: () => ({ id: uid(), name: '', emoji: '◎', milestones: [], story: [], achievedAt: null, createdAt: Date.now() }),
   milestone: () => ({ id: uid(), name: '', tasks: [] }),
   task: () => ({ id: uid(), name: '', done: false }),
   lifestyle: () => ({ id: uid(), name: '', emoji: '◈', activities: [], schedule: emptyWeek(), createdAt: Date.now() }),
@@ -136,6 +136,7 @@ export function defaults() {
     targets: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },   // what you want per week; 0 = no target
     baseline: { social: 0, girls: 0, money: 0, looks: 0, health: 0 },  // your count from before the app, added to the total
     pool: { size: 0, maxAge: 24, exes: 0 },   // women aged 18–maxAge where you live (you enter it), and girlfriends you had before
+    factorStory: { social: [], girls: [], money: [], looks: [], health: [] },   // "where this stands", step by step, per factor
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],
@@ -236,7 +237,9 @@ export function normalize(raw) {
   o.nextMoves = fit(BLANK.nextMove, o.nextMoves).filter(m => !m.done).map(m => ({ ...m, statEffects: obj(m.statEffects) }));
   o.northstar = o.northstar && typeof o.northstar === 'object' && o.northstar.text ? { text: String(o.northstar.text), targetDate: o.northstar.targetDate || null, updatedAt: num(o.northstar.updatedAt) } : null;
   o.eras = fit(BLANK.era, o.eras).filter(e => e.start && e.end);
-  o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks) })) }));
+  const steps = l => arr(l).filter(e => e && e.text).map(e => ({ id: e.id || uid(), t: num(e.t, Date.now()), text: String(e.text) }));
+  for (const p of PILLARS) o.factorStory[p.key] = steps(o.factorStory[p.key]);
+  o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, story: steps(m.story), milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks) })) }));
   o.abilities = fit(BLANK.ability, o.abilities).map(a => ({ ...a, assignments: arr(a.assignments) }));
   o.lifestyles = fit(BLANK.lifestyle, o.lifestyles).map(l => ({ ...l, activities: arr(l.activities), schedule: shapeWeek(l.schedule) }));
   o.schedule = shapeWeek(o.schedule);
