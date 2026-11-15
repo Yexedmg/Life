@@ -115,16 +115,16 @@ page('schedule', {
   },
 });
 
-// FUTURE — where you live ahead of time: the day you want, and what you will have and live.
+// IDEAL DAY — the day you are aiming to live, and the key items it needs.
 page('future', {
-  title: 'FUTURE',
+  title: 'IDEAL DAY',
   render() {
     const ta = curAlloc(), want = D.keyItems.filter(k => !k.has || k.wantName);
     const blocks = ta.slots.map(x => ({ title: (x.levelUpRef ? '⤴ ' : '') + x.title, start: toMin(x.start), end: toMin(x.end), from: x.start, to: x.end, label: `${x.start}–${x.end}`, hrs: r1((toMin(x.end) - toMin(x.start)) / 60), color: PILLARS.find(p => p.key === x.pillar)?.color || x.color, tag: PILLARS.find(p => p.key === x.pillar)?.short || '', fn: () => slotForm(ta, x), sub: '' }));
-    return `<div class="sect"><span>THE DAY YOU LIVE THERE</span><span class="secbtns"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎</button><button class="sbtn" ${on(() => allocForm())}>+ Day type</button></span></div>
+    return `<div class="sect"><span>YOUR IDEAL DAY</span><span class="secbtns"><button class="sbtn ghost" ${on(() => allocForm(ta))}>✎</button><button class="sbtn" ${on(() => allocForm())}>+ Day type</button></span></div>
     ${D.timeAllocs.length > 1 ? tabs(D.timeAllocs.map(t => [t.id, esc(t.name)]), ta.id, id => { D.currentTimeAllocId = id; commit(); }) : ''}
-    ${dayView(blocks, 'Empty day — tap \'+ Add\' and paint the day you live in the future.', () => slotForm(ta))}
-    ${sect('WHAT YOU HAVE THERE', 'Key items', () => go('keyitems'))}
+    ${dayView(blocks, 'Empty day — tap \'+ Add\' and paint your ideal day.', () => slotForm(ta))}
+    ${sect('KEY ITEMS FOR THIS DAY', 'Key items', () => go('keyitems'))}
     ${want.map(k => row({ icon: esc(k.icon), title: esc(k.wantName || k.name), desc: k.has ? `today: ${esc(k.detail || k.name)}` : 'today: not yet', val: k.wantPrice ? '$' + Math.round(k.wantPrice).toLocaleString('en-US') : '', fn: () => go('keyitems') })).join('') || empty('Every key item obtained, and no upgrade named.')}`;
   },
 });
