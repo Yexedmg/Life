@@ -43,10 +43,10 @@ page('manifest', {
   },
 });
 
-// ── Adventures: things you want to live, not tasks to finish
+// ── Experiences (stored as `adventures`): things you want to live, not tasks to finish
 function adventureForm(a) {
-  form({ title: a ? `Edit ${a.name}` : 'New adventure', sub: 'Something you want to experience. Put it here so it stops being a maybe.',
-    fields: [{ name: 'name', label: 'What do you want to live?', value: a?.name, required: true, placeholder: 'Christmas market adventure' },
+  form({ title: a ? `Edit ${a.name}` : 'New experience', sub: 'Something you want to experience. Put it here so it stops being a maybe.',
+    fields: [{ name: 'name', label: 'What do you want to live?', value: a?.name, required: true, placeholder: 'Christmas market' },
       { name: 'when', label: 'When? (optional)', type: 'date', value: a?.when || '' }, { name: 'withWho', label: 'With who? (optional)', value: a?.withWho },
       { name: 'pillar', label: 'Which part of life does it feed?', type: 'seg', value: a?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
       { name: 'notes', label: 'Notes', type: 'textarea', value: a?.notes }],
@@ -60,13 +60,13 @@ function liveIt(a) {
   log(`Lived it: ${a.name}`, 'manifest'); addXP(15, a.name); commit(); toast(`${a.name} — lived. +15 XP`);
 }
 page('adventures', {
-  title: 'ADVENTURES',
+  title: 'EXPERIENCES',
   render() {
     const open = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999')), done = D.adventures.filter(a => a.doneAt).sort((a, b) => b.doneAt - a.doneAt);
     const meta = a => { const d = a.when ? daysTo(a.when) : null, col = PILLARS.find(p => p.key === a.pillar);
       return [a.when ? `${fmtDate(dts(a.when))} · ${d < 0 ? -d + 'd ago' : d === 0 ? 'today' : 'in ' + d + 'd'}` : 'no date yet', a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : ''].filter(Boolean).join(' · '); };
-    return `<div class="card hero sh-gold"><small>✧ ADVENTURES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
-    <div class="btns">${btn('+ Adventure', () => adventureForm(), 'good')}</div>
+    return `<div class="card hero sh-gold"><small>✧ EXPERIENCES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
+    <div class="btns">${btn('+ Experience', () => adventureForm(), 'good')}</div>
     ${open.map(a => `<div class="card"><div ${on(() => adventureForm(a))}><h3>${esc(a.name)}</h3><small>${meta(a)}</small>${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
       <div class="catfoot"><button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button><button class="sbtn" ${on(() => liveIt(a))}>Lived it</button></div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
     ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => adventureForm(a))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div></div>`).join('') : ''}`;

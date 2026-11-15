@@ -104,7 +104,7 @@ page('home', {
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
       return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('')
       || empty('No quests. What are you going after?')}
-    ${sect('ADVENTURES', adv.length ? 'All' : '+ Adventure', () => go('adventures'))}
+    ${sect('EXPERIENCES', adv.length ? 'All' : '+ Experience', () => go('adventures'))}
     ${adv.slice(0, 3).map(a => `<div class="quest" ${on(() => go('adventures'))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet. Add one.')}`;
   },
 });
