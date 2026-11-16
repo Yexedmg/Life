@@ -531,3 +531,6 @@ em.cat { font: 700 10.5px var(--mono); font-style: normal; letter-spacing: .06em
 .kgrid > div i { font: 700 24px var(--mono); font-style: normal; color: var(--muted); } .kgrid > div span { font: 700 11px/1.2 var(--sans); color: var(--text2); }
 .kgrid > div.has { border: 1px solid var(--gold); opacity: 1; background: linear-gradient(180deg, rgba(255,203,28,.12), rgba(255,203,28,.02)); } .kgrid > div.has i { color: var(--gold); } .kgrid > div.has span { color: var(--text); }
 .slide .fac:first-of-type, .slide .qcard:first-of-type { margin-top: 10px !important; }
+
+/* Engine over its limit: the badge and bar go red */
+.fac.over { border-left-color: var(--red); } .fac.over .fh em { background: var(--red); color: #fff; border-color: var(--red); }

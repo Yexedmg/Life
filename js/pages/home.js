@@ -10,7 +10,7 @@ import { modal, closeModal, toast, btn } from '../ui.js';
 import { gain } from '../game.js';
 import { allocBar } from './time.js';
 import { storyBlock, storyNow } from '../story.js';
-import { parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain } from '../calc.js';
+import { parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
   const n = D.northstar;
@@ -44,7 +44,27 @@ function factorCells(key) {
     : key === 'looks' ? [`${r1(s.looks)}/${CAP}`, 'looks stat'] : [`${r1(s.health)}/${CAP}`, 'health stat'];
   return [[tg ? `${u(wk)}<i>/${u(tg)}</i>` : u(wk), 'this week'], [u(totalGain(key)), key === 'money' ? 'earned total' : 'in total'], now];
 }
+function engineRow(p) {
+  const e = engineHours(), pct = e.limit ? Math.min(100, e.week / e.limit * 100) : 0;
+  return `<div class="fac ${e.over ? 'off over' : 'on'}" style="--c:${p.color}" ${on(engineSheet)}>
+    <div class="fh"><span>${p.label.toUpperCase()}</span><em>${e.over ? 'OVER LIMIT' : 'WITHIN LIMIT'}</em></div>
+    <div class="fc"><div><b>${r1(e.week)}h<i>/${r1(e.limit)}h</i></b><small>this week</small></div><div><b>${Math.round(e.share)}%</b><small>of planned time</small></div><div><b>${r1(e.today)}h</b><small>today</small></div></div>
+    ${storyNow(D.factorStory.engine) ? `<p class="qdesc">${esc(storyNow(D.factorStory.engine))}</p>` : ''}
+    <div class="bar"><i style="width:${pct}%;background:${e.over ? 'var(--red)' : p.color}"></i></div></div>`;
+}
+function engineSheet() {
+  modal(() => {
+    const p = PILLARS.find(x => x.key === 'engine'), e = engineHours(), step = d => { D.engineLimit = Math.max(0.5, Math.min(168, r1(D.engineLimit + d))); commit(); };
+    return `<h2>${esc(p.label)}</h2><p class="msub">System work. Counted from the Engine time slots in your week.</p>
+      ${storyBlock(D.factorStory.engine, 'f-engine', p.label, engineSheet)}
+      <div class="fstate ${e.over ? 'off' : 'on'}"><b>${e.over ? 'OVER LIMIT' : 'WITHIN LIMIT'}</b><span>${e.over ? `${r1(e.week - e.limit)}h over this week` : `${r1(e.limit - e.week)}h left this week`}</span></div>
+      ${term('THIS WEEK', [['PLANNED', `${r1(e.week)}h of ${r1(e.limit)}h`, e.over ? 'red' : ''], ['SHARE OF PLANNED TIME', `${Math.round(e.share)}%`], ['TODAY', `${r1(e.today)}h`]])}
+      <div class="panel"><div class="pt">WEEKLY LIMIT</div><div class="lvlset">${btn('−', () => step(-1))}<div><b>${r1(D.engineLimit)}</b><span>h / week</span></div>${btn('+', () => step(1), 'good')}</div></div>
+      <div class="btns">${btn('Open the week', () => { closeModal(); go('schedule'); })}${btn('Close', closeModal)}</div>`;
+  });
+}
 function factorRow(p) {
+  if (p.key === 'engine') return engineRow(p);
   const on_ = factorActive(p.key), cells = factorCells(p.key), tg = p.key !== 'time' && D.targets[p.key];
   return `<div class="fac ${on_ ? 'on' : 'off'}" style="--c:${p.color}" ${on(() => (p.key === 'time' ? go('schedule') : factorSheet(p.key)))}>
     <div class="fh"><span>${p.key === 'girls' ? GIRL + ' ' : ''}${p.label.toUpperCase()}</span><em>${on_ ? 'ACTIVE' : 'INACTIVE'}</em></div>
@@ -92,11 +112,11 @@ page('home', {
   render() {
     const p = D.player, need = xpForLevel(p.level), ns = D.northstar, era = currentEra();
     const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = D.adventures.filter(a => !a.doneAt).length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
-    const all = [...PILLARS, TIME], active = all.filter(f => factorActive(f.key)).length;
+    const all = [...PILLARS, TIME], counted = all.filter(f => !f.limit), active = counted.filter(f => factorActive(f.key)).length; // Engine has a limit, not an active state
     return `
     <div class="carousel" id="hcar">
       <section class="slide">
-        <div class="sect"><span>YOUR LIFE</span><span>${active} / ${all.length} active</span></div>
+        <div class="sect"><span>YOUR LIFE</span><span>${active} / ${counted.length} active</span></div>
         ${allocBar()}
         ${all.map(factorRow).join('')}
       </section>
