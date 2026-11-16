@@ -23,6 +23,17 @@ export function northstarForm() {
     onDelete: n ? () => destroy('Northstar wiped.', () => { D.northstar = null; }) : null, del: 'Wipe it',
   });
 }
+// Principles: how you see the journey, in your own words. Nothing shows on Home until you write one.
+function principleForm(x) {
+  form({ title: x ? 'Edit principle' : 'New principle', fields: [{ name: 'text', label: 'Your principle', type: 'textarea', rows: 3, value: x?.text, required: true, placeholder: 'Life is like a Pokémon adventure.' }],
+    submit: 'Save', onSubmit: v => { if (x) x.text = v.text; else D.principles.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), text: v.text }); setTimeout(principlesSheet); } });
+}
+export function principlesSheet() {
+  modal(() => `<h2>Principles</h2><p class="msub">How you see the journey. Tap one to change its wording.</p>
+    ${D.principles.map(x => `<div class="move"><span ${on(() => principleForm(x))}>${esc(x.text)}</span><button ${on(() => destroy('Principle removed.', () => { D.principles = D.principles.filter(y => y.id !== x.id); }))}>×</button></div>`).join('')}
+    <div class="btns">${btn('+ Principle', () => principleForm(), 'good')}${btn('Close', closeModal)}</div>`);
+}
+const principlesCard = () => (D.principles.length ? `<div class="princ" ${on(principlesSheet)}><small>❖ PRINCIPLES</small>${D.principles.map(x => `<b>${esc(x.text)}</b>`).join('')}</div>` : '');
 export function birthdayForm() {
   form({ title: 'Birthday', sub: 'The clock is running either way.', fields: [{ name: 'birthday', label: 'When were you born?', type: 'date', value: D.settings.birthday }],
     onSubmit: v => { D.settings.birthday = v.birthday; } });
@@ -141,6 +152,7 @@ page('home', {
       <b>${ns ? esc(ns.text) : 'No direction set. Tap to call it.'}</b>
       ${nsDays != null ? `<em class="${nsDays < 0 ? 'red' : ''}">${Math.abs(nsDays)} days ${nsDays < 0 ? 'overdue' : 'left'}</em>` : ''}
     </div>
+    ${principlesCard()}
 
     `;
   },

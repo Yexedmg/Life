@@ -140,7 +140,8 @@ export function defaults() {
     baseline: { social: 0, girls: 0, money: 0, looks: 0, health: 0, engine: 0 },  // your count from before the app, added to the total
     pool: { size: 0, maxAge: 24, exes: 0 },   // women aged 18–maxAge where you live (you enter it), and girlfriends you had before
     factorStory: { social: [], girls: [], money: [], looks: [], health: [], engine: [] },
-    engineLimit: ENGINE_LIMIT,   // hours of Engine per week before it is too much   // "where this stands", step by step, per factor
+    engineLimit: ENGINE_LIMIT,   // hours of Engine per week before it is too much
+    principles: [],              // how you see the journey, in your own words: { id, text }
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],
@@ -269,6 +270,7 @@ export function normalize(raw) {
   o.pool.maxAge = clamp(Math.round(num(o.pool.maxAge, 24)), POOL_MIN_AGE, 99); o.pool.size = Math.max(0, Math.round(num(o.pool.size))); o.pool.exes = Math.max(0, Math.round(num(o.pool.exes)));
   o.girlsRecurring = Math.max(0, Math.round(num(o.girlsRecurring)));
   o.engineLimit = clamp(r1(num(o.engineLimit, ENGINE_LIMIT)), 0.5, 168);
+  o.principles = arr(o.principles).filter(x => x && String(x.text || '').trim()).map(x => ({ id: x.id || uid(), text: String(x.text).trim() }));
   o.keyItems = fit(BLANK.keyItem, o.keyItems).map(k => ({ ...k, has: !!k.has, tier: TIER_VAL[k.tier] == null ? 'C' : k.tier, wantPrice: Math.max(0, num(k.wantPrice)) }));
   o.adventures = fit(BLANK.adventure, o.adventures);
   o.outfits = fit(BLANK.outfit, o.outfits).map(x => ({ ...x, tier: TIER_VAL[x.tier] == null ? 'C' : x.tier }));
