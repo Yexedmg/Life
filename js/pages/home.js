@@ -55,11 +55,21 @@ function factorCells(key) {
     : key === 'looks' ? [`${r1(s.looks)}/${CAP}`, 'looks stat'] : [`${r1(s.health)}/${CAP}`, 'health stat'];
   return [[tg ? `${u(wk)}<i>/${u(tg)}</i>` : u(wk), 'this week'], [u(totalGain(key)), key === 'money' ? 'earned total' : 'in total'], now];
 }
+// Needs attention: a mark you set yourself on a life factor. It stays until you clear it.
+const attnMark = key => { const x = D.attention[key]; return x ? `<div class="attn"><i></i><span>needs attention</span>${x.note ? `<small>${esc(x.note)}</small>` : ''}</div>` : ''; };
+function attnPanel(key, reopen) {
+  const x = D.attention[key];
+  const edit = () => form({ title: 'Needs attention', sub: 'Why does this need attention? Optional.', fields: [{ name: 'note', label: 'Note', type: 'textarea', rows: 2, value: x?.note || '', placeholder: "Haven't trained in two weeks." }],
+    submit: 'Save', onSubmit: v => { D.attention[key] = { note: v.note, since: x?.since || Date.now() }; setTimeout(reopen); } });
+  return `<div class="attnp ${x ? 'on' : ''}"><div class="split"><b>${x ? '● Needs attention' : '○ Needs attention'}</b><button class="sbtn ${x ? 'ghost' : ''}" ${on(() => { if (x) delete D.attention[key]; else D.attention[key] = { note: '', since: Date.now() }; commit(); })}>${x ? 'Clear' : 'Mark'}</button></div>
+    ${x ? `<div class="split dim"><span ${on(edit)}>${x.note ? esc(x.note) : '+ Add a note'}</span><span>since ${fmtDate(x.since)}</span></div>` : ''}</div>`;
+}
 function engineRow(p) {
   const e = engineHours(), pct = e.limit ? Math.min(100, e.week / e.limit * 100) : 0;
   return `<div class="fac ${e.over ? 'off over' : 'on'}" style="--c:${p.color}" ${on(engineSheet)}>
     <div class="fh"><span>${p.label.toUpperCase()}</span><em>${e.over ? 'OVER LIMIT' : 'WITHIN LIMIT'}</em></div>
     <div class="fc"><div><b>${r1(e.week)}h<i>/${r1(e.limit)}h</i></b><small>this week</small></div><div><b>${Math.round(e.share)}%</b><small>of planned time</small></div><div><b>${r1(e.today)}h</b><small>today</small></div></div>
+    ${attnMark('engine')}
     ${storyNow(D.factorStory.engine) ? `<p class="qdesc">${esc(storyNow(D.factorStory.engine))}</p>` : ''}
     <div class="bar"><i style="width:${pct}%;background:${e.over ? 'var(--red)' : p.color}"></i></div></div>`;
 }
@@ -67,6 +77,7 @@ function engineSheet() {
   modal(() => {
     const p = PILLARS.find(x => x.key === 'engine'), e = engineHours(), step = d => { D.engineLimit = Math.max(0.5, Math.min(168, r1(D.engineLimit + d))); commit(); };
     return `<h2>${esc(p.label)}</h2><p class="msub">System work. Counted from the Engine time slots in your week.</p>
+      ${attnPanel('engine', engineSheet)}
       ${storyBlock(D.factorStory.engine, 'f-engine', p.label, engineSheet)}
       <div class="fstate ${e.over ? 'off' : 'on'}"><b>${e.over ? 'OVER LIMIT' : 'WITHIN LIMIT'}</b><span>${e.over ? `${r1(e.week - e.limit)}h over this week` : `${r1(e.limit - e.week)}h left this week`}</span></div>
       ${term('THIS WEEK', [['PLANNED', `${r1(e.week)}h of ${r1(e.limit)}h`, e.over ? 'red' : ''], ['SHARE OF PLANNED TIME', `${Math.round(e.share)}%`], ['TODAY', `${r1(e.today)}h`]])}
@@ -80,6 +91,7 @@ function factorRow(p) {
   return `<div class="fac ${on_ ? 'on' : 'off'}" style="--c:${p.color}" ${on(() => (p.key === 'time' ? go('schedule') : factorSheet(p.key)))}>
     <div class="fh"><span>${p.key === 'girls' ? GIRL + ' ' : ''}${p.label.toUpperCase()}</span><em>${on_ ? 'ACTIVE' : 'INACTIVE'}</em></div>
     <div class="fc">${cells.map(c => `<div><b>${c[0]}</b><small>${c[1]}</small></div>`).join('')}</div>
+    ${p.key !== 'time' ? attnMark(p.key) : ''}
     ${p.key !== 'time' && storyNow(D.factorStory[p.key]) ? `<p class="qdesc">${esc(storyNow(D.factorStory[p.key]))}</p>` : ''}
     ${tg ? `<div class="bar"><i style="width:${Math.min(100, weekGain(p.key) / tg * 100)}%;background:${p.color}"></i></div>` : ''}</div>`;
 }
@@ -96,6 +108,7 @@ function factorSheet(key) {
       fields: [{ name: 'n', label: q, type: 'number', min: 0, value: key === 'money' ? '' : 1, required: true }, { name: 'note', label: 'Note (optional)' }],
       submit: 'Log it', onSubmit: v => { if (!(v.n > 0)) { toast('More than zero.'); return false; } gain(key, v.n, v.note); if (key === 'money') D.player.stats.money += v.n; setTimeout(() => factorSheet(key)); } });
     return `<h2>${esc(p.label)}</h2>
+      ${attnPanel(key, () => factorSheet(key))}
       ${storyBlock(D.factorStory[key], 'f-' + key, p.label, () => factorSheet(key))}
       <div class="fstate ${act ? 'on' : 'off'}"><b>${act ? 'ACTIVE' : 'INACTIVE'}</b><span>${last ? 'last logged ' + fmtDate(last) : 'nothing ever logged'} · active means something real in the last ${ACTIVE_DAYS} days${key === 'girls' ? ', or a girlfriend / recurring girl' : ''}</span></div>
       ${term('YOUR NUMBERS', [['THIS WEEK', tg ? `${unit(wk)} / ${unit(tg)}` : unit(wk), tg && wk >= tg ? 'green' : ''], ['LAST WEEK', unit(weekGain(key, 1))], ['PER WEEK · 4-week average', unit(r.perWeek)], ['LAST 30 DAYS', unit(r.month)], ['IN TOTAL', unit(totalGain(key)), 'gold'], ['SHARE OF PLANNED TIME', `${Math.round(t.pct(key))}% · ${t.h[key]}h of ${t.total}h`]])}
@@ -123,11 +136,11 @@ page('home', {
   render() {
     const p = D.player, need = xpForLevel(p.level), ns = D.northstar, era = currentEra();
     const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = D.adventures.filter(a => !a.doneAt).length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
-    const all = [...PILLARS, TIME], counted = all.filter(f => !f.limit), active = counted.filter(f => factorActive(f.key)).length; // Engine has a limit, not an active state
+    const all = [...PILLARS, TIME], counted = all.filter(f => !f.limit), active = counted.filter(f => factorActive(f.key)).length, attnN = PILLARS.filter(f => D.attention[f.key]).length; // Engine has a limit, not an active state
     return `
     <div class="carousel" id="hcar">
       <section class="slide">
-        <div class="sect"><span>YOUR LIFE</span><span>${active} / ${counted.length} active</span></div>
+        <div class="sect"><span>YOUR LIFE</span><span>${active} / ${counted.length} active${attnN ? ` · <b class="attnc">${attnN} need${attnN === 1 ? 's' : ''} attention</b>` : ''}</span></div>
         ${allocBar()}
         ${all.map(factorRow).join('')}
       </section>

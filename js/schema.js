@@ -142,6 +142,7 @@ export function defaults() {
     factorStory: { social: [], girls: [], money: [], looks: [], health: [], engine: [] },
     engineLimit: ENGINE_LIMIT,   // hours of Engine per week before it is too much
     principles: [],              // how you see the journey, in your own words: { id, text }
+    attention: {},               // factors you marked as needing attention: { [factorKey]: { note, since } }
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
     ratings: ['Hair', 'Face', 'Dental', 'Shower', 'Body towel', 'Extracosmetics', 'Clothes', 'Digital system', 'Physique'].map(n => BLANK.rating(n)),
     socialMedia: [],
@@ -200,7 +201,7 @@ function fill(def, src) {
     const d = def[k], s = src?.[k];
     if (s === undefined) out[k] = d;
     else if (Array.isArray(d)) out[k] = Array.isArray(s) ? s : d;
-    else if (d && typeof d === 'object') out[k] = k === 'schedule' ? s : fill(d, obj(s));
+    else if (d && typeof d === 'object') out[k] = k === 'schedule' || k === 'attention' ? obj(s) : fill(d, obj(s)); // keyed by id or factor: keep every key
     else if (d === null) out[k] = s;
     else out[k] = typeof s === typeof d ? s : d;
   }
@@ -270,6 +271,7 @@ export function normalize(raw) {
   o.pool.maxAge = clamp(Math.round(num(o.pool.maxAge, 24)), POOL_MIN_AGE, 99); o.pool.size = Math.max(0, Math.round(num(o.pool.size))); o.pool.exes = Math.max(0, Math.round(num(o.pool.exes)));
   o.girlsRecurring = Math.max(0, Math.round(num(o.girlsRecurring)));
   o.engineLimit = clamp(r1(num(o.engineLimit, ENGINE_LIMIT)), 0.5, 168);
+  o.attention = Object.fromEntries(Object.entries(obj(o.attention)).filter(([k, v]) => PILLARS.some(p => p.key === k) && v && typeof v === 'object').map(([k, v]) => [k, { note: String(v.note || ''), since: num(v.since, Date.now()) }]));
   o.principles = arr(o.principles).filter(x => x && String(x.text || '').trim()).map(x => ({ id: x.id || uid(), text: String(x.text).trim() }));
   o.keyItems = fit(BLANK.keyItem, o.keyItems).map(k => ({ ...k, has: !!k.has, tier: TIER_VAL[k.tier] == null ? 'C' : k.tier, wantPrice: Math.max(0, num(k.wantPrice)) }));
   o.adventures = fit(BLANK.adventure, o.adventures);
