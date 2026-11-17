@@ -612,3 +612,10 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .hrow.total span, .hrow.total b { color: var(--text); } .hrow.total { border-bottom: 0; border-top: 1px solid var(--line); }
 .hrow.dim span, .hrow.dim b { color: var(--muted); } .hrow.dim { border-bottom: 0; }
 .hours .hint { padding: 6px 0 0; text-align: left; }
+
+/* inspiration: moments and where they went */
+.moment { padding: 10px 12px; border-radius: var(--r); border: 1px solid var(--line); margin-top: 8px !important; display: flex; flex-direction: column; gap: 8px; }
+.moment .mtop { display: flex; align-items: center; gap: 8px; } .moment .mtop .sn { font: 700 12px var(--mono); font-style: normal; color: var(--muted); min-width: 16px; }
+.moment .mtop span { flex: 1; font: 600 15px var(--sans); cursor: pointer; overflow-wrap: anywhere; } .moment .mv { width: 28px; color: var(--muted); font-size: 14px; } .moment .mv[disabled] { opacity: .2; pointer-events: none; }
+.moment .mbot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; justify-content: flex-end; }
+.usedtag { font: 800 9.5px var(--sans); font-style: normal; letter-spacing: .08em; color: #000; background: var(--gold); border-radius: 99px; padding: 3px 8px; cursor: pointer; }

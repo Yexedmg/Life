@@ -92,6 +92,7 @@ export const BLANK = {
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
   adventure: () => ({ id: uid(), name: '', when: '', withWho: '', pillar: '', notes: '', img: '', steps: [], regret: false, regretState: '', lesson: '', doneAt: null, createdAt: Date.now() }),   // regret: something you missed out on; regretState: '' | 'possible' | 'gone'   // steps: what it takes to get there { id, text, done }
   keyItem: (name = '', icon = '◆') => ({ id: uid(), name, icon, has: false, detail: '', tier: 'C', wantName: '', wantPrice: 0, notes: '', gotAt: null, transport: false }),
+  inspiration: () => ({ id: uid(), title: '', date: '', img: '', description: '', good: '', moments: [], createdAt: Date.now() }),   // a great day to learn from; moments: { id, text, uses: [{ kind, ref }] }
   outfit: () => ({ id: uid(), name: '', tier: 'C', occasion: '', pieces: '', createdAt: Date.now() }),
   ratingItem: () => ({ id: uid(), name: '', tier: 'C', later: false, upgrade: null, upgrades: [] }),
 };
@@ -144,6 +145,7 @@ export function defaults() {
     factorStory: { social: [], girls: [], money: [], looks: [], health: [], engine: [] },
     engineLimit: ENGINE_LIMIT,   // hours of Engine per week before it is too much
     principles: [],              // how you see the journey, in your own words: { id, text }
+    inspirations: [],            // great days you lived (a holiday…) and the moments you bring home from them
     maps: [],                    // your maps, each with places you create (Home → Bedroom, City → Gym…)
     attention: {},               // factors you marked as needing attention: { [factorKey]: { note, since } }
     girlsRecurring: 0,    // how many girls you see on a recurring basis; you set it
@@ -276,6 +278,8 @@ export function normalize(raw) {
   o.engineLimit = clamp(r1(num(o.engineLimit, ENGINE_LIMIT)), 0.5, 168);
   o.attention = Object.fromEntries(Object.entries(obj(o.attention)).filter(([k, v]) => PILLARS.some(p => p.key === k) && v && typeof v === 'object').map(([k, v]) => [k, { note: String(v.note || ''), since: num(v.since, Date.now()) }]));
   o.principles = arr(o.principles).filter(x => x && String(x.text || '').trim()).map(x => ({ id: x.id || uid(), text: String(x.text).trim() }));
+  o.inspirations = fit(BLANK.inspiration, o.inspirations).map(x => ({ ...x, img: typeof x.img === 'string' && x.img.startsWith('data:image/') ? x.img : '',
+    moments: arr(x.moments).filter(m => m && String(m.text || '').trim()).map(m => ({ id: m.id || uid(), text: String(m.text).trim(), uses: arr(m.uses).filter(u => u && ['experience', 'place', 'ideal', 'principle'].includes(u.kind) && u.ref) })) }));
   o.maps = fit(BLANK.lifeMap, o.maps).map(m => ({ ...m, name: String(m.name || ''), bg: typeof m.bg === 'string' && m.bg.startsWith('data:image/') ? m.bg : '',
     places: fit(BLANK.mapPlace, m.places).map(x => ({ ...x, x: clamp(num(x.x, 50), 0, 100), y: clamp(num(x.y, 50), 0, 100), todo: arr(x.todo).filter(t => t && String(t.text || '').trim()).map(t => ({ id: t.id || uid(), text: String(t.text).trim() })) })),
     transport: arr(m.transport).filter(t => t && (t.label || t.keyItemId)).map(t => ({ id: t.id || uid(), label: String(t.label || ''), keyItemId: t.keyItemId || null })) }));

@@ -136,7 +136,7 @@ page('portal', {
     const tab = k => () => { ui.rosterTab = k; saveUi(); }, n = (x, w) => `${x} ${w}${x === 1 ? '' : 's'}`;
     // Grouped by the major parts of life, in their Home colours. Every page is still here.
     return grp('SOCIAL', c('social'), [
-      t('≡', 'Friends', n(D.friends.length, 'friend'), 'roster', {}, tab('friends')), t('!', 'Meet', `${Math.round(meetBar())}% meet bar`, 'meet'),
+      t('●', 'Social', 'your social world', 'social'), t('≡', 'Friends', n(D.friends.length, 'friend'), 'roster', {}, tab('friends')), t('!', 'Meet', `${Math.round(meetBar())}% meet bar`, 'meet'),
       t('⌘', 'Social media', `${D.socialMedia.length} platforms`, 'socialmedia'), t('◉', 'Lead gen', r1(leadBar()) + '% bar', 'leadgen')])
     + grp('GIRLS', c('girls'), [
       t(GIRL, 'Girlfriends', `${taken()} · ${chasers().length} in play`, 'life'), t('≡', 'Girls', n(D.girls.length, 'girl'), 'roster', {}, tab('girls')),

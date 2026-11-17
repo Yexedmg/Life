@@ -11,6 +11,7 @@ import './pages/time.js';
 import './pages/worlds.js';
 import './pages/system.js';
 import './pages/maps.js';
+import './pages/inspo.js';
 
 load();
 initUi();
