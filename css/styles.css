@@ -602,3 +602,13 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .rseg { margin-top: 6px; } .rseg label { cursor: pointer; } .rseg span.sel { background: var(--text); color: #000; border-color: var(--text); }
 .lesson { color: var(--text) !important; font-size: 14.5px; white-space: pre-wrap; cursor: pointer; }
 .showif[hidden] { display: none; }
+
+/* hours per week and month */
+.hours { padding: 12px 16px; border-radius: var(--r); border: 1px solid var(--line); margin-top: 10px !important; }
+.hrow { display: grid; grid-template-columns: 1fr 64px 72px; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--line2); font: 400 13px var(--mono); }
+.hrow span { display: flex; align-items: center; gap: 8px; color: var(--text2); } .hrow span i { width: 9px; height: 9px; border-radius: 99px; display: block; }
+.hrow b { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
+.hrow.head { font: 700 10.5px var(--mono); letter-spacing: .12em; color: var(--muted); } .hrow.head span:not(:first-child) { justify-content: flex-end; }
+.hrow.total span, .hrow.total b { color: var(--text); } .hrow.total { border-bottom: 0; border-top: 1px solid var(--line); }
+.hrow.dim span, .hrow.dim b { color: var(--muted); } .hrow.dim { border-bottom: 0; }
+.hours .hint { padding: 6px 0 0; text-align: left; }

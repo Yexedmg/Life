@@ -62,6 +62,19 @@ export function weekPanel(schedule, key) {
 }
 
 // Where the planned week goes, split across the three pillars.
+// Hours per part of life: planned per week, and per month. The week repeats, so a month is the week × 52 / 12 (4.33 weeks).
+const WEEKS_PER_MONTH = 52 / 12;
+const hh = n => (n ? `${r1(n)}h` : '–');
+export function hoursTable(schedule = D.schedule) {
+  const t = pillarTime(schedule); if (!t.total) return '';
+  const rows = [...PILLARS.map(p => [p.short, t.h[p.key], p.color]), ['Untagged', t.h.other, '#6E6E6E']].filter(r => r[1]);
+  const free = Math.max(0, 168 - t.total);
+  return `<div class="hours"><div class="hrow head"><span>HOURS</span><span>week</span><span>month</span></div>
+    ${rows.map(([l, h, c]) => `<div class="hrow"><span><i style="background:${c}"></i>${l}</span><b>${hh(h)}</b><b>${hh(h * WEEKS_PER_MONTH)}</b></div>`).join('')}
+    <div class="hrow total"><span>Planned</span><b>${hh(t.total)}</b><b>${hh(t.total * WEEKS_PER_MONTH)}</b></div>
+    <div class="hrow dim"><span>Unplanned</span><b>${hh(free)}</b><b>${hh(free * WEEKS_PER_MONTH)}</b></div>
+    <p class="hint">A month is your week × 4.33.</p></div>`;
+}
 export function allocBar(schedule = D.schedule) {
   const t = pillarTime(schedule), parts = [...PILLARS.map(p => [p.short, t.h[p.key], p.color]), ['Untagged', t.h.other, '#4A4A4A']];
   if (!t.total) return `<div class="alloc none"><small>PLANNED THIS WEEK</small><p>Nothing planned this week, so there is nothing to split yet.</p></div>`;
@@ -114,6 +127,7 @@ page('schedule', {
   title: 'PLAN',
   render() {
     return `${allocBar()}
+    ${hoursTable()}
     ${weekPanel(D.schedule, 'main')}`;
   },
 });
