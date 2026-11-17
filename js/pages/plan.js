@@ -70,9 +70,12 @@ page('adventures', {
       return [a.when ? `${fmtDate(dts(a.when))} · ${d < 0 ? -d + 'd ago' : d === 0 ? 'today' : 'in ' + d + 'd'}` : 'no date yet', a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : ''].filter(Boolean).join(' · '); };
     return `<div class="card hero sh-gold"><small>✧ EXPERIENCES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
     <div class="btns">${btn('+ Experience', () => adventureForm(), 'good')}</div>
-    ${open.map(a => `<div class="card">${a.img ? `<img class="expimg" src="${a.img}" alt="" ${on(() => adventureForm(a))}>` : ''}<div ${on(() => adventureForm(a))}><h3>${esc(a.name)}</h3><small>${meta(a)}</small>${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
-      <div class="catfoot">${photoBtns(a)}<button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button><button class="sbtn" ${on(() => liveIt(a))}>Lived it</button></div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
-    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => adventureForm(a))}><div class="ric">${a.img ? `<img class="expthumb" src="${a.img}" alt="">` : '✓'}</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div></div>`).join('') : ''}`;
+    ${open.map(a => { const shown = isCol('exp-' + a.id);
+      return `<div class="card">${a.img && shown ? `<img class="expimg" src="${a.img}" alt="" ${on(() => toggleCol('exp-' + a.id))}>` : ''}<div ${on(() => (a.img ? toggleCol('exp-' + a.id) : adventureForm(a)))}><h3>${esc(a.name)}</h3><small>${meta(a)}${a.img && !shown ? ' · <span class="hasphoto">▣ photo</span>' : ''}</small>${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
+      <div class="catfoot">${photoBtns(a)}<button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button><button class="sbtn" ${on(() => liveIt(a))}>Lived it</button></div></div>`; }).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
+    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => { const shown = a.img && isCol('exp-' + a.id);
+      return `<div class="row" ${on(() => (a.img ? toggleCol('exp-' + a.id) : adventureForm(a)))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}${a.img && !shown ? ' · <span class="hasphoto">▣ photo</span>' : ''}</small></div></div>
+      ${shown ? `<div class="card livedopen"><img class="expimg" src="${a.img}" alt="" ${on(() => toggleCol('exp-' + a.id))}><div class="catfoot">${photoBtns(a)}<button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button></div></div>` : ''}`; }).join('') : ''}`;
   },
 });
 
