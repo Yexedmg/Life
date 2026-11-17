@@ -86,7 +86,7 @@ export const BLANK = {
   timeAlloc: (name = 'Default day') => ({ id: uid(), name, slots: [] }),
   timeSlot: () => ({ id: uid(), title: '', start: '', end: '', color: SLOT_COLORS[0], pillar: '', placeId: '' }),
   lifeMap: (name = '') => ({ id: uid(), name, bg: '', places: [], transport: [], createdAt: Date.now() }),   // a map you make: Home, City…
-  mapPlace: (name = '') => ({ id: uid(), name, notes: '', x: 50, y: 50 }),                                      // a place on it, x/y in % of the map
+  mapPlace: (name = '') => ({ id: uid(), name, notes: '', x: 50, y: 50, todo: [] }),   // todo: things you can do there { id, text }                                      // a place on it, x/y in % of the map
   element: () => ({ id: uid(), title: '', desc: '', level: 0, levelUp: [], history: [], createdAt: Date.now() }), // body-map stat OR platform
   income: () => ({ id: uid(), title: '', desc: '', amount: 0, hoursPerWeek: 0, status: 'active', projections: [], createdAt: Date.now() }),
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
@@ -277,7 +277,7 @@ export function normalize(raw) {
   o.attention = Object.fromEntries(Object.entries(obj(o.attention)).filter(([k, v]) => PILLARS.some(p => p.key === k) && v && typeof v === 'object').map(([k, v]) => [k, { note: String(v.note || ''), since: num(v.since, Date.now()) }]));
   o.principles = arr(o.principles).filter(x => x && String(x.text || '').trim()).map(x => ({ id: x.id || uid(), text: String(x.text).trim() }));
   o.maps = fit(BLANK.lifeMap, o.maps).map(m => ({ ...m, name: String(m.name || ''), bg: typeof m.bg === 'string' && m.bg.startsWith('data:image/') ? m.bg : '',
-    places: fit(BLANK.mapPlace, m.places).map(x => ({ ...x, x: clamp(num(x.x, 50), 0, 100), y: clamp(num(x.y, 50), 0, 100) })),
+    places: fit(BLANK.mapPlace, m.places).map(x => ({ ...x, x: clamp(num(x.x, 50), 0, 100), y: clamp(num(x.y, 50), 0, 100), todo: arr(x.todo).filter(t => t && String(t.text || '').trim()).map(t => ({ id: t.id || uid(), text: String(t.text).trim() })) })),
     transport: arr(m.transport).filter(t => t && (t.label || t.keyItemId)).map(t => ({ id: t.id || uid(), label: String(t.label || ''), keyItemId: t.keyItemId || null })) }));
   o.keyItems = fit(BLANK.keyItem, o.keyItems).map(k => ({ ...k, has: !!k.has, tier: TIER_VAL[k.tier] == null ? 'C' : k.tier, wantPrice: Math.max(0, num(k.wantPrice)) }));
   o.adventures = fit(BLANK.adventure, o.adventures).map(a => ({ ...a, img: typeof a.img === 'string' && a.img.startsWith('data:image/') ? a.img : '' }));

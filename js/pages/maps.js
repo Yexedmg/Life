@@ -52,12 +52,20 @@ function transportPicker(m) {
       <div class="btns">${btn('Close', closeModal)}</div>`;
   });
 }
+function todoForm(m, x, reopen) {
+  form({ title: x ? `Things to do — ${x.name}` : 'New thing to do', sub: 'Something you can do there.',
+    fields: [...(x ? [] : [{ name: 'place', label: 'Where?', type: 'select', value: m.places[0]?.id || '', options: m.places.map(p => [p.id, p.name]) }]),
+      { name: 'text', label: 'What can you do there?', value: '', required: true, placeholder: 'Host friends, read, train…' }],
+    submit: 'Add', onSubmit: v => { const p = x || m.places.find(q => q.id === v.place); if (!p) return false; p.todo.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text: v.text }); if (reopen) setTimeout(reopen); } });
+}
+const todoRows = (m, x, reopen) => x.todo.map(t => `<div class="move tdo"><span>${esc(t.text)}</span><button ${on(() => destroy('Removed.', () => { x.todo = x.todo.filter(y => y !== t); }))}>×</button></div>`).join('');
 function placeSheet(mapId, placeId) {
   modal(() => {
     const m = getMap(mapId), x = m?.places.find(p => p.id === placeId); if (!x) return null;
     const st = placeStatus(x.id), line = (t, a, b) => `<div class="trow"><span>${esc(a)}</span><b>${esc(b)}</b></div>`;
     return `<h2>${esc(x.name)} ${bubble(st)}</h2><p class="msub">${esc(m.name)}</p>
       ${x.notes ? `<p class="desc">${esc(x.notes)}</p>` : ''}
+      <div class="panel"><div class="pt">THINGS TO DO <button class="sbtn" ${on(() => todoForm(m, x, () => placeSheet(mapId, placeId)))}>+ Add</button></div>${todoRows(m, x) || '<p>Nothing listed yet. What can you do here?</p>'}</div>
       <div class="panel"><div class="pt">TODAY HERE</div>${st.today.length ? st.today.map(e => line(0, e.time, e.name)).join('') : '<p>Nothing planned here today.</p>'}</div>
       <div class="panel"><div class="pt">IDEAL DAY HERE</div>${st.ideal.length ? st.ideal.map(s => line(0, `${s.start}–${s.end}`, s.title)).join('') : '<p>Not part of your ideal day.</p>'}</div>
       <p class="hint">Give a slot a place in Plan or Ideal day (the "Where?" field) and it shows up here.</p>
@@ -90,8 +98,10 @@ page('map', {
         ${!m.places.length ? '<p class="hint mapempty">No places yet. Tap + Place.</p>' : ''}</div>
         ${m.places.length ? '<p class="hint">Drag a marker to move it. Tap it to open.</p>' : ''}`
       : `${m.places.map(x => { const s = st[x.id];
-          return `<div class="row" ${on(() => placeSheet(id, x.id))}><div class="rbody"><b>${esc(x.name)} ${bubble(s)}</b><small>${s.today.length ? s.today.map(e => esc(e.time.split(/[–-]/)[0]) + ' ' + esc(e.name)).join(' · ') : s.ideal.length ? 'in your ideal day' : esc(x.notes || 'nothing planned')}</small></div><div class="rarr">→</div></div>`; }).join('') || empty('No places yet. Tap + Place.')}`}
+          return `<div class="row" ${on(() => placeSheet(id, x.id))}><div class="rbody"><b>${esc(x.name)} ${bubble(s)}</b><small>${s.today.length ? s.today.map(e => esc(e.time.split(/[–-]/)[0]) + ' ' + esc(e.name)).join(' · ') : s.ideal.length ? 'in your ideal day' : x.todo.length ? `${x.todo.length} thing${x.todo.length === 1 ? '' : 's'} to do` : esc(x.notes || 'nothing planned')}</small></div><div class="rarr">→</div></div>`; }).join('') || empty('No places yet. Tap + Place.')}`}
     ${legend}
+    <div class="sect"><span>THINGS TO DO</span>${m.places.length ? `<button class="sbtn" ${on(() => todoForm(m))}>+ Add</button>` : ''}</div>
+    ${m.places.filter(x => x.todo.length).map(x => `<div class="todog"><b ${on(() => placeSheet(id, x.id))}>${esc(x.name)} ${bubble(st[x.id])}</b>${todoRows(m, x)}</div>`).join('') || empty(m.places.length ? 'Nothing listed yet. What can you do at each place?' : 'Add a place first.')}
     <div class="btns">${btn('+ Place', () => placeForm(m), 'good')}${btn('Map settings', () => mapSettings(id))}</div>`;
   },
   after(view, { id }) {

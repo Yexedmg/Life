@@ -574,3 +574,9 @@ em.cat { font: 700 10.5px var(--mono); font-style: normal; letter-spacing: .06em
 .expimg { width: calc(100% + 24px); margin: -12px -12px 4px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r) var(--r) 0 0; display: block; cursor: pointer; }
 .expthumb { width: 40px; height: 40px; object-fit: cover; border-radius: 8px; display: block; } .expthumb.sm { width: 26px; height: 26px; border-radius: 6px; display: inline-block; vertical-align: middle; margin-right: 4px; }
 label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
+
+/* things to do on a map, grouped by place */
+.todog { padding: 10px 14px; border-radius: var(--r); border: 1px solid var(--line); margin-top: 8px !important; }
+.todog > b { display: block; font: 700 14px var(--sans); cursor: pointer; margin-bottom: 2px; }
+.todog .move span, .panel .move span { font-size: 14px; }
+.move.tdo { flex-wrap: nowrap; padding: 8px 0; } .move.tdo span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; } .move.tdo:last-child { border-bottom: 0; }
