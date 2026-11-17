@@ -143,7 +143,7 @@ page('portal', {
       t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Experiences', `${D.adventures.filter(a => !a.doneAt).length} waiting`, 'adventures'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`, `<div class="mt" ${on(principlesSheet)}><i>❖</i><b>Principles</b><small>${D.principles.length || 'none yet'}</small></div>`])
     + grp('WORLDS', [
-      t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', `${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'}`, 'wardrobe'), t('◆', 'Key items', `${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length} obtained`, 'keyitems'), t('⬢', 'World map', 'cities & moves', 'world')])
+      t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', `${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'}`, 'wardrobe'), t('◆', 'Key items', `${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length} obtained`, 'keyitems'), t('⌖', 'Maps', `${D.maps.length} map${D.maps.length === 1 ? '' : 's'}`, 'maps'), t('⬢', 'World map', 'cities & moves', 'world')])
     + grp('SYSTEM', [
       t('Σ', 'Total stats', `level ${D.player.level}`, 'totalstats'), t('≣', 'Log', `${D.log.length} entries`, 'log'), t('⇅', 'Save / load', 'backup & import', 'saveload')]);
   },

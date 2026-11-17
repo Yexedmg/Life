@@ -10,6 +10,7 @@ import './pages/plan.js';
 import './pages/time.js';
 import './pages/worlds.js';
 import './pages/system.js';
+import './pages/maps.js';
 
 load();
 initUi();

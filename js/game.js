@@ -110,15 +110,18 @@ export function integrity() {
   }
   for (const c of D.vibeComponents) cleanSlots(c);
 
+  const placeIds = new Set(D.maps.flatMap(m => m.places.map(x => x.id)));
+  for (const m of D.maps) m.transport = m.transport.filter(t => !t.keyItemId || D.keyItems.some(k => k.id === t.keyItemId));
   const fixWeek = w => { for (const d of DAYS) for (const e of w[d]) {
     if (e.activityItemId && !findActivity(e.activityItemId)) { e.activityItemId = null; e.catId = null; }
     if (e.levelUpRef && !resolveMove(e.levelUpRef)) delete e.levelUpRef;
+    if (e.placeId && !placeIds.has(e.placeId)) e.placeId = '';
   } };
   fixWeek(D.schedule);
   for (const l of D.lifestyles) { fixWeek(l.schedule); l.activities = l.activities.filter(a => findActivity(a.activityItemId)); }
   if (!D.timeAllocs.length) D.timeAllocs.push(BLANK.timeAlloc());
   if (!D.timeAllocs.some(t => t.id === D.currentTimeAllocId)) D.currentTimeAllocId = D.timeAllocs[0].id;
-  for (const t of D.timeAllocs) for (const s of t.slots) if (s.levelUpRef && !resolveMove(s.levelUpRef)) delete s.levelUpRef;
+  for (const t of D.timeAllocs) for (const s of t.slots) { if (s.levelUpRef && !resolveMove(s.levelUpRef)) delete s.levelUpRef; if (s.placeId && !placeIds.has(s.placeId)) s.placeId = ''; }
   for (const a of D.abilities) a.assignments = a.assignments.filter(x => (x.type === 'activity' ? findActivity(x.itemId) : findLeadItem(x.itemId)));
   if (!D.lifestyles.some(l => l.id === D.activeLifestyleId)) D.activeLifestyleId = null;
   for (const m of D.nextMoves) if (m.city && !W.cities.some(c => c.id === m.city)) m.city = null;

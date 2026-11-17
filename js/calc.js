@@ -168,6 +168,13 @@ export function engineHours() {
   const t = pillarTime(), today = sum(D.schedule[todayKey()].filter(e => entryPillar(e) === 'engine').map(e => parseRange(e.time)?.hours || 0));
   return { week: t.h.engine || 0, today, share: t.pct('engine'), limit: D.engineLimit, over: (t.h.engine || 0) > D.engineLimit };
 }
+// Maps: a place's status comes from slots that name it.
+export function findMapPlace(id) { if (!id) return null; for (const map of D.maps) { const place = map.places.find(x => x.id === id); if (place) return { map, place }; } return null; }
+export function placeStatus(id) {
+  const today = D.schedule[todayKey()].filter(e => e.placeId === id), cur = nowNext().cur;
+  const ideal = D.timeAllocs.flatMap(t => t.slots.filter(x => x.placeId === id).map(x => ({ ...x, day: t.name })));
+  return { now: !!(cur && cur.e.placeId === id), today, ideal };
+}
 export const lastGain = key => D.gains.filter(g => g.pillar === key).at(-1)?.t || null;
 export const gainSum = (pillar, days) => sum(D.gains.filter(g => g.pillar === pillar && g.t >= Date.now() - days * DAY).map(g => g.amount));
 export const pillarRate = pillar => ({ week: gainSum(pillar, 7), perWeek: gainSum(pillar, 28) / 4, month: gainSum(pillar, 30) });

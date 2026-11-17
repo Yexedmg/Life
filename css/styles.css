@@ -551,3 +551,21 @@ em.cat { font: 700 10.5px var(--mono); font-style: normal; letter-spacing: .06em
 .tcol { display: flex; flex-direction: column; align-items: center; line-height: 1.2; }
 .tcol i { font: 600 8.5px var(--mono); font-style: normal; letter-spacing: .06em; color: var(--text); opacity: .28; }
 .tcol b { font: 700 11.5px var(--mono); letter-spacing: .06em; color: var(--text); }
+
+/* maps: your own maps and places */
+.getthere { font: 700 11px var(--mono); letter-spacing: .12em; color: var(--text2); align-items: center; }
+.chip.miss { color: var(--red); border-color: color-mix(in srgb, var(--red) 50%, transparent); }
+.mapc { position: relative; width: 100%; aspect-ratio: 4 / 5; border-radius: var(--r); border: 1px solid var(--line); background-color: #070707; background-size: cover; background-position: center; overflow: hidden; touch-action: none;
+  background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 22px 22px; margin-top: 10px; }
+.mapc[style*="background-image"] { background-size: cover; }
+.mapempty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+.mk { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: grab; touch-action: none; user-select: none; }
+.mk > i { width: 16px; height: 16px; border-radius: 99px; background: var(--text); border: 3px solid #000; box-shadow: 0 0 0 1px rgba(255,255,255,.5); }
+.mk > span { font: 700 11px var(--sans); background: rgba(0,0,0,.75); padding: 2px 7px; border-radius: 99px; white-space: nowrap; }
+.mk.drag > i { background: var(--gold); }
+.mk .bub { position: absolute; top: -8px; left: calc(50% + 9px); }
+.bub { display: inline-flex; align-items: center; justify-content: center; vertical-align: middle; min-width: 12px; height: 12px; border-radius: 99px; font-style: normal; }
+.bub.today { background: var(--gold); } .bub.ideal { border: 2px solid var(--gold); box-sizing: border-box; }
+.bub.now { background: var(--green); color: #000; font: 800 9px var(--sans); padding: 0 6px; height: 16px; letter-spacing: .06em; }
+.maplegend { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 400 11px var(--mono); color: var(--muted); margin-top: 8px !important; }
+.maplegend .bub { margin-left: 8px; } .maplegend .bub:first-child { margin-left: 0; }

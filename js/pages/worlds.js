@@ -96,10 +96,10 @@ page('wardrobe', {
 function keyItemForm(k) {
   form({ title: k ? k.name : 'New key item', sub: 'A piece of equipment that changes what you can do.',
     fields: [{ name: 'name', label: 'What is it?', value: k?.name, required: true, placeholder: 'Car, licence, own place…' }, { name: 'icon', label: 'Icon', value: k?.icon || '◆' },
-      { name: 'has', label: 'I have it', type: 'check', value: k?.has }, { name: 'detail', label: 'Which one do you have?', value: k?.detail, placeholder: 'VW Polo 2015' }, { name: 'tier', label: 'How good is it, really?', type: 'tier', value: k?.tier || 'C' },
+      { name: 'has', label: 'I have it', type: 'check', value: k?.has }, { name: 'transport', label: 'This is a mode of transport', type: 'check', value: k?.transport }, { name: 'detail', label: 'Which one do you have?', value: k?.detail, placeholder: 'VW Polo 2015' }, { name: 'tier', label: 'How good is it, really?', type: 'tier', value: k?.tier || 'C' },
       { name: 'wantName', label: k?.has ? 'The upgrade you want' : 'The one you want', value: k?.wantName, placeholder: 'BMW 1 Series' }, { name: 'wantPrice', label: 'What does it cost? ($)', type: 'number', min: 0, value: k?.wantPrice || '' },
       { name: 'notes', label: 'Notes', type: 'textarea', value: k?.notes }],
-    onSubmit: v => { const data = { name: v.name, icon: v.icon || '◆', has: v.has, detail: v.has ? v.detail : '', tier: v.tier || 'C', wantName: v.wantName, wantPrice: Math.max(0, v.wantPrice || 0), notes: v.notes };
+    onSubmit: v => { const data = { name: v.name, icon: v.icon || '◆', has: v.has, detail: v.has ? v.detail : '', tier: v.tier || 'C', wantName: v.wantName, wantPrice: Math.max(0, v.wantPrice || 0), notes: v.notes, transport: !!v.transport };
       if (k) { if (v.has && !k.has) data.gotAt = Date.now(); Object.assign(k, data); } else D.keyItems.push({ ...BLANK.keyItem(), ...data, gotAt: v.has ? Date.now() : null }); },
     onDelete: k ? () => destroy(`${k.name} — removed from key items.`, () => { D.keyItems = D.keyItems.filter(x => x !== k); }) : null });
 }
