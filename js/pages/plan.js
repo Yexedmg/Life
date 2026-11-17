@@ -78,6 +78,8 @@ page('adventures', {
 });
 
 // One experience: its photo, and the steps it takes to get there.
+// Steps are in order: 1, 2, 3. Move one up or down to change the order.
+const moveStep = (a, i, d) => { const j = i + d; if (j < 0 || j >= a.steps.length) return; [a.steps[i], a.steps[j]] = [a.steps[j], a.steps[i]]; commit(); };
 function stepForm(a, t) {
   form({ title: t ? 'Edit step' : 'New step', sub: t ? '' : `What does it take to get to ${a.name}?`, fields: [{ name: 'text', label: 'The step', value: t?.text, required: true, placeholder: 'Pick a date, ask Daan, book the train…' }],
     submit: 'Save', onSubmit: v => { if (t) t.text = v.text; else a.steps.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text: v.text, done: false }); },
@@ -87,14 +89,15 @@ page('experience', {
   title: p => (D.adventures.find(a => a.id === p.id)?.name || 'Experience').toUpperCase(),
   render({ id }) {
     const a = D.adventures.find(x => x.id === id); if (!a) return null;
-    const col = PILLARS.find(p => p.key === a.pillar), n = a.steps.filter(t => t.done).length, pct = a.steps.length ? n / a.steps.length * 100 : 0;
+    const next = a.steps.findIndex(t => !t.done), col = PILLARS.find(p => p.key === a.pillar), n = a.steps.filter(t => t.done).length, pct = a.steps.length ? n / a.steps.length * 100 : 0;
     return `${a.img ? `<img class="exphero" src="${a.img}" alt="">` : ''}
     <div class="card ${a.doneAt ? 'sh-green' : 'sh-gold'}"><small>${a.doneAt ? `✓ LIVED · ${fmtDate(a.doneAt)}` : '✧ EXPERIENCE'}</small><h2>${esc(a.name)}</h2>
       <div class="split dim"><span>${whenText(a)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</span><span>${col ? `<b style="color:${col.color}">${col.short}</b>` : ''}</span></div>
       ${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
     <div class="sect"><span>STEPS TO GET THERE${a.steps.length ? ` · ${n}/${a.steps.length}` : ''}</span><button class="sbtn" ${on(() => stepForm(a))}>+ Step</button></div>
     ${a.steps.length ? bar(pct, 'green') : ''}
-    ${a.steps.map(t => `<div class="task ${t.done ? 'done' : ''}"><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}</span><button class="x" ${on(() => stepForm(a, t))}>✎</button></div>`).join('') || empty('No steps yet. What does it take to get there?')}
+    ${a.steps.map((t, i) => `<div class="task step ${t.done ? 'done' : ''} ${i === next ? 'next' : ''}"><i class="sn">${i + 1}</i><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}${i === next ? '<em>NEXT</em>' : ''}</span>
+      <button class="x mv" ${i ? '' : 'disabled'} ${on(() => moveStep(a, i, -1))} aria-label="Move up">↑</button><button class="x mv" ${i < a.steps.length - 1 ? '' : 'disabled'} ${on(() => moveStep(a, i, 1))} aria-label="Move down">↓</button><button class="x" ${on(() => stepForm(a, t))}>✎</button></div>`).join('') || empty('No steps yet. What does it take to get there?')}
     <div class="btns">${photoBtnsBig(a)}${btn('Edit', () => adventureForm(a))}${a.doneAt ? btn('Not lived yet', () => { a.doneAt = null; commit(); }) : btn('Lived it', () => liveIt(a), 'good')}</div>`;
   },
 });

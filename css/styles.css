@@ -588,3 +588,9 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 /* top bar: a long title gives way; the clock never moves */
 #top .trow1 h1 { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 #top .trow1 .tright { flex: 0 0 auto; }
+
+/* ordered steps */
+.task.step { gap: 6px; } .task.step .sn { font: 700 12px var(--mono); font-style: normal; color: var(--muted); min-width: 18px; text-align: right; }
+.task.step.next .sn, .task.step.next > span { color: var(--text); } .task.step.next > span { font-weight: 700; }
+.task.step > span em { font: 800 9px var(--sans); font-style: normal; letter-spacing: .1em; color: #000; background: var(--gold); padding: 2px 6px; border-radius: 99px; margin-left: 8px; vertical-align: middle; }
+.task.step .mv { width: 30px; } .task.step .mv[disabled] { opacity: .2; pointer-events: none; }
