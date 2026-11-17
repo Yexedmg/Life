@@ -629,3 +629,19 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .locktag { font: 800 9.5px var(--sans); font-style: normal; letter-spacing: .08em; color: var(--text2); border: 1px solid var(--line); border-radius: 99px; padding: 1px 7px; vertical-align: middle; white-space: nowrap; }
 .reqp .pt { display: flex; justify-content: space-between; align-items: center; } .reqp.ready .pt { color: var(--green); } .reqp.locked .pt { color: var(--orange); } .reqp.locked { border-color: color-mix(in srgb, var(--orange) 40%, transparent); }
 .needs { color: var(--orange) !important; }
+
+/* experience steps as a timeline: done → next → still ahead → the experience itself */
+.tline { position: relative; margin-top: 12px !important; padding-left: 4px; }
+.tl-i:not(.goal)::before { content: ''; position: absolute; left: 17px; top: 36px; bottom: 0; width: 2px; background: var(--line); } .tl-i.done::before { background: var(--green); }
+.tl-i { position: relative; display: flex; gap: 14px; padding-bottom: 18px; }
+.tl-dot { position: relative; z-index: 1; flex: 0 0 36px; height: 36px; border-radius: 99px; border: 2px solid var(--line); background: var(--bg); color: var(--text2); font: 700 13px var(--mono); display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.tl-i.done .tl-dot { background: var(--green); border-color: var(--green); color: #000; }
+.tl-i.next .tl-dot { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 4px rgba(255,203,28,.15); }
+.tl-body { flex: 1; min-width: 0; padding-top: 6px; display: flex; flex-direction: column; gap: 4px; }
+.tl-body > span { font: 500 16px var(--sans); color: var(--text2); cursor: pointer; overflow-wrap: anywhere; }
+.tl-i.next .tl-body > span { color: var(--text); font-weight: 700; } .tl-i.done .tl-body > span { color: var(--muted); text-decoration: line-through; }
+.tl-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .tl-meta:empty { display: none; } .tl-meta .wktag { margin-left: 0; }
+.nexttag { font: 800 9px var(--sans); font-style: normal; letter-spacing: .1em; color: #000; background: var(--gold); padding: 2px 7px; border-radius: 99px; }
+.tl-ctl { display: flex; gap: 2px; margin-left: -6px; } .tl-ctl .x { width: 32px; height: 28px; color: var(--muted); font-size: 14px; } .tl-ctl .mv[disabled] { opacity: .2; pointer-events: none; }
+.tl-i.goal { padding-bottom: 0; } .tl-i.goal .tl-dot { border-color: var(--gold); color: var(--gold); cursor: default; font-size: 16px; }
+.tl-i.goal .tl-body > span { color: var(--text); font: 800 17px var(--sans); cursor: default; } .tl-i.goal.done .tl-dot { background: var(--gold); color: #000; } .tl-i.goal.done .tl-body > span { text-decoration: none; }

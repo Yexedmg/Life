@@ -131,10 +131,13 @@ page('experience', {
       <div class="pt" style="margin-top:10px">WHAT I'D DO DIFFERENTLY</div>${a.lesson ? `<p class="lesson" ${on(() => adventureForm(a))}>${esc(a.lesson)}</p>` : `<p ${on(() => adventureForm(a))}>Nothing written yet. Tap to write it.</p>`}</div>` : ''}
     ${a.doneAt ? '' : reqPanel(a)}
     <div class="sect"><span>STEPS TO GET THERE${a.steps.length ? ` · ${n}/${a.steps.length}` : ''}</span><button class="sbtn" ${on(() => stepForm(a))}>+ Step</button></div>
-    ${a.steps.length ? bar(pct, 'green') : ''}
-    ${a.steps.map((t, i) => `<div class="task step ${t.done ? 'done' : ''} ${i === next ? 'next' : ''}"><i class="sn">${i + 1}</i><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}${i === next ? '<em>NEXT</em>' : ''}${slotTag(t)}</span>
-      <button class="x wk" ${on(() => stepToWeek(a, t))} aria-label="Put in my week">◷</button>
-      <button class="x mv" ${i ? '' : 'disabled'} ${on(() => moveStep(a, i, -1))} aria-label="Move up">↑</button><button class="x mv" ${i < a.steps.length - 1 ? '' : 'disabled'} ${on(() => moveStep(a, i, 1))} aria-label="Move down">↓</button><button class="x" ${on(() => stepForm(a, t))}>✎</button></div>`).join('') || empty('No steps yet. What does it take to get there?')}
+    ${a.steps.length ? `<div class="tline">${a.steps.map((t, i) => `<div class="tl-i ${t.done ? 'done' : ''} ${i === next ? 'next' : ''}">
+        <button class="tl-dot" ${on(() => { t.done = !t.done; commit(); })} aria-label="${t.done ? 'Mark not done' : 'Mark done'}">${t.done ? '✓' : i + 1}</button>
+        <div class="tl-body"><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}</span>
+          <div class="tl-meta">${i === next ? '<em class="nexttag">NEXT</em>' : ''}${slotTag(t)}</div>
+          <div class="tl-ctl"><button class="x wk" ${on(() => stepToWeek(a, t))} aria-label="Put in my week">◷</button><button class="x mv" ${i ? '' : 'disabled'} ${on(() => moveStep(a, i, -1))} aria-label="Move up">↑</button><button class="x mv" ${i < a.steps.length - 1 ? '' : 'disabled'} ${on(() => moveStep(a, i, 1))} aria-label="Move down">↓</button><button class="x" ${on(() => stepForm(a, t))} aria-label="Edit step">✎</button></div></div></div>`).join('')}
+      <div class="tl-i goal ${a.doneAt ? 'done' : ''}"><span class="tl-dot">✧</span><div class="tl-body"><span>${esc(a.name)}</span><div class="tl-meta"><small>${a.doneAt ? 'lived ' + fmtDate(a.doneAt) : whenText(a)}</small></div></div></div></div>`
+      : empty('No steps yet. What does it take to get there?')}
     <div class="btns">${photoBtnsBig(a)}${btn('Edit', () => adventureForm(a))}${a.doneAt ? btn('Not lived yet', () => { a.doneAt = null; commit(); }) : btn('Lived it', () => liveIt(a), 'good')}</div>`;
   },
 });
