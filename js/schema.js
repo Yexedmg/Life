@@ -78,7 +78,7 @@ export const BLANK = {
   nextMove: () => ({ id: uid(), name: '', statEffects: {}, city: null }),
   ability: () => ({ id: uid(), name: '', desc: '', unlocked: false, assignments: [] }),
   era: () => ({ id: uid(), name: '', start: '', end: '', color: ERA_COLORS[0], createdAt: Date.now() }),
-  manifest: () => ({ id: uid(), name: '', emoji: '◎', milestones: [], story: [], achievedAt: null, createdAt: Date.now() }),
+  manifest: () => ({ id: uid(), name: '', emoji: '◎', milestones: [], story: [], reqs: [], achievedAt: null, createdAt: Date.now() }),   // reqs: what must be in place first { id, text, done }
   milestone: () => ({ id: uid(), name: '', tasks: [] }),
   task: () => ({ id: uid(), name: '', done: false }),
   lifestyle: () => ({ id: uid(), name: '', emoji: '◈', activities: [], schedule: emptyWeek(), createdAt: Date.now() }),
@@ -90,7 +90,7 @@ export const BLANK = {
   element: () => ({ id: uid(), title: '', desc: '', level: 0, levelUp: [], history: [], createdAt: Date.now() }), // body-map stat OR platform
   income: () => ({ id: uid(), title: '', desc: '', amount: 0, hoursPerWeek: 0, status: 'active', projections: [], createdAt: Date.now() }),
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
-  adventure: () => ({ id: uid(), name: '', when: '', withWho: '', pillar: '', notes: '', img: '', steps: [], regret: false, regretState: '', lesson: '', placeId: '', doneAt: null, createdAt: Date.now() }),   // regret: something you missed out on; regretState: '' | 'possible' | 'gone'   // steps: what it takes to get there { id, text, done }
+  adventure: () => ({ id: uid(), name: '', when: '', withWho: '', pillar: '', notes: '', img: '', steps: [], regret: false, regretState: '', lesson: '', placeId: '', reqs: [], doneAt: null, createdAt: Date.now() }),   // regret: something you missed out on; regretState: '' | 'possible' | 'gone'   // steps: what it takes to get there { id, text, done }
   keyItem: (name = '', icon = '◆') => ({ id: uid(), name, icon, has: false, detail: '', tier: 'C', wantName: '', wantPrice: 0, notes: '', gotAt: null, transport: false }),
   inspiration: () => ({ id: uid(), title: '', date: '', img: '', description: '', good: '', moments: [], createdAt: Date.now() }),   // a great day to learn from; moments: { id, text, uses: [{ kind, ref }] }
   outfit: () => ({ id: uid(), name: '', tier: 'C', occasion: '', pieces: '', createdAt: Date.now() }),
@@ -263,7 +263,8 @@ export function normalize(raw) {
   o.eras = fit(BLANK.era, o.eras).filter(e => e.start && e.end);
   const steps = l => arr(l).filter(e => e && e.text).map(e => ({ id: e.id || uid(), t: num(e.t, Date.now()), text: String(e.text) }));
   for (const p of PILLARS) o.factorStory[p.key] = steps(o.factorStory[p.key]);
-  o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, story: steps(m.story), milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks) })) }));
+  const reqs = l => arr(l).filter(r => r && String(r.text || '').trim()).map(r => ({ id: r.id || uid(), text: String(r.text).trim(), done: !!r.done }));
+  o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, reqs: reqs(m.reqs), story: steps(m.story), milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks) })) }));
   o.abilities = fit(BLANK.ability, o.abilities).map(a => ({ ...a, assignments: arr(a.assignments) }));
   o.lifestyles = fit(BLANK.lifestyle, o.lifestyles).map(l => ({ ...l, activities: arr(l.activities), schedule: shapeWeek(l.schedule) }));
   o.schedule = shapeWeek(o.schedule);
@@ -284,7 +285,7 @@ export function normalize(raw) {
     places: fit(BLANK.mapPlace, m.places).map(x => ({ ...x, x: clamp(num(x.x, 50), 0, 100), y: clamp(num(x.y, 50), 0, 100), todo: arr(x.todo).filter(t => t && String(t.text || '').trim()).map(t => ({ id: t.id || uid(), text: String(t.text).trim() })) })),
     transport: arr(m.transport).filter(t => t && (t.label || t.keyItemId)).map(t => ({ id: t.id || uid(), label: String(t.label || ''), keyItemId: t.keyItemId || null })) }));
   o.keyItems = fit(BLANK.keyItem, o.keyItems).map(k => ({ ...k, has: !!k.has, tier: TIER_VAL[k.tier] == null ? 'C' : k.tier, wantPrice: Math.max(0, num(k.wantPrice)) }));
-  o.adventures = fit(BLANK.adventure, o.adventures).map(a => ({ ...a, regret: !!a.regret, regretState: ['possible', 'gone'].includes(a.regretState) ? a.regretState : '', lesson: String(a.lesson || ''), steps: arr(a.steps).filter(t => t && String(t.text || '').trim()).map(t => ({ id: t.id || uid(), text: String(t.text).trim(), done: !!t.done, slot: t.slot && DAYS.includes(t.slot.day) && t.slot.id ? { day: t.slot.day, id: String(t.slot.id) } : null })), img: typeof a.img === 'string' && a.img.startsWith('data:image/') ? a.img : '' }));
+  o.adventures = fit(BLANK.adventure, o.adventures).map(a => ({ ...a, reqs: reqs(a.reqs), regret: !!a.regret, regretState: ['possible', 'gone'].includes(a.regretState) ? a.regretState : '', lesson: String(a.lesson || ''), steps: arr(a.steps).filter(t => t && String(t.text || '').trim()).map(t => ({ id: t.id || uid(), text: String(t.text).trim(), done: !!t.done, slot: t.slot && DAYS.includes(t.slot.day) && t.slot.id ? { day: t.slot.day, id: String(t.slot.id) } : null })), img: typeof a.img === 'string' && a.img.startsWith('data:image/') ? a.img : '' }));
   o.outfits = fit(BLANK.outfit, o.outfits).map(x => ({ ...x, tier: TIER_VAL[x.tier] == null ? 'C' : x.tier }));
   o.ratings = shapeRatings(o.ratings);
   o.log = arr(o.log).filter(e => e && e.msg).slice(0, 500).map(e => ({ t: num(e.t, Date.now()), msg: String(e.msg), tag: e.tag || 'event' }));

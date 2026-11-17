@@ -6,6 +6,7 @@ import { findMapPlace, todayKey, waitingExp, birthday, eraStatus, dts, daysTo, f
 import { addXP, applyEffects, log, fxText, gain } from '../game.js';
 import { birthdayForm } from './home.js';
 import { storyBlock, storyNow } from '../story.js';
+import { reqPanel, lockTag } from '../reqs.js';
 
 // ── Manifest
 function goalForm(m) {
@@ -28,9 +29,9 @@ page('manifest', {
   title: 'MANIFEST',
   render() {
     const goal = m => { const all = tasksOf(m), pr = progress(all), closed = isCol(m.id);
-      return `<div class="card ${m.achievedAt ? 'sh-green' : ''}"><div class="cathead" ${on(() => toggleCol(m.id))}><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span><i>${closed ? '▸' : '▾'}</i></div>${bar(pr, 'green')}
+      return `<div class="card ${m.achievedAt ? 'sh-green' : ''}"><div class="cathead" ${on(() => toggleCol(m.id))}><b>${esc(m.emoji)} ${esc(m.name)} ${m.achievedAt ? '' : lockTag(m)}</b><span>${Math.round(pr)}%</span><i>${closed ? '▸' : '▾'}</i></div>${bar(pr, 'green')}
       ${m.achievedAt ? `<div class="split dim"><span>🎯 ACHIEVED</span><span>${fmtDate(m.achievedAt)}</span></div>` : ''}
-      ${closed ? (storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : '') : `${storyBlock(m.story, m.id, m.name)}${m.milestones.map(ms => { const mp = progress(ms.tasks), mc = isCol(ms.id), done = ms.tasks.length && mp === 100;
+      ${closed ? (storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : '') : `${storyBlock(m.story, m.id, m.name)}${m.achievedAt ? '' : reqPanel(m)}${m.milestones.map(ms => { const mp = progress(ms.tasks), mc = isCol(ms.id), done = ms.tasks.length && mp === 100;
         return `<div class="ms"><div class="mshead"><span ${on(() => toggleCol(ms.id))}>${mc ? '▸' : '▾'} ${done ? '✓ ' : ''}${esc(ms.name)}</span><em>${ms.tasks.filter(t => t.done).length}/${ms.tasks.length}</em>
           <button class="sbtn ghost" ${on(() => nameForm('Edit milestone', 'Milestone', ms, m.milestones, BLANK.milestone))}>✎</button><button class="sbtn" ${on(() => nameForm('New task', "What's required?", null, ms.tasks, BLANK.task, () => { m.achievedAt = null; }))}>+ Task</button></div>
           ${mc ? '' : ms.tasks.map(t => `<div class="task ${t.done ? 'done' : ''}"><button ${on(() => toggleTask(m, t))}>${t.done ? '■' : '□'}</button><span ${on(() => toggleTask(m, t))}>${esc(t.name)}</span><button class="x" ${on(() => nameForm('Edit task', 'Task', t, ms.tasks, BLANK.task))}>✎</button></div>`).join('') || '<p class="hint">No tasks. What does this milestone actually require?</p>'}</div>`; }).join('')}
@@ -74,7 +75,7 @@ page('adventures', {
     const open = waitingExp().sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999')), done = D.adventures.filter(a => a.doneAt).sort((a, b) => b.doneAt - a.doneAt);
     const meta = a => { const col = PILLARS.find(p => p.key === a.pillar);
       return [whenText(a), a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : '', stepsOf(a)].filter(Boolean).join(' · '); };
-    const tag = a => (a.regret ? `<em class="rtag">REGRET${a.doneAt ? ' · redeemed' : a.regretState ? '' : ' · undecided'}</em>` : '');
+    const tag = a => (a.regret ? `<em class="rtag">REGRET${a.doneAt ? ' · redeemed' : a.regretState ? '' : ' · undecided'}</em>` : '') + (a.doneAt ? '' : lockTag(a));
     return `<div class="card hero sh-gold"><small>✧ EXPERIENCES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
     <div class="btns">${btn('+ Experience', () => adventureForm(), 'good')}${btn(`✦ Inspiration${D.inspirations.length ? ' · ' + D.inspirations.length : ''}`, () => go('inspiration'))}</div>
     ${open.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)} ${tag(a)}</b><small>${meta(a)}</small>${a.steps.length ? bar(a.steps.filter(t => t.done).length / a.steps.length * 100, 'green') : ''}</div><div class="rarr">→</div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
@@ -121,6 +122,7 @@ page('experience', {
     ${a.regret ? `<div class="panel regretp"><div class="pt">REGRET</div>
       ${a.doneAt ? '<p>You missed it once, then you lived it.</p>' : `<div class="split"><span>Can it still happen?</span></div><div class="seg rseg">${[['possible', 'Still possible'], ['gone', 'Gone']].map(([k, l]) => `<label ${on(() => { a.regretState = a.regretState === k ? '' : k; commit(); })}><span class="${a.regretState === k ? 'sel' : ''}">${l}</span></label>`).join('')}</div>`}
       <div class="pt" style="margin-top:10px">WHAT I'D DO DIFFERENTLY</div>${a.lesson ? `<p class="lesson" ${on(() => adventureForm(a))}>${esc(a.lesson)}</p>` : `<p ${on(() => adventureForm(a))}>Nothing written yet. Tap to write it.</p>`}</div>` : ''}
+    ${a.doneAt ? '' : reqPanel(a)}
     <div class="sect"><span>STEPS TO GET THERE${a.steps.length ? ` · ${n}/${a.steps.length}` : ''}</span><button class="sbtn" ${on(() => stepForm(a))}>+ Step</button></div>
     ${a.steps.length ? bar(pct, 'green') : ''}
     ${a.steps.map((t, i) => `<div class="task step ${t.done ? 'done' : ''} ${i === next ? 'next' : ''}"><i class="sn">${i + 1}</i><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}${i === next ? '<em>NEXT</em>' : ''}${slotTag(t)}</span>

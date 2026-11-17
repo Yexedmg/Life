@@ -10,6 +10,7 @@ import { modal, closeModal, toast, btn } from '../ui.js';
 import { gain } from '../game.js';
 import { allocBar } from './time.js';
 import { storyBlock, storyNow } from '../story.js';
+import { isReady, missingReqs } from '../reqs.js';
 import { waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
@@ -176,9 +177,18 @@ page('home', {
   },
 });
 
+// What move can I make already? Every open quest and experience, split into READY NOW and LOCKED.
 page('questlog', {
   title: 'QUESTS & EXPERIENCES',
   render() {
-    return questsBody();
+    const moves = [...D.manifests.filter(m => !m.achievedAt).map(m => ({ x: m, kind: 'quest', name: `${m.emoji} ${m.name}`, open: () => go('manifest'), next: tasksOf(m).find(t => !t.done)?.name })),
+      ...waitingExp().map(a => ({ x: a, kind: 'exp', name: `✧ ${a.name}`, open: () => go('experience', { id: a.id }), next: a.steps.find(t => !t.done)?.text }))];
+    const ready = moves.filter(v => isReady(v.x)), locked = moves.filter(v => !isReady(v.x));
+    const card = v => `<div class="quest" ${on(v.open)}><div class="split"><b>${esc(v.name)} ${v.x.regret ? '<em class="rtag">REGRET</em>' : ''}</b><span>${v.kind === 'quest' ? 'quest' : 'experience'}</span></div>
+      ${isReady(v.x) ? (v.next ? `<small>▸ ${esc(v.next)}</small>` : '') : `<small class="needs">needs: ${missingReqs(v.x).map(r => esc(r.text)).join(' · ')}</small>`}</div>`;
+    return `<div class="btns">${btn('All quests →', () => go('manifest'))}${btn('All experiences →', () => go('adventures'))}</div>
+    <div class="sect"><span class="green">READY NOW · ${ready.length}</span></div>
+    ${ready.map(card).join('') || empty(moves.length ? 'Nothing is ready yet. Look at what the locked moves need.' : 'No open quests or experiences.')}
+    ${locked.length ? `<div class="sect"><span>LOCKED · ${locked.length}</span></div>${locked.map(card).join('')}` : ''}`;
   },
 });
