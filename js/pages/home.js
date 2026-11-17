@@ -10,7 +10,7 @@ import { modal, closeModal, toast, btn } from '../ui.js';
 import { gain } from '../game.js';
 import { allocBar } from './time.js';
 import { storyBlock, storyNow } from '../story.js';
-import { isoWeek, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
+import { parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
   const n = D.northstar;
@@ -131,17 +131,6 @@ const questsBody = () => {
     ${exp.slice(0, 5).map(a => `<div class="quest" ${on(() => go('adventures'))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet.')}`;
 };
 
-// Now, like a picker wheel: the current week and day in focus, their neighbours faded above and below.
-function nowWheel() {
-  const t = new Date(), at = n => new Date(t.getFullYear(), t.getMonth(), t.getDate() + n), wk = n => isoWeek(at(n * 7));
-  const W = [wk(-1), wk(0), wk(1)], dn = n => at(n).toLocaleDateString('en-GB', { weekday: 'short' });
-  const cell = (txt, mid) => (mid ? `<b>${txt}</b>` : `<span>${txt}</span>`);
-  return `<div class="wheel" ${on(() => go('schedule'))}>
-    <div class="wcol">${W.map((w, i) => cell(`Week ${w.week}<i>/${w.total}</i>`, i === 1)).join('')}</div>
-    <div class="wcol">${[-1, 0, 1].map(n => cell(dn(n), n === 0)).join('')}</div>
-  </div>`;
-}
-
 page('home', {
   title: 'HOME',
   render() {
@@ -149,7 +138,6 @@ page('home', {
     const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = D.adventures.filter(a => !a.doneAt).length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
     const all = [...PILLARS, TIME], counted = all.filter(f => !f.limit), active = counted.filter(f => factorActive(f.key)).length, attnN = PILLARS.filter(f => D.attention[f.key]).length; // Engine has a limit, not an active state
     return `
-    ${nowWheel()}
     <div class="carousel" id="hcar">
       <section class="slide">
         <div class="sect"><span>YOUR LIFE</span><span>${active} / ${counted.length} active${attnN ? ` · <b class="attnc">${attnN} need${attnN === 1 ? 's' : ''} attention</b>` : ''}</span></div>

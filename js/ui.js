@@ -43,7 +43,7 @@ export function render() {
   }
   const view = $('#view'), keep = last === cur ? view.scrollTop : (cur.scroll || 0);
   const title = typeof def.title === 'function' ? def.title(cur.params) : def.title;
-  $('#top').innerHTML = `<div class="trow1"><h1 style="font-size:${(title || '').length > 16 ? 12 : 16}px">${esc(title || '')}</h1><span class="tright"><em id="tweek"></em><b id="clock"></b></span></div><div class="trow2"><span id="tnow"></span><span id="tleft"></span></div><div class="tbar"><i id="tbar"></i></div>`;
+  $('#top').innerHTML = `<div class="trow1"><h1 style="font-size:${(title || '').length > 16 ? 12 : 16}px">${esc(title || '')}</h1><span class="tright"><span id="tweek" class="tstack"></span><b id="clock"></b></span></div><div class="trow2"><span id="tnow"></span><span id="tleft"></span></div><div class="tbar"><i id="tbar"></i></div>`;
   tickTop();
   $('#backfab').hidden = stack.length <= 1;
   view.innerHTML = body; view.scrollTop = keep; last = cur;
@@ -148,8 +148,10 @@ function tickTop() {
   const c = $('#clock'); if (!c || !D) return;
   const n = new Date(), secs = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds(), left = 86400 - secs;
   c.textContent = `${p2(n.getHours())}:${p2(n.getMinutes())}:${p2(n.getSeconds())}`;
-  const w = isoWeek(n);
-  $('#tweek').textContent = `WEEK ${w.week}/${w.total} · ${n.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase()}`;
+  const at = d => new Date(n.getFullYear(), n.getMonth(), n.getDate() + d), wk = d => { const w = isoWeek(at(d)); return `WEEK ${w.week}/${w.total}`; };
+  const day = d => at(d).toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase(), col = (a, b, c) => `<span class="tcol"><i>${a}</i><b>${b}</b><i>${c}</i></span>`;
+  const html = col(wk(-7), wk(0), wk(7)) + col(day(-1), day(0), day(1)), el = $('#tweek');
+  if (el.dataset.k !== html) { el.innerHTML = html; el.dataset.k = html; } // rebuild only when the day changes
   $('#tleft').textContent = `${Math.floor(left / 3600)}h ${p2(Math.floor(left % 3600 / 60))}m ${p2(left % 60)}s left`;
   $('#tbar').style.width = secs / 864 + '%';
   const nn = nowNext();
