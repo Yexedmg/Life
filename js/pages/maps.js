@@ -65,6 +65,7 @@ function placeSheet(mapId, placeId) {
     const st = placeStatus(x.id), line = (t, a, b) => `<div class="trow"><span>${esc(a)}</span><b>${esc(b)}</b></div>`;
     return `<h2>${esc(x.name)} ${bubble(st)}</h2><p class="msub">${esc(m.name)}</p>
       ${x.notes ? `<p class="desc">${esc(x.notes)}</p>` : ''}
+      ${D.adventures.filter(e => e.placeId === x.id && !e.doneAt).length ? `<div class="panel"><div class="pt">EXPERIENCES HERE</div>${D.adventures.filter(e => e.placeId === x.id && !e.doneAt).map(e => `<div class="trow" ${on(() => { closeModal(); go('experience', { id: e.id }); })}><span>${e.regret ? 'REGRET' : '✧'}</span><b>${esc(e.name)} →</b></div>`).join('')}</div>` : ''}
       <div class="panel"><div class="pt">THINGS TO DO <button class="sbtn" ${on(() => todoForm(m, x, () => placeSheet(mapId, placeId)))}>+ Add</button></div>${todoRows(m, x) || '<p>Nothing listed yet. What can you do here?</p>'}</div>
       <div class="panel"><div class="pt">TODAY HERE</div>${st.today.length ? st.today.map(e => line(0, e.time, e.name)).join('') : '<p>Nothing planned here today.</p>'}</div>
       <div class="panel"><div class="pt">IDEAL DAY HERE</div>${st.ideal.length ? st.ideal.map(s => line(0, `${s.start}–${s.end}`, s.title)).join('') : '<p>Not part of your ideal day.</p>'}</div>

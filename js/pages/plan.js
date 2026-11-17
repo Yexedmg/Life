@@ -1,8 +1,8 @@
 // Planning: Manifest, Eras + Calendar, Abilities, World map + Next Moves.
 import { D, commit, ui } from '../store.js';
-import { BLANK, ERA_COLORS, CAP, PILLARS } from '../schema.js';
+import { BLANK, ERA_COLORS, CAP, PILLARS, DAYS } from '../schema.js';
 import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi, shrinkImage, setPicture } from '../ui.js';
-import { waitingExp, birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
+import { findMapPlace, todayKey, waitingExp, birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
 import { addXP, applyEffects, log, fxText, gain } from '../game.js';
 import { birthdayForm } from './home.js';
 import { storyBlock, storyNow } from '../story.js';
@@ -49,6 +49,7 @@ function adventureForm(a) {
   form({ title: a ? `Edit ${a.name}` : 'New experience', sub: 'Something you want to experience. Put it here so it stops being a maybe.',
     fields: [{ name: 'name', label: 'What do you want to live?', value: a?.name, required: true, placeholder: 'Christmas market' },
       { name: 'when', label: 'When? (optional)', type: 'date', value: a?.when || '' }, { name: 'withWho', label: 'With who? (optional)', value: a?.withWho },
+      { name: 'placeId', label: 'Where? (optional)', type: 'select', value: a?.placeId || '', options: [['', '— Nowhere in particular —'], ...D.maps.filter(m => m.places.length).map(m => ({ group: m.name, options: m.places.map(x => [x.id, x.name]) }))] },
       { name: 'pillar', label: 'Which part of life does it feed?', type: 'seg', value: a?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
       { name: 'notes', label: 'Notes', type: 'textarea', value: a?.notes },
       { name: 'regret', label: 'This is a regret — something I missed out on', type: 'check', value: a?.regret },
@@ -83,6 +84,23 @@ page('adventures', {
 });
 
 // One experience: its photo, and the steps it takes to get there.
+// Step → week: a step becomes a slot in Plan, with the experience's category and place, so it shows up when it's time.
+const DAYN = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+const stepSlot = t => t.slot && D.schedule[t.slot.day]?.find(e => e.id === t.slot.id);
+const slotTag = t => { const e = stepSlot(t); return e ? `<em class="wktag" ${on((_, ev) => { ev.stopPropagation(); setUi('day-main', t.slot.day); go('schedule'); })}>${DAYN[t.slot.day]} ${esc(e.time.split(/[–-]/)[0])}</em>` : ''; };
+function stepToWeek(a, t) {
+  const e = stepSlot(t), r = e && e.time.split(/[–-]/);
+  form({ title: e ? 'Move in your week' : 'Put in my week', sub: `“${t.text}” becomes a slot in Plan${findMapPlace(a.placeId) ? ' at ' + findMapPlace(a.placeId).place.name : ''}.`,
+    fields: [{ name: 'day', label: 'Which day?', type: 'seg', value: t.slot?.day || todayKey(), options: DAYS.map(d => [d, DAYN[d]]) },
+      { name: 'from', label: 'From', type: 'time', value: r?.[0] || '', required: true }, { name: 'to', label: 'Until', type: 'time', value: r?.[1] || '', required: true }],
+    submit: e ? 'Move it' : 'Put it in', onSubmit: v => {
+      if (!v.day) { toast('Pick a day.'); return false; } if (v.from === v.to) { toast('From and until — not the same.'); return false; }
+      if (e) D.schedule[t.slot.day] = D.schedule[t.slot.day].filter(x => x !== e);
+      const n = { ...BLANK.entry(), time: `${v.from}–${v.to}`, name: t.text, pillar: a.pillar || '', placeId: a.placeId || '' };
+      D.schedule[v.day].push(n); t.slot = { day: v.day, id: n.id }; toast(`In your week: ${DAYN[v.day]} ${v.from}.`);
+    },
+    onDelete: e ? () => destroy('Taken out of your week.', () => { D.schedule[t.slot.day] = D.schedule[t.slot.day].filter(x => x !== e); t.slot = null; }) : null, del: 'Take it out' });
+}
 // Steps are in order: 1, 2, 3. Move one up or down to change the order.
 const moveStep = (a, i, d) => { const j = i + d; if (j < 0 || j >= a.steps.length) return; [a.steps[i], a.steps[j]] = [a.steps[j], a.steps[i]]; commit(); };
 function stepForm(a, t) {
@@ -97,6 +115,7 @@ page('experience', {
     const next = a.steps.findIndex(t => !t.done), col = PILLARS.find(p => p.key === a.pillar), n = a.steps.filter(t => t.done).length, pct = a.steps.length ? n / a.steps.length * 100 : 0;
     return `${a.img ? `<img class="exphero" src="${a.img}" alt="">` : ''}
     <div class="card ${a.doneAt ? 'sh-green' : 'sh-gold'}"><small>${a.doneAt ? `✓ LIVED · ${fmtDate(a.doneAt)}` : '✧ EXPERIENCE'}${a.regret ? ` · <span class="rtag">REGRET${a.doneAt ? ' · REDEEMED' : ''}</span>` : ''}</small><h2>${esc(a.name)}</h2>
+      ${findMapPlace(a.placeId) ? `<div class="split"><span class="plink" ${on(() => go('map', { id: findMapPlace(a.placeId).map.id }))}>⌖ ${esc(findMapPlace(a.placeId).place.name)} · ${esc(findMapPlace(a.placeId).map.name)} →</span></div>` : ''}
       <div class="split dim"><span>${whenText(a)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</span><span>${col ? `<b style="color:${col.color}">${col.short}</b>` : ''}</span></div>
       ${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
     ${a.regret ? `<div class="panel regretp"><div class="pt">REGRET</div>
@@ -104,7 +123,8 @@ page('experience', {
       <div class="pt" style="margin-top:10px">WHAT I'D DO DIFFERENTLY</div>${a.lesson ? `<p class="lesson" ${on(() => adventureForm(a))}>${esc(a.lesson)}</p>` : `<p ${on(() => adventureForm(a))}>Nothing written yet. Tap to write it.</p>`}</div>` : ''}
     <div class="sect"><span>STEPS TO GET THERE${a.steps.length ? ` · ${n}/${a.steps.length}` : ''}</span><button class="sbtn" ${on(() => stepForm(a))}>+ Step</button></div>
     ${a.steps.length ? bar(pct, 'green') : ''}
-    ${a.steps.map((t, i) => `<div class="task step ${t.done ? 'done' : ''} ${i === next ? 'next' : ''}"><i class="sn">${i + 1}</i><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}${i === next ? '<em>NEXT</em>' : ''}</span>
+    ${a.steps.map((t, i) => `<div class="task step ${t.done ? 'done' : ''} ${i === next ? 'next' : ''}"><i class="sn">${i + 1}</i><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}${i === next ? '<em>NEXT</em>' : ''}${slotTag(t)}</span>
+      <button class="x wk" ${on(() => stepToWeek(a, t))} aria-label="Put in my week">◷</button>
       <button class="x mv" ${i ? '' : 'disabled'} ${on(() => moveStep(a, i, -1))} aria-label="Move up">↑</button><button class="x mv" ${i < a.steps.length - 1 ? '' : 'disabled'} ${on(() => moveStep(a, i, 1))} aria-label="Move down">↓</button><button class="x" ${on(() => stepForm(a, t))}>✎</button></div>`).join('') || empty('No steps yet. What does it take to get there?')}
     <div class="btns">${photoBtnsBig(a)}${btn('Edit', () => adventureForm(a))}${a.doneAt ? btn('Not lived yet', () => { a.doneAt = null; commit(); }) : btn('Lived it', () => liveIt(a), 'good')}</div>`;
   },

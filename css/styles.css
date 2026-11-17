@@ -619,3 +619,8 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .moment .mtop span { flex: 1; font: 600 15px var(--sans); cursor: pointer; overflow-wrap: anywhere; } .moment .mv { width: 28px; color: var(--muted); font-size: 14px; } .moment .mv[disabled] { opacity: .2; pointer-events: none; }
 .moment .mbot { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; justify-content: flex-end; }
 .usedtag { font: 800 9.5px var(--sans); font-style: normal; letter-spacing: .08em; color: #000; background: var(--gold); border-radius: 99px; padding: 3px 8px; cursor: pointer; }
+
+/* experiences: place link, steps in the week */
+.plink { color: var(--text); font: 600 13px var(--mono); cursor: pointer; }
+.task.step .wk { width: 30px; color: var(--muted); font-size: 15px; }
+.wktag { font: 800 9.5px var(--sans); font-style: normal; letter-spacing: .06em; color: #000; background: var(--cyan); border-radius: 99px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; cursor: pointer; }

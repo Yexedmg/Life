@@ -117,6 +117,7 @@ export function integrity() {
     if (e.levelUpRef && !resolveMove(e.levelUpRef)) delete e.levelUpRef;
     if (e.placeId && !placeIds.has(e.placeId)) e.placeId = '';
   } };
+  for (const a of D.adventures) { if (a.placeId && !placeIds.has(a.placeId)) a.placeId = ''; for (const t of a.steps) if (t.slot && !D.schedule[t.slot.day]?.some(e => e.id === t.slot.id)) t.slot = null; }
   fixWeek(D.schedule);
   for (const l of D.lifestyles) { fixWeek(l.schedule); l.activities = l.activities.filter(a => findActivity(a.activityItemId)); }
   if (!D.timeAllocs.length) D.timeAllocs.push(BLANK.timeAlloc());
