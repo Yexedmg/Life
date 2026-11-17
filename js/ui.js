@@ -1,7 +1,7 @@
 // LIFE — ui. Router, modal, forms, toast, and the small HTML components every page shares.
 // No inline handlers anywhere: on(fn) registers a closure and returns a data attribute.
 import { D, commit, hooks, snapshot, replace, ui, saveUi } from './store.js';
-import { nowNext } from './calc.js';
+import { nowNext, isoWeek } from './calc.js';
 import { STATS, TIERS, TIER_COLOR } from './schema.js';
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -148,9 +148,8 @@ function tickTop() {
   const c = $('#clock'); if (!c || !D) return;
   const n = new Date(), secs = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds(), left = 86400 - secs;
   c.textContent = `${p2(n.getHours())}:${p2(n.getMinutes())}:${p2(n.getSeconds())}`;
-  const d = new Date(Date.UTC(n.getFullYear(), n.getMonth(), n.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // ISO week: the week with Thursday in it
-  const wk = Math.ceil(((d - Date.UTC(d.getUTCFullYear(), 0, 1)) / 864e5 + 1) / 7);
-  $('#tweek').textContent = `WEEK ${wk} · ${n.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase()}`;
+  const w = isoWeek(n);
+  $('#tweek').textContent = `WEEK ${w.week}/${w.total} · ${n.toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase()}`;
   $('#tleft').textContent = `${Math.floor(left / 3600)}h ${p2(Math.floor(left % 3600 / 60))}m ${p2(left % 60)}s left`;
   $('#tbar').style.width = secs / 864 + '%';
   const nn = nowNext();

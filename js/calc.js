@@ -18,6 +18,13 @@ export const iso = t => { const d = new Date(t); return `${d.getFullYear()}-${St
 export const todayKey = () => DAYS[(new Date().getDay() + 6) % 7];
 
 // ── XP
+// ISO weeks: Monday to Sunday; week 1 holds the year's first Thursday. Some years have 53.
+export function isoWeek(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())); d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  const year = d.getUTCFullYear(), week = Math.ceil(((d - Date.UTC(year, 0, 1)) / 864e5 + 1) / 7);
+  const dec28 = new Date(Date.UTC(year, 11, 28)); dec28.setUTCDate(dec28.getUTCDate() + 4 - (dec28.getUTCDay() || 7));
+  return { week, year, total: Math.ceil(((dec28 - Date.UTC(year, 0, 1)) / 864e5 + 1) / 7) };
+}
 export const xpForLevel = l => Math.floor(100 * Math.pow(1.4, l - 1));
 
 // ── Borough scoping: the main borough shows the global sets, every other borough its own.
