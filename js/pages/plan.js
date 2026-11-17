@@ -1,7 +1,7 @@
 // Planning: Manifest, Eras + Calendar, Abilities, World map + Next Moves.
 import { D, commit, ui } from '../store.js';
 import { BLANK, ERA_COLORS, CAP, PILLARS, DAYS } from '../schema.js';
-import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi, shrinkImage, setPicture } from '../ui.js';
+import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi, tabs, shrinkImage, setPicture } from '../ui.js';
 import { findMapPlace, todayKey, waitingExp, birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
 import { addXP, applyEffects, log, fxText, gain } from '../game.js';
 import { birthdayForm } from './home.js';
@@ -76,11 +76,18 @@ page('adventures', {
     const meta = a => { const col = PILLARS.find(p => p.key === a.pillar);
       return [whenText(a), a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : '', stepsOf(a)].filter(Boolean).join(' · '); };
     const tag = a => (a.regret ? `<em class="rtag">REGRET${a.doneAt ? ' · redeemed' : a.regretState ? '' : ' · undecided'}</em>` : '') + (a.doneAt ? '' : lockTag(a));
+    const regrets = D.adventures.filter(a => a.regret), rtab = ui.expTab === 'regrets';
+    const rrow = (a, cls = '') => `<div class="row ${cls}" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)}</b>${a.lesson ? `<small>${esc(a.lesson)}</small>` : `<small>${a.doneAt ? 'lived ' + fmtDate(a.doneAt) : whenText(a)}</small>`}</div><div class="rarr">→</div></div>`;
+    const rgroup = (title, list, cls) => (list.length ? sect(`${title} · ${list.length}`) + list.map(a => rrow(a, cls)).join('') : '');
     return `<div class="card hero sh-gold"><small>✧ EXPERIENCES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
     <div class="btns">${btn('+ Experience', () => adventureForm(), 'good')}${btn(`✦ Inspiration${D.inspirations.length ? ' · ' + D.inspirations.length : ''}`, () => go('inspiration'))}</div>
+    ${tabs([['all', 'All'], ['regrets', `Regrets${regrets.length ? ' · ' + regrets.length : ''}`]], rtab ? 'regrets' : 'all', k => setUi('expTab', k))}
+    ${rtab ? `${rgroup('UNDECIDED', regrets.filter(a => !a.doneAt && !a.regretState))}${rgroup('STILL POSSIBLE', regrets.filter(a => !a.doneAt && a.regretState === 'possible'))}${rgroup('REDEEMED', regrets.filter(a => a.doneAt))}${rgroup('GONE', regrets.filter(a => !a.doneAt && a.regretState === 'gone'), 'gone')}
+    ${regrets.length ? '' : empty('No regrets written down. Missed out on something? Add it as an experience and switch on “This is a regret”.')}` : `
     ${open.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)} ${tag(a)}</b><small>${meta(a)}</small>${a.steps.length ? bar(a.steps.filter(t => t.done).length / a.steps.length * 100, 'green') : ''}</div><div class="rarr">→</div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
     ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)} ${tag(a)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div><div class="rarr">→</div></div>`).join('') : ''}
-    ${gone.length ? sect(`REGRETS · GONE · ${gone.length}`) + gone.map(a => `<div class="row gone" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)}</b>${a.lesson ? `<small>${esc(a.lesson)}</small>` : ''}</div><div class="rarr">→</div></div>`).join('') : ''}`;
+    ${gone.length ? sect(`REGRETS · GONE · ${gone.length}`) + gone.map(a => `<div class="row gone" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)}</b>${a.lesson ? `<small>${esc(a.lesson)}</small>` : ''}</div><div class="rarr">→</div></div>`).join('') : ''}
+    `}`;
   },
 });
 
