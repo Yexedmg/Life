@@ -90,7 +90,7 @@ export const BLANK = {
   element: () => ({ id: uid(), title: '', desc: '', level: 0, levelUp: [], history: [], createdAt: Date.now() }), // body-map stat OR platform
   income: () => ({ id: uid(), title: '', desc: '', amount: 0, hoursPerWeek: 0, status: 'active', projections: [], createdAt: Date.now() }),
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
-  adventure: () => ({ id: uid(), name: '', when: '', withWho: '', pillar: '', notes: '', doneAt: null, createdAt: Date.now() }),
+  adventure: () => ({ id: uid(), name: '', when: '', withWho: '', pillar: '', notes: '', img: '', doneAt: null, createdAt: Date.now() }),
   keyItem: (name = '', icon = '◆') => ({ id: uid(), name, icon, has: false, detail: '', tier: 'C', wantName: '', wantPrice: 0, notes: '', gotAt: null, transport: false }),
   outfit: () => ({ id: uid(), name: '', tier: 'C', occasion: '', pieces: '', createdAt: Date.now() }),
   ratingItem: () => ({ id: uid(), name: '', tier: 'C', later: false, upgrade: null, upgrades: [] }),
@@ -280,7 +280,7 @@ export function normalize(raw) {
     places: fit(BLANK.mapPlace, m.places).map(x => ({ ...x, x: clamp(num(x.x, 50), 0, 100), y: clamp(num(x.y, 50), 0, 100) })),
     transport: arr(m.transport).filter(t => t && (t.label || t.keyItemId)).map(t => ({ id: t.id || uid(), label: String(t.label || ''), keyItemId: t.keyItemId || null })) }));
   o.keyItems = fit(BLANK.keyItem, o.keyItems).map(k => ({ ...k, has: !!k.has, tier: TIER_VAL[k.tier] == null ? 'C' : k.tier, wantPrice: Math.max(0, num(k.wantPrice)) }));
-  o.adventures = fit(BLANK.adventure, o.adventures);
+  o.adventures = fit(BLANK.adventure, o.adventures).map(a => ({ ...a, img: typeof a.img === 'string' && a.img.startsWith('data:image/') ? a.img : '' }));
   o.outfits = fit(BLANK.outfit, o.outfits).map(x => ({ ...x, tier: TIER_VAL[x.tier] == null ? 'C' : x.tier }));
   o.ratings = shapeRatings(o.ratings);
   o.log = arr(o.log).filter(e => e && e.msg).slice(0, 500).map(e => ({ t: num(e.t, Date.now()), msg: String(e.msg), tag: e.tag || 'event' }));

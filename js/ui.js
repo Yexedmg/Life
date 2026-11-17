@@ -159,6 +159,29 @@ function tickTop() {
 }
 setInterval(tickTop, 1000);
 
+// Shrink a picture the user picked to phone size, so it fits in the browser's storage.
+export function shrinkImage(file, maxPx = 1000, quality = 0.78) {
+  return new Promise((resolve, reject) => {
+    if (!file || !file.type.startsWith('image/')) return reject('That is not a picture.');
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      const k = Math.min(1, maxPx / Math.max(img.width, img.height)), c = document.createElement('canvas');
+      c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+      const data = c.toDataURL('image/jpeg', quality);
+      data.length > 1.6e6 ? reject('That picture is too large, even shrunk. Try a smaller one.') : resolve(data);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject('Could not read that picture.'); };
+    img.src = url;
+  });
+}
+// Put a picture on an object; if the phone's storage is full, take it back off and say so.
+export function setPicture(obj, key, data, done = 'Photo added.') {
+  const old = obj[key]; obj[key] = data;
+  if (commit() === false) { obj[key] = old; commit(); toast("Not enough space on this phone for that picture. Remove an older one, or export a backup and clear some."); }
+  else toast(done);
+}
+
 // ── Global delegation
 export function initUi() {
   document.addEventListener('click', e => {

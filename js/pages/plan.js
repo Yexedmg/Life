@@ -1,7 +1,7 @@
 // Planning: Manifest, Eras + Calendar, Abilities, World map + Next Moves.
 import { D, commit, ui } from '../store.js';
 import { BLANK, ERA_COLORS, CAP, PILLARS } from '../schema.js';
-import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi } from '../ui.js';
+import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi, shrinkImage, setPicture } from '../ui.js';
 import { birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
 import { addXP, applyEffects, log, fxText, gain } from '../game.js';
 import { birthdayForm } from './home.js';
@@ -55,6 +55,8 @@ function adventureForm(a) {
     onSubmit: v => { if (a) Object.assign(a, v); else D.adventures.push({ ...BLANK.adventure(), ...v }); },
     onDelete: a ? () => destroy(`"${a.name}" — dropped.`, () => { D.adventures = D.adventures.filter(x => x !== a); }) : null, del: 'Drop it' });
 }
+const addPhoto = (a, file) => shrinkImage(file, 800, 0.75).then(data => setPicture(a, 'img', data), msg => toast(msg));
+const photoBtns = a => `<label class="sbtn ghost">${a.img ? 'Change photo' : '+ Photo'}<input type="file" accept="image/*" hidden ${onChange((_, el) => addPhoto(a, el.files[0]))}></label>${a.img ? `<button class="sbtn ghost" ${on(() => destroy('Photo removed.', () => { a.img = ''; }))}>Remove photo</button>` : ''}`;
 function liveIt(a) {
   a.doneAt = Date.now();
   if (a.pillar && a.pillar !== 'money') gain(a.pillar, 1, a.name);
@@ -68,9 +70,9 @@ page('adventures', {
       return [a.when ? `${fmtDate(dts(a.when))} · ${d < 0 ? -d + 'd ago' : d === 0 ? 'today' : 'in ' + d + 'd'}` : 'no date yet', a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : ''].filter(Boolean).join(' · '); };
     return `<div class="card hero sh-gold"><small>✧ EXPERIENCES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
     <div class="btns">${btn('+ Experience', () => adventureForm(), 'good')}</div>
-    ${open.map(a => `<div class="card"><div ${on(() => adventureForm(a))}><h3>${esc(a.name)}</h3><small>${meta(a)}</small>${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
-      <div class="catfoot"><button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button><button class="sbtn" ${on(() => liveIt(a))}>Lived it</button></div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
-    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => adventureForm(a))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div></div>`).join('') : ''}`;
+    ${open.map(a => `<div class="card">${a.img ? `<img class="expimg" src="${a.img}" alt="" ${on(() => adventureForm(a))}>` : ''}<div ${on(() => adventureForm(a))}><h3>${esc(a.name)}</h3><small>${meta(a)}</small>${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
+      <div class="catfoot">${photoBtns(a)}<button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button><button class="sbtn" ${on(() => liveIt(a))}>Lived it</button></div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
+    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => adventureForm(a))}><div class="ric">${a.img ? `<img class="expthumb" src="${a.img}" alt="">` : '✓'}</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div></div>`).join('') : ''}`;
   },
 });
 

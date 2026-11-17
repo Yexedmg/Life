@@ -2,7 +2,7 @@
 // when a slot today, in the ideal day, or right now happens there.
 import { D, commit, ui, saveUi } from '../store.js';
 import { BLANK } from '../schema.js';
-import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, sect, empty, btn, tabs, rerender } from '../ui.js';
+import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, sect, empty, btn, tabs, rerender, shrinkImage, setPicture } from '../ui.js';
 import { placeStatus } from '../calc.js';
 
 const MODES = ['On foot', 'Bike', 'Public transport']; // ways to get somewhere that are not key items
@@ -31,21 +31,7 @@ function placeForm(m, x) {
     } });
 }
 
-// Shrink an uploaded picture to phone size so it fits in the browser's storage.
-function loadPicture(m, file) {
-  if (!file || !file.type.startsWith('image/')) return toast('That is not a picture.');
-  const img = new Image(), url = URL.createObjectURL(file);
-  img.onload = () => {
-    const k = Math.min(1, 1000 / Math.max(img.width, img.height)), c = document.createElement('canvas');
-    c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-    const data = c.toDataURL('image/jpeg', 0.78);
-    if (data.length > 1.6e6) return toast('That picture is too large, even shrunk. Try a smaller one.');
-    m.bg = data; commit(); toast('Background set.');
-  };
-  img.onerror = () => { URL.revokeObjectURL(url); toast('Could not read that picture.'); };
-  img.src = url;
-}
+const loadPicture = (m, file) => shrinkImage(file, 1000, 0.78).then(data => setPicture(m, 'bg', data, 'Background set.'), msg => toast(msg));
 function mapSettings(id) {
   modal(() => {
     const m = getMap(id); if (!m) return null;

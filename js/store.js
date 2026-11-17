@@ -12,8 +12,9 @@ export function load() {
   hooks.integrity();
   save();
 }
-export function save() { write(SAVE_KEY, D); }
-export function commit() { hooks.integrity(); save(); hooks.render(); }
+export function save() { return write(SAVE_KEY, D); }
+// Returns false when the browser had no room to save (storage full).
+export function commit() { hooks.integrity(); const ok = save(); hooks.render(); return ok; }
 export const snapshot = () => JSON.stringify(D);
 export function replace(raw) { D = normalize(typeof raw === 'string' ? JSON.parse(raw) : raw); commit(); }
 
