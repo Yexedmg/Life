@@ -128,7 +128,7 @@ const questsBody = () => {
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
       return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
     <div class="qcard" ${on(() => go('adventures'))}><div class="qrow"><b>✧ Experiences</b><span>${exp.length} waiting</span></div><em>All experiences →</em></div>
-    ${exp.slice(0, 5).map(a => `<div class="quest" ${on(() => go('adventures'))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet.')}`;
+    ${exp.slice(0, 5).map(a => `<div class="quest" ${on(() => go('experience', { id: a.id }))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet.')}`;
 };
 
 page('home', {

@@ -581,3 +581,10 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .todog .move span, .panel .move span { font-size: 14px; }
 .move.tdo { flex-wrap: nowrap; padding: 8px 0; } .move.tdo span { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; } .move.tdo:last-child { border-bottom: 0; }
 .hasphoto { color: var(--text2); } .card.livedopen { margin-top: 6px !important; }
+
+/* one experience: photo across the top, then the steps */
+.exphero { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: var(--r); border: 1px solid var(--line); }
+
+/* top bar: a long title gives way; the clock never moves */
+#top .trow1 h1 { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#top .trow1 .tright { flex: 0 0 auto; }

@@ -56,28 +56,49 @@ function adventureForm(a) {
     onDelete: a ? () => destroy(`"${a.name}" — dropped.`, () => { D.adventures = D.adventures.filter(x => x !== a); }) : null, del: 'Drop it' });
 }
 const addPhoto = (a, file) => shrinkImage(file, 800, 0.75).then(data => setPicture(a, 'img', data), msg => toast(msg));
-const photoBtns = a => `<label class="sbtn ghost">${a.img ? 'Change photo' : '+ Photo'}<input type="file" accept="image/*" hidden ${onChange((_, el) => addPhoto(a, el.files[0]))}></label>${a.img ? `<button class="sbtn ghost" ${on(() => destroy('Photo removed.', () => { a.img = ''; }))}>Remove photo</button>` : ''}`;
+const photoBtnsBig = a => `<label class="btn">${a.img ? 'Change photo' : '+ Photo'}<input type="file" accept="image/*" hidden ${onChange((_, el) => addPhoto(a, el.files[0]))}></label>${a.img ? btn('Remove photo', () => destroy('Photo removed.', () => { a.img = ''; })) : ''}`;
 function liveIt(a) {
   a.doneAt = Date.now();
   if (a.pillar && a.pillar !== 'money') gain(a.pillar, 1, a.name);
   log(`Lived it: ${a.name}`, 'manifest'); addXP(15, a.name); commit(); toast(`${a.name} — lived. +15 XP`);
 }
+const stepsOf = a => (a.steps.length ? `${a.steps.filter(t => t.done).length}/${a.steps.length} steps` : '');
+const whenText = a => { if (!a.when) return 'no date yet'; const d = daysTo(a.when); return `${fmtDate(dts(a.when))} · ${d < 0 ? -d + 'd ago' : d === 0 ? 'today' : 'in ' + d + 'd'}`; };
 page('adventures', {
   title: 'EXPERIENCES',
   render() {
     const open = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999')), done = D.adventures.filter(a => a.doneAt).sort((a, b) => b.doneAt - a.doneAt);
-    const meta = a => { const d = a.when ? daysTo(a.when) : null, col = PILLARS.find(p => p.key === a.pillar);
-      return [a.when ? `${fmtDate(dts(a.when))} · ${d < 0 ? -d + 'd ago' : d === 0 ? 'today' : 'in ' + d + 'd'}` : 'no date yet', a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : ''].filter(Boolean).join(' · '); };
+    const meta = a => { const col = PILLARS.find(p => p.key === a.pillar);
+      return [whenText(a), a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : '', stepsOf(a)].filter(Boolean).join(' · '); };
     return `<div class="card hero sh-gold"><small>✧ EXPERIENCES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
     <div class="btns">${btn('+ Experience', () => adventureForm(), 'good')}</div>
-    ${open.map(a => { const shown = isCol('exp-' + a.id);
-      return `<div class="card">${a.img && shown ? `<img class="expimg" src="${a.img}" alt="" ${on(() => toggleCol('exp-' + a.id))}>` : ''}<div ${on(() => (a.img ? toggleCol('exp-' + a.id) : adventureForm(a)))}><h3>${esc(a.name)}</h3><small>${meta(a)}${a.img && !shown ? ' · <span class="hasphoto">▣ photo</span>' : ''}</small>${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
-      <div class="catfoot">${photoBtns(a)}<button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button><button class="sbtn" ${on(() => liveIt(a))}>Lived it</button></div></div>`; }).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
-    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => { const shown = a.img && isCol('exp-' + a.id);
-      return `<div class="row" ${on(() => (a.img ? toggleCol('exp-' + a.id) : adventureForm(a)))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}${a.img && !shown ? ' · <span class="hasphoto">▣ photo</span>' : ''}</small></div></div>
-      ${shown ? `<div class="card livedopen"><img class="expimg" src="${a.img}" alt="" ${on(() => toggleCol('exp-' + a.id))}><div class="catfoot">${photoBtns(a)}<button class="sbtn ghost" ${on(() => adventureForm(a))}>✎ Edit</button></div></div>` : ''}`; }).join('') : ''}`;
+    ${open.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)}</b><small>${meta(a)}</small>${a.steps.length ? bar(a.steps.filter(t => t.done).length / a.steps.length * 100, 'green') : ''}</div><div class="rarr">→</div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
+    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div><div class="rarr">→</div></div>`).join('') : ''}`;
   },
 });
+
+// One experience: its photo, and the steps it takes to get there.
+function stepForm(a, t) {
+  form({ title: t ? 'Edit step' : 'New step', sub: t ? '' : `What does it take to get to ${a.name}?`, fields: [{ name: 'text', label: 'The step', value: t?.text, required: true, placeholder: 'Pick a date, ask Daan, book the train…' }],
+    submit: 'Save', onSubmit: v => { if (t) t.text = v.text; else a.steps.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text: v.text, done: false }); },
+    onDelete: t ? () => destroy('Step removed.', () => { a.steps = a.steps.filter(x => x !== t); }) : null, del: 'Remove' });
+}
+page('experience', {
+  title: p => (D.adventures.find(a => a.id === p.id)?.name || 'Experience').toUpperCase(),
+  render({ id }) {
+    const a = D.adventures.find(x => x.id === id); if (!a) return null;
+    const col = PILLARS.find(p => p.key === a.pillar), n = a.steps.filter(t => t.done).length, pct = a.steps.length ? n / a.steps.length * 100 : 0;
+    return `${a.img ? `<img class="exphero" src="${a.img}" alt="">` : ''}
+    <div class="card ${a.doneAt ? 'sh-green' : 'sh-gold'}"><small>${a.doneAt ? `✓ LIVED · ${fmtDate(a.doneAt)}` : '✧ EXPERIENCE'}</small><h2>${esc(a.name)}</h2>
+      <div class="split dim"><span>${whenText(a)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</span><span>${col ? `<b style="color:${col.color}">${col.short}</b>` : ''}</span></div>
+      ${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
+    <div class="sect"><span>STEPS TO GET THERE${a.steps.length ? ` · ${n}/${a.steps.length}` : ''}</span><button class="sbtn" ${on(() => stepForm(a))}>+ Step</button></div>
+    ${a.steps.length ? bar(pct, 'green') : ''}
+    ${a.steps.map(t => `<div class="task ${t.done ? 'done' : ''}"><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}</span><button class="x" ${on(() => stepForm(a, t))}>✎</button></div>`).join('') || empty('No steps yet. What does it take to get there?')}
+    <div class="btns">${photoBtnsBig(a)}${btn('Edit', () => adventureForm(a))}${a.doneAt ? btn('Not lived yet', () => { a.doneAt = null; commit(); }) : btn('Lived it', () => liveIt(a), 'good')}</div>`;
+  },
+});
+
 
 // ── Eras + Calendar
 function eraForm(e) {
