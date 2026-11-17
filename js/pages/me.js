@@ -1,6 +1,6 @@
 // ME — body map, stat grid, the shared "rated element" sheet (body-map stats + platforms), Portal.
-import { D, commit } from '../store.js';
-import { BLANK, STATS, STAT, CAP, uid } from '../schema.js';
+import { D, commit, ui, saveUi } from '../store.js';
+import { BLANK, STATS, STAT, CAP, uid, PILLARS } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge, GIRL } from '../ui.js';
 import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, taken, waitingExp } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
@@ -130,21 +130,31 @@ page('portal', {
   title: 'MENU',
   render() {
     const s = D.player.stats, rp = ratingsPct(), open = D.manifests.filter(m => !m.achievedAt).length;
-    const t = (icon, label, sub, to, params) => `<div class="mt" ${on(() => go(to, params))}><i>${icon}</i><b>${label}</b><small>${sub}</small></div>`;
-    const grp = (title, tiles) => `<div class="mg"><span>${title}</span><div class="mgrid">${tiles.join('')}</div></div>`;
-    return grp('PEOPLE', [
-      t(GIRL, 'Girlfriends', `${taken()} · ${chasers().length} in play`, 'life'), t('≡', 'Roster', `${D.girls.length} girl${D.girls.length === 1 ? '' : 's'} · ${D.friends.length} friend${D.friends.length === 1 ? '' : 's'}`, 'roster'),
-      t('!', 'Meet', `${Math.round(meetBar())}% meet bar`, 'meet'), t('⌘', 'Social media', `${D.socialMedia.length} platforms`, 'socialmedia')])
-    + grp('GROW', [
-      t('▲', 'Activities', `${slottedActivities().length} active`, 'activities'), t('◉', 'Lead gen', r1(leadBar()) + '% bar', 'leadgen'),
-      t('✦', 'The Entity', r1(vibe()) + '% vibe', 'vibe'), t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'),
-      t('★', 'Abilities', `${D.abilities.filter(a => a.unlocked).length}/${D.abilities.length} unlocked`, 'abilities')])
-    + grp('GOALS', [
-      t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Experiences', `${waitingExp().length} waiting`, 'adventures'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
+    const t = (icon, label, sub, to, params, pre) => `<div class="mt" ${on(() => { if (pre) pre(); go(to, params); })}><i>${icon}</i><b>${label}</b><small>${sub}</small></div>`;
+    const c = k => PILLARS.find(p => p.key === k)?.color || 'var(--muted)';
+    const grp = (title, color, tiles) => `<div class="mg"><span style="color:${color}">${title}</span><div class="mgrid">${tiles.join('')}</div></div>`;
+    const tab = k => () => { ui.rosterTab = k; saveUi(); }, n = (x, w) => `${x} ${w}${x === 1 ? '' : 's'}`;
+    // Grouped by the major parts of life, in their Home colours. Every page is still here.
+    return grp('SOCIAL', c('social'), [
+      t('≡', 'Friends', n(D.friends.length, 'friend'), 'roster', {}, tab('friends')), t('!', 'Meet', `${Math.round(meetBar())}% meet bar`, 'meet'),
+      t('⌘', 'Social media', `${D.socialMedia.length} platforms`, 'socialmedia'), t('◉', 'Lead gen', r1(leadBar()) + '% bar', 'leadgen')])
+    + grp('GIRLS', c('girls'), [
+      t(GIRL, 'Girlfriends', `${taken()} · ${chasers().length} in play`, 'life'), t('≡', 'Girls', n(D.girls.length, 'girl'), 'roster', {}, tab('girls')),
+      t('✦', 'The Entity', r1(vibe()) + '% vibe', 'vibe')])
+    + grp('MONEY', c('money'), [
+      t('$', 'Money', money(s.money), 'money'), t('◆', 'Key items', `${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length} obtained`, 'keyitems')])
+    + grp('LOOKS', c('looks'), [
+      t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', n(D.outfits.length, 'outfit'), 'wardrobe')])
+    + grp('HEALTH', c('health'), [
+      t('▲', 'Activities', `${slottedActivities().length} active`, 'activities'), t('★', 'Abilities', `${D.abilities.filter(a => a.unlocked).length}/${D.abilities.length} unlocked`, 'abilities')])
+    + grp('ENGINE', c('engine'), [
+      t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'), t('Σ', 'Total stats', `level ${D.player.level}`, 'totalstats'),
+      t('≣', 'Log', `${D.log.length} entries`, 'log'), t('⇅', 'Save / load', 'backup & import', 'saveload')])
+    + grp('TIME & GOALS', 'var(--text2)', [
+      t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Experiences', `${waitingExp().length} waiting`, 'adventures'),
+      t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`, `<div class="mt" ${on(principlesSheet)}><i>❖</i><b>Principles</b><small>${D.principles.length || 'none yet'}</small></div>`])
-    + grp('WORLDS', [
-      t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', `${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'}`, 'wardrobe'), t('◆', 'Key items', `${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length} obtained`, 'keyitems'), t('⌖', 'Maps', `${D.maps.length} map${D.maps.length === 1 ? '' : 's'}`, 'maps'), t('⬢', 'World map', 'cities & moves', 'world')])
-    + grp('SYSTEM', [
-      t('Σ', 'Total stats', `level ${D.player.level}`, 'totalstats'), t('≣', 'Log', `${D.log.length} entries`, 'log'), t('⇅', 'Save / load', 'backup & import', 'saveload')]);
+    + grp('WORLD', 'var(--text2)', [
+      t('⌖', 'Maps', n(D.maps.length, 'map'), 'maps'), t('⬢', 'World map', 'cities & moves', 'world')]);
   },
 });

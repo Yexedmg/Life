@@ -20,7 +20,7 @@ If the old build ran on the same address, its save (`life-rpg-data`) is picked u
 | **HOME** | The pause screen: level, Northstar, six life factors each ACTIVE or INACTIVE, and the quest list |
 | **STATUS** | Stats and the body map |
 | **PLAN** | The actual week, with the time split and analytics on demand |
-| **MENU** | Every area as one tile: People, Grow, Goals, Worlds (incl. your Maps), System |
+| **MENU** | Every page, grouped by part of life: Social, Girls, Money, Looks, Health, Engine, Time & goals, World |
 
 ## Code map
 
