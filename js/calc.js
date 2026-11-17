@@ -175,6 +175,7 @@ export function placeStatus(id) {
   const ideal = D.timeAllocs.flatMap(t => t.slots.filter(x => x.placeId === id).map(x => ({ ...x, day: t.name })));
   return { now: !!(cur && cur.e.placeId === id), today, ideal };
 }
+export const waitingExp = () => D.adventures.filter(a => !a.doneAt && !(a.regret && a.regretState === 'gone'));
 export const lastGain = key => D.gains.filter(g => g.pillar === key).at(-1)?.t || null;
 export const gainSum = (pillar, days) => sum(D.gains.filter(g => g.pillar === pillar && g.t >= Date.now() - days * DAY).map(g => g.amount));
 export const pillarRate = pillar => ({ week: gainSum(pillar, 7), perWeek: gainSum(pillar, 28) / 4, month: gainSum(pillar, 30) });

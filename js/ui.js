@@ -73,7 +73,7 @@ export const modalOpen = () => !!modalFn;
 // ── Forms: declare fields, get typed values back.
 export function form({ title, sub, fields, submit = 'Lock it in', onSubmit, onDelete, del = 'Cut it' }) {
   modal(() => `<form class="form" novalidate><h2>${esc(title)}</h2>${sub ? `<p class="msub">${esc(sub)}</p>` : ''}
-    ${fields.map(field).join('')}
+    ${fields.map(f => (f.showIf ? `<div class="showif" data-showif="${f.showIf}" ${fields.find(x => x.name === f.showIf)?.value ? '' : 'hidden'}>${field(f)}</div>` : field(f))).join('')}
     <div class="btns"><button type="submit" class="btn good">${esc(submit)}</button>
     ${onDelete ? `<button type="button" class="btn danger" ${on(() => { closeModal(); onDelete(); })}>${esc(del)}</button>` : ''}
     <button type="button" class="btn" ${on(closeModal)}>Never mind</button></div></form>`, { static: true });
@@ -192,6 +192,7 @@ export function initUi() {
     const el = e.target.closest('[data-c]'); if (!el) return;
     const fn = find(el.dataset.c); if (fn) fn(el.type === 'checkbox' ? el.checked : el.value, el);
   });
+  document.addEventListener('change', e => { const t = e.target; if (t.type === 'checkbox' && t.name) t.closest('form')?.querySelectorAll(`[data-showif="${t.name}"]`).forEach(el => { el.hidden = !t.checked; }); });
   document.addEventListener('input', e => { if (e.target.type === 'range' && e.target.nextElementSibling?.tagName === 'OUTPUT') e.target.nextElementSibling.textContent = e.target.value; });
   document.addEventListener('submit', e => {
     e.preventDefault(); if (!formCtx) return;

@@ -2,7 +2,7 @@
 import { D, commit, ui } from '../store.js';
 import { BLANK, ERA_COLORS, CAP, PILLARS } from '../schema.js';
 import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi, shrinkImage, setPicture } from '../ui.js';
-import { birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
+import { waitingExp, birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
 import { addXP, applyEffects, log, fxText, gain } from '../game.js';
 import { birthdayForm } from './home.js';
 import { storyBlock, storyNow } from '../story.js';
@@ -50,7 +50,9 @@ function adventureForm(a) {
     fields: [{ name: 'name', label: 'What do you want to live?', value: a?.name, required: true, placeholder: 'Christmas market' },
       { name: 'when', label: 'When? (optional)', type: 'date', value: a?.when || '' }, { name: 'withWho', label: 'With who? (optional)', value: a?.withWho },
       { name: 'pillar', label: 'Which part of life does it feed?', type: 'seg', value: a?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
-      { name: 'notes', label: 'Notes', type: 'textarea', value: a?.notes }],
+      { name: 'notes', label: 'Notes', type: 'textarea', value: a?.notes },
+      { name: 'regret', label: 'This is a regret — something I missed out on', type: 'check', value: a?.regret },
+      { name: 'lesson', label: "What I'd do differently", type: 'textarea', rows: 2, value: a?.lesson, showIf: 'regret' }],
     submit: a ? 'Lock it in' : 'Put it on the list',
     onSubmit: v => { if (a) Object.assign(a, v); else D.adventures.push({ ...BLANK.adventure(), ...v }); },
     onDelete: a ? () => destroy(`"${a.name}" — dropped.`, () => { D.adventures = D.adventures.filter(x => x !== a); }) : null, del: 'Drop it' });
@@ -67,13 +69,16 @@ const whenText = a => { if (!a.when) return 'no date yet'; const d = daysTo(a.wh
 page('adventures', {
   title: 'EXPERIENCES',
   render() {
-    const open = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999')), done = D.adventures.filter(a => a.doneAt).sort((a, b) => b.doneAt - a.doneAt);
+    const gone = D.adventures.filter(a => !a.doneAt && a.regret && a.regretState === 'gone');
+    const open = waitingExp().sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999')), done = D.adventures.filter(a => a.doneAt).sort((a, b) => b.doneAt - a.doneAt);
     const meta = a => { const col = PILLARS.find(p => p.key === a.pillar);
       return [whenText(a), a.withWho ? 'with ' + esc(a.withWho) : '', col ? `<span style="color:${col.color}">${col.short}</span>` : '', stepsOf(a)].filter(Boolean).join(' · '); };
+    const tag = a => (a.regret ? `<em class="rtag">REGRET${a.doneAt ? ' · redeemed' : a.regretState ? '' : ' · undecided'}</em>` : '');
     return `<div class="card hero sh-gold"><small>✧ EXPERIENCES — things you want to live</small><div class="count"><b>${open.length}</b><span>waiting<br>${done.length} lived</span></div></div>
     <div class="btns">${btn('+ Experience', () => adventureForm(), 'good')}</div>
-    ${open.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)}</b><small>${meta(a)}</small>${a.steps.length ? bar(a.steps.filter(t => t.done).length / a.steps.length * 100, 'green') : ''}</div><div class="rarr">→</div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
-    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div><div class="rarr">→</div></div>`).join('') : ''}`;
+    ${open.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)} ${tag(a)}</b><small>${meta(a)}</small>${a.steps.length ? bar(a.steps.filter(t => t.done).length / a.steps.length * 100, 'green') : ''}</div><div class="rarr">→</div></div>`).join('') || empty('Nothing on the list. What do you want to experience? A Christmas market, a trip, a night you will remember.')}
+    ${done.length ? sect(`LIVED · ${done.length}`) + done.map(a => `<div class="row" ${on(() => go('experience', { id: a.id }))}><div class="ric">✓</div><div class="rbody"><b>${esc(a.name)} ${tag(a)}</b><small>${fmtDate(a.doneAt)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</small></div><div class="rarr">→</div></div>`).join('') : ''}
+    ${gone.length ? sect(`REGRETS · GONE · ${gone.length}`) + gone.map(a => `<div class="row gone" ${on(() => go('experience', { id: a.id }))}><div class="rbody"><b>${esc(a.name)}</b>${a.lesson ? `<small>${esc(a.lesson)}</small>` : ''}</div><div class="rarr">→</div></div>`).join('') : ''}`;
   },
 });
 
@@ -91,9 +96,12 @@ page('experience', {
     const a = D.adventures.find(x => x.id === id); if (!a) return null;
     const next = a.steps.findIndex(t => !t.done), col = PILLARS.find(p => p.key === a.pillar), n = a.steps.filter(t => t.done).length, pct = a.steps.length ? n / a.steps.length * 100 : 0;
     return `${a.img ? `<img class="exphero" src="${a.img}" alt="">` : ''}
-    <div class="card ${a.doneAt ? 'sh-green' : 'sh-gold'}"><small>${a.doneAt ? `✓ LIVED · ${fmtDate(a.doneAt)}` : '✧ EXPERIENCE'}</small><h2>${esc(a.name)}</h2>
+    <div class="card ${a.doneAt ? 'sh-green' : 'sh-gold'}"><small>${a.doneAt ? `✓ LIVED · ${fmtDate(a.doneAt)}` : '✧ EXPERIENCE'}${a.regret ? ` · <span class="rtag">REGRET${a.doneAt ? ' · REDEEMED' : ''}</span>` : ''}</small><h2>${esc(a.name)}</h2>
       <div class="split dim"><span>${whenText(a)}${a.withWho ? ' · with ' + esc(a.withWho) : ''}</span><span>${col ? `<b style="color:${col.color}">${col.short}</b>` : ''}</span></div>
       ${a.notes ? `<p>${esc(a.notes)}</p>` : ''}</div>
+    ${a.regret ? `<div class="panel regretp"><div class="pt">REGRET</div>
+      ${a.doneAt ? '<p>You missed it once, then you lived it.</p>' : `<div class="split"><span>Can it still happen?</span></div><div class="seg rseg">${[['possible', 'Still possible'], ['gone', 'Gone']].map(([k, l]) => `<label ${on(() => { a.regretState = a.regretState === k ? '' : k; commit(); })}><span class="${a.regretState === k ? 'sel' : ''}">${l}</span></label>`).join('')}</div>`}
+      <div class="pt" style="margin-top:10px">WHAT I'D DO DIFFERENTLY</div>${a.lesson ? `<p class="lesson" ${on(() => adventureForm(a))}>${esc(a.lesson)}</p>` : `<p ${on(() => adventureForm(a))}>Nothing written yet. Tap to write it.</p>`}</div>` : ''}
     <div class="sect"><span>STEPS TO GET THERE${a.steps.length ? ` · ${n}/${a.steps.length}` : ''}</span><button class="sbtn" ${on(() => stepForm(a))}>+ Step</button></div>
     ${a.steps.length ? bar(pct, 'green') : ''}
     ${a.steps.map((t, i) => `<div class="task step ${t.done ? 'done' : ''} ${i === next ? 'next' : ''}"><i class="sn">${i + 1}</i><button ${on(() => { t.done = !t.done; commit(); })}>${t.done ? '■' : '□'}</button><span ${on(() => { t.done = !t.done; commit(); })}>${esc(t.text)}${i === next ? '<em>NEXT</em>' : ''}</span>

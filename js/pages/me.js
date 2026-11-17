@@ -2,7 +2,7 @@
 import { D, commit } from '../store.js';
 import { BLANK, STATS, STAT, CAP, uid } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge, GIRL } from '../ui.js';
-import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, taken } from '../calc.js';
+import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, taken, waitingExp } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
 import { northstarForm, principlesSheet } from './home.js';
 
@@ -140,7 +140,7 @@ page('portal', {
       t('✦', 'The Entity', r1(vibe()) + '% vibe', 'vibe'), t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'),
       t('★', 'Abilities', `${D.abilities.filter(a => a.unlocked).length}/${D.abilities.length} unlocked`, 'abilities')])
     + grp('GOALS', [
-      t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Experiences', `${D.adventures.filter(a => !a.doneAt).length} waiting`, 'adventures'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
+      t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Experiences', `${waitingExp().length} waiting`, 'adventures'), t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`, `<div class="mt" ${on(principlesSheet)}><i>❖</i><b>Principles</b><small>${D.principles.length || 'none yet'}</small></div>`])
     + grp('WORLDS', [
       t('$', 'Money', money(s.money), 'money'), t('⭐', 'Ratings', rp == null ? 'not rated' : Math.round(rp) + '% potential', 'ratings'), t('◆', 'Wardrobe', `${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'}`, 'wardrobe'), t('◆', 'Key items', `${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length} obtained`, 'keyitems'), t('⌖', 'Maps', `${D.maps.length} map${D.maps.length === 1 ? '' : 's'}`, 'maps'), t('⬢', 'World map', 'cities & moves', 'world')])

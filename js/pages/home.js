@@ -10,7 +10,7 @@ import { modal, closeModal, toast, btn } from '../ui.js';
 import { gain } from '../game.js';
 import { allocBar } from './time.js';
 import { storyBlock, storyNow } from '../story.js';
-import { parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
+import { waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
   const n = D.northstar;
@@ -123,7 +123,7 @@ function factorSheet(key) {
 
 // Quests and experiences in full: used by the third page of Home and by the Quests & Experiences page.
 const questsBody = () => {
-    const quests = D.manifests.filter(m => !m.achievedAt), exp = D.adventures.filter(a => !a.doneAt).sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
+    const quests = D.manifests.filter(m => !m.achievedAt), exp = waitingExp().sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
     return `<div class="qcard" ${on(() => go('manifest'))}><div class="qrow"><b>◎ Quests</b><span>${quests.length} open</span></div><em>All quests →</em></div>
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
       return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
@@ -135,7 +135,7 @@ page('home', {
   title: 'HOME',
   render() {
     const p = D.player, need = xpForLevel(p.level), ns = D.northstar, era = currentEra();
-    const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = D.adventures.filter(a => !a.doneAt).length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
+    const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = waitingExp().length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
     const all = [...PILLARS, TIME], counted = all.filter(f => !f.limit), active = counted.filter(f => factorActive(f.key)).length, attnN = PILLARS.filter(f => D.attention[f.key]).length; // Engine has a limit, not an active state
     return `
     <div class="carousel" id="hcar">
