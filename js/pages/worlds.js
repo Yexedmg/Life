@@ -4,7 +4,7 @@ import { BLANK, TIER_COLOR, TIERS, TIER_VAL, uid, CAP } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge } from '../ui.js';
 import { nodePct, ratingsPct, findRating, money, fmtDate, clamp } from '../calc.js';
 import { log, gain } from '../game.js';
-import { factorQuestSect } from './plan.js';
+import { factorPanel } from './home.js';
 
 // ════════ RATINGS ════════
 const pot = n => { const p = nodePct(n); return p == null ? '<div class="split dim"><span>not rated yet</span></div>' : `${bar(p, 'pot')}<div class="split dim"><span>${Math.round(p)}% of potential</span><span>${Math.round(100 - p)}% gap</span></div>`; };
@@ -46,10 +46,10 @@ page('ratings', {
   title: '⭐ RATINGS',
   render() {
     const p = ratingsPct();
-    return `<div class="card hero sh-gold"><small>⭐ EVERYTHING YOU RUN — RATED S TO F, PUSHED TO ITS POTENTIAL</small><div class="count"><b>${p == null ? '—' : Math.round(p) + '%'}</b><span>of potential<br>100% = everything S</span></div>${p == null ? '' : bar(p, 'pot')}</div>
+    return `${factorPanel('looks')}
+    <div class="card hero sh-gold"><small>⭐ EVERYTHING YOU RUN — RATED S TO F, PUSHED TO ITS POTENTIAL</small><div class="count"><b>${p == null ? '—' : Math.round(p) + '%'}</b><span>of potential<br>100% = everything S</span></div>${p == null ? '' : bar(p, 'pot')}</div>
     <div class="card" ${on(() => go('wardrobe'))}><div class="split"><h3>◆ Wardrobe</h3><b>${D.outfits.length} outfit${D.outfits.length === 1 ? '' : 's'} →</b></div>${D.outfits.length ? potBar(outfitPct()) : '<div class="split dim"><span>How many complete outfits do you own?</span></div>'}</div>
     <div class="card" ${on(() => go('keyitems'))}><div class="split"><h3>◆ Key items</h3><b>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length} →</b></div></div>
-    ${factorQuestSect('looks')}
     ${sect('CATEGORIES', '+ Category', () => nodeForm(D.ratings, null, 1))}
     ${D.ratings.map(n => nodeRow(n, [n.id])).join('') || empty('Nothing to rate. What do you run every day?')}`;
   },
@@ -135,9 +135,9 @@ page('money', {
   title: '$ MONEY',
   render() {
     const s = D.player.stats, g = D.moneyGoal;
-    return `<div class="card hero sh-gold"><small>$ IN THE ACCOUNT</small><div class="count"><b>${money(s.money)}</b></div></div>
+    return `${factorPanel('money')}
+    <div class="card hero sh-gold"><small>$ IN THE ACCOUNT</small><div class="count"><b>${money(s.money)}</b></div></div>
     <div class="btns">${btn('Add', () => balForm('Add money', 1), 'good')}${btn('Spent', () => balForm('Spent', -1), 'warm')}${btn('Set balance', () => balForm('Balance', 0))}</div>
-    <div class="card ${g ? '' : 'dashed'}" ${on(goalForm)}><small>$ THE GOAL</small>${g ? `<div class="split"><h3>${money(g)}</h3><b>${Math.round(clamp(s.money / g * 100))}%</b></div>${bar(s.money / g * 100, 'gold')}<div class="split dim"><span>${money(Math.max(0, g - s.money))} to go</span><span>tap to change</span></div>` : '<p>What number are you chasing? Tap to set it.</p>'}</div>
-    ${factorQuestSect('money')}`;
+    <div class="card ${g ? '' : 'dashed'}" ${on(goalForm)}><small>$ THE GOAL</small>${g ? `<div class="split"><h3>${money(g)}</h3><b>${Math.round(clamp(s.money / g * 100))}%</b></div>${bar(s.money / g * 100, 'gold')}<div class="split dim"><span>${money(Math.max(0, g - s.money))} to go</span><span>tap to change</span></div>` : '<p>What number are you chasing? Tap to set it.</p>'}</div>`;
   },
 });

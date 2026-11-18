@@ -650,3 +650,4 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .fgroup { font: 800 11px var(--sans); letter-spacing: .12em; margin: 18px 2px 0 !important; }
 .fqh { display: flex; justify-content: space-between; align-items: center; }
 .move.fq { display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; padding: 10px 0; } .move.fq span { flex: 1; min-width: 0; font: 600 15px var(--sans); overflow-wrap: anywhere; } .move.fq small { display: block; font: 500 12px var(--mono); color: var(--text2); margin-top: 3px; } .move.fq b { font: 700 13px var(--mono); }
+.fachead { font: 800 12px var(--sans); letter-spacing: .14em; color: var(--c); border-left: 4px solid var(--c); padding: 4px 0 4px 10px; }

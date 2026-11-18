@@ -11,7 +11,7 @@ import { gain } from '../game.js';
 import { allocBar } from './time.js';
 import { storyBlock, storyNow } from '../story.js';
 import { isReady, missingReqs, lockTag } from '../reqs.js';
-import { goalForm } from './plan.js';
+import { factorQuestSect } from './plan.js';
 import { waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
@@ -62,78 +62,71 @@ const attnMark = key => { const x = D.attention[key]; return x ? `<div class="at
 function attnPanel(key, reopen) {
   const x = D.attention[key];
   const edit = () => form({ title: 'Needs attention', sub: 'Why does this need attention? Optional.', fields: [{ name: 'note', label: 'Note', type: 'textarea', rows: 2, value: x?.note || '', placeholder: "Haven't trained in two weeks." }],
-    submit: 'Save', onSubmit: v => { D.attention[key] = { note: v.note, since: x?.since || Date.now() }; setTimeout(reopen); } });
+    submit: 'Save', onSubmit: v => { D.attention[key] = { note: v.note, since: x?.since || Date.now() }; if (reopen) setTimeout(reopen); } });
   return `<div class="attnp ${x ? 'on' : ''}"><div class="split"><b>${x ? '● Needs attention' : '○ Needs attention'}</b><button class="sbtn ${x ? 'ghost' : ''}" ${on(() => { if (x) delete D.attention[key]; else D.attention[key] = { note: '', since: Date.now() }; commit(); })}>${x ? 'Clear' : 'Mark'}</button></div>
     ${x ? `<div class="split dim"><span ${on(edit)}>${x.note ? esc(x.note) : '+ Add a note'}</span><span>since ${fmtDate(x.since)}</span></div>` : ''}</div>`;
 }
 function engineRow(p) {
   const e = engineHours(), pct = e.limit ? Math.min(100, e.week / e.limit * 100) : 0;
-  return `<div class="fac ${e.over ? 'off over' : 'on'}" style="--c:${p.color}" ${on(engineSheet)}>
+  return `<div class="fac ${e.over ? 'off over' : 'on'}" style="--c:${p.color}" ${on(() => go('engine'))}>
     <div class="fh"><span>${p.label.toUpperCase()}</span><em>${e.over ? 'OVER LIMIT' : 'WITHIN LIMIT'}</em></div>
     <div class="fc"><div><b>${r1(e.week)}h<i>/${r1(e.limit)}h</i></b><small>this week</small></div><div><b>${Math.round(e.share)}%</b><small>of planned time</small></div><div><b>${r1(e.today)}h</b><small>today</small></div></div>
     ${attnMark('engine')}
     ${storyNow(D.factorStory.engine) ? `<p class="qdesc">${esc(storyNow(D.factorStory.engine))}</p>` : ''}
     <div class="bar"><i style="width:${pct}%;background:${e.over ? 'var(--red)' : p.color}"></i></div></div>`;
 }
-function engineSheet() {
-  modal(() => {
+// ENGINE — its own page: weekly hour limit, counted from the Engine slots in your week.
+page('engine', {
+  title: 'ENGINE',
+  render() {
     const p = PILLARS.find(x => x.key === 'engine'), e = engineHours(), step = d => { D.engineLimit = Math.max(0.5, Math.min(168, r1(D.engineLimit + d))); commit(); };
-    return `<h2>${esc(p.label)}</h2><p class="msub">System work. Counted from the Engine time slots in your week.</p>
-      ${attnPanel('engine', engineSheet)}
-      ${storyBlock(D.factorStory.engine, 'f-engine', p.label, engineSheet)}
-      ${factorQuests('engine', engineSheet)}
+    return `<p class="msub">System work. Counted from the Engine time slots in your week.</p>
+      ${attnPanel('engine')}
+      ${storyBlock(D.factorStory.engine, 'f-engine', p.label)}
       <div class="fstate ${e.over ? 'off' : 'on'}"><b>${e.over ? 'OVER LIMIT' : 'WITHIN LIMIT'}</b><span>${e.over ? `${r1(e.week - e.limit)}h over this week` : `${r1(e.limit - e.week)}h left this week`}</span></div>
       ${term('THIS WEEK', [['PLANNED', `${r1(e.week)}h of ${r1(e.limit)}h`, e.over ? 'red' : ''], ['SHARE OF PLANNED TIME', `${Math.round(e.share)}%`], ['TODAY', `${r1(e.today)}h`]])}
       <div class="panel"><div class="pt">WEEKLY LIMIT</div><div class="lvlset">${btn('−', () => step(-1))}<div><b>${r1(D.engineLimit)}</b><span>h / week</span></div>${btn('+', () => step(1), 'good')}</div></div>
-      <div class="btns">${btn('Open the week', () => { closeModal(); go('schedule'); })}${btn('Close', closeModal)}</div>`;
-  });
-}
+      <div class="btns">${btn('Open the week', () => go('schedule'))}</div>
+      ${factorQuestSect('engine')}`;
+  },
+});
 function factorRow(p) {
   if (p.key === 'engine') return engineRow(p);
   const on_ = factorActive(p.key), cells = factorCells(p.key), tg = p.key !== 'time' && D.targets[p.key];
-  return `<div class="fac ${on_ ? 'on' : 'off'}" style="--c:${p.color}" ${on(() => (p.key === 'time' ? go('schedule') : factorSheet(p.key)))}>
+  return `<div class="fac ${on_ ? 'on' : 'off'}" style="--c:${p.color}" ${on(() => (p.key === 'time' ? go('schedule') : go(...OPEN[p.key])))}>
     <div class="fh"><span>${p.key === 'girls' ? GIRL + ' ' : ''}${p.label.toUpperCase()}</span><em>${on_ ? 'ACTIVE' : 'INACTIVE'}</em></div>
     <div class="fc">${cells.map(c => `<div><b>${c[0]}</b><small>${c[1]}</small></div>`).join('')}</div>
     ${p.key !== 'time' ? attnMark(p.key) : ''}
     ${p.key !== 'time' && storyNow(D.factorStory[p.key]) ? `<p class="qdesc">${esc(storyNow(D.factorStory[p.key]))}</p>` : ''}
     ${tg ? `<div class="bar"><i style="width:${Math.min(100, weekGain(p.key) / tg * 100)}%;background:${p.color}"></i></div>` : ''}</div>`;
 }
-function factorSheet(key) {
-  modal(() => {
+// The top of each factor's own page (Girlfriends, Social, Money, Ratings, Health): where it stands,
+// ACTIVE / INACTIVE, the numbers, week by week, the weekly target, and logging what really happened.
+export function factorPanel(key) {
     const p = PILLARS.find(x => x.key === key), r = pillarRate(key), t = pillarTime(), unit = key === 'money' ? money : n => r1(n), act = factorActive(key), last = lastGain(key);
     const recent = D.gains.filter(g => g.pillar === key).slice(-5).reverse(), [btnLabel, title, q] = LOG[key];
     const tg = D.targets[key], wk = weekGain(key), weeks = [7, 6, 5, 4, 3, 2, 1, 0].map(b => weekGain(key, b)), wmax = Math.max(1, tg, ...weeks);
     const setup = () => form({ title: `${p.short} — target and history`, sub: "What's necessary per week? And how many did you already have before this app?",
       fields: [{ name: 'target', label: key === 'money' ? 'Weekly target ($) — 0 for none' : 'Weekly target — 0 for none', type: 'number', min: 0, value: tg || '' },
         { name: 'base', label: key === 'money' ? 'Earned before the app ($)' : 'How many before the app?', type: 'number', min: 0, value: D.baseline[key] || '' }],
-      onSubmit: v => { D.targets[key] = Math.max(0, v.target || 0); D.baseline[key] = Math.max(0, v.base || 0); setTimeout(() => factorSheet(key)); } });
+      onSubmit: v => { D.targets[key] = Math.max(0, v.target || 0); D.baseline[key] = Math.max(0, v.base || 0); } });
     const logForm = () => form({ title, sub: 'Log it when it really happened. The dates give you the rate per week and per month.',
       fields: [{ name: 'n', label: q, type: 'number', min: 0, value: key === 'money' ? '' : 1, required: true }, { name: 'note', label: 'Note (optional)' }],
-      submit: 'Log it', onSubmit: v => { if (!(v.n > 0)) { toast('More than zero.'); return false; } gain(key, v.n, v.note); if (key === 'money') D.player.stats.money += v.n; setTimeout(() => factorSheet(key)); } });
-    return `<h2>${esc(p.label)}</h2>
-      ${attnPanel(key, () => factorSheet(key))}
-      ${storyBlock(D.factorStory[key], 'f-' + key, p.label, () => factorSheet(key))}
-      ${factorQuests(key, () => factorSheet(key))}
+      submit: 'Log it', onSubmit: v => { if (!(v.n > 0)) { toast('More than zero.'); return false; } gain(key, v.n, v.note); if (key === 'money') D.player.stats.money += v.n; } });
+    return `<div class="fachead" style="--c:${p.color}">${key === 'girls' ? GIRL + ' ' : ''}${esc(p.label.toUpperCase())}</div>
+      ${attnPanel(key)}
+      ${storyBlock(D.factorStory[key], 'f-' + key, p.label)}
       <div class="fstate ${act ? 'on' : 'off'}"><b>${act ? 'ACTIVE' : 'INACTIVE'}</b><span>${last ? 'last logged ' + fmtDate(last) : 'nothing ever logged'} · active means something real in the last ${ACTIVE_DAYS} days${key === 'girls' ? ', or a girlfriend / recurring girl' : ''}</span></div>
+      <div class="btns">${btn(btnLabel, logForm, 'good')}</div>
       ${term('YOUR NUMBERS', [['THIS WEEK', tg ? `${unit(wk)} / ${unit(tg)}` : unit(wk), tg && wk >= tg ? 'green' : ''], ['LAST WEEK', unit(weekGain(key, 1))], ['PER WEEK · 4-week average', unit(r.perWeek)], ['LAST 30 DAYS', unit(r.month)], ['IN TOTAL', unit(totalGain(key)), 'gold'], ['SHARE OF PLANNED TIME', `${Math.round(t.pct(key))}% · ${t.h[key]}h of ${t.total}h`]])}
       <div class="panel"><div class="pt">WEEK BY WEEK${tg ? ` · target ${unit(tg)}` : ''}</div><div class="wkbars">${weeks.map((v, i) => `<div><i style="height:${Math.max(3, v / wmax * 100)}%;background:${tg && v >= tg ? 'var(--green)' : p.color};opacity:${i === 7 ? 1 : .55}"></i><small>${i === 7 ? 'now' : '-' + (7 - i)}</small></div>`).join('')}</div></div>
       <div class="btns">${btn(tg ? `Weekly target: ${unit(tg)}` : 'Set a weekly target', setup)}</div>
       ${key === 'girls' ? `<div class="panel"><div class="pt">RECURRING GIRLS — you set this</div><div class="lvlset">${btn('−', () => { D.girlsRecurring = Math.max(0, D.girlsRecurring - 1); commit(); })}<div><b>${D.girlsRecurring}</b></div>${btn('+', () => { D.girlsRecurring++; commit(); }, 'good')}</div></div>` : ''}
-      <div class="btns">${btn(btnLabel, logForm, 'good')}</div>
       <div class="panel"><div class="pt">LAST LOGGED</div>${recent.map(g => `<div class="move"><span>${fmtDate(g.t)} · ${key === 'money' ? money(g.amount) : '+' + g.amount}${g.note ? ' · ' + esc(g.note) : ''}</span><button ${on(() => destroy('Entry removed.', () => { D.gains = D.gains.filter(x => x.id !== g.id); if (key === 'money') D.player.stats.money -= g.amount; }))}>×</button></div>`).join('') || '<p>Nothing logged yet.</p>'}</div>
-      <div class="btns">${btn('Open ' + p.short, () => { closeModal(); go(...OPEN[key]); })}${btn('Close', closeModal)}</div>`;
-  });
+      ${factorQuestSect(key)}`;
 }
 
 const edge = x => { const c = PILLARS.find(p => p.key === x.pillar); return c ? `style="border-left:4px solid ${c.color}"` : ''; };
-// The quests filed under one life factor, with + Quest preset to it. reopen: the sheet to come back to.
-function factorQuests(key, reopen) {
-  const qs = D.manifests.filter(m => m.pillar === key && !m.achievedAt);
-  return `<div class="panel"><div class="pt fqh">QUESTS · ${qs.length}<button class="sbtn ghost" ${on(() => goalForm(null, key, reopen))}>+ Quest</button></div>
-    ${qs.map(m => { const pr = progress(tasksOf(m)), next = tasksOf(m).find(t => !t.done);
-      return `<div class="move fq" ${on(() => { closeModal(); go('quest', { id: m.id }); })}><span>${esc(m.emoji)} ${esc(m.name)} ${lockTag(m)}${next ? `<small class="dim"> ▸ ${esc(next.name)}</small>` : ''}</span><b>${Math.round(pr)}%</b></div>`; }).join('') || '<p>No quests for this yet.</p>'}</div>`;
-}
-
 // Quests and experiences in full: used by the third page of Home and by the Quests & Experiences page.
 const questsBody = () => {
     const quests = D.manifests.filter(m => !m.achievedAt), exp = waitingExp().sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));

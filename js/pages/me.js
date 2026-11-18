@@ -4,8 +4,7 @@ import { BLANK, STATS, STAT, CAP, uid, PILLARS } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge, GIRL } from '../ui.js';
 import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, taken, waitingExp } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
-import { northstarForm, principlesSheet } from './home.js';
-import { factorQuestSect } from './plan.js';
+import { northstarForm, principlesSheet, factorPanel } from './home.js';
 
 // ── Rated element: { title, desc, level 0–25, levelUp[], history[] }
 const listOf = kind => (kind === 'me' ? D.meStats : D.socialMedia);
@@ -115,12 +114,12 @@ page('stat', {
     const hrs = weekStats(D.schedule).week.byStat[key] || 0;
     const adj = n => btn(n > 0 ? '+' + n : n, () => { applyEffects({ [key]: n }); commit(); }, n > 0 ? 'good' : '');
     const setMoney = () => form({ title: 'Balance', sub: "What's actually in the account?", fields: [{ name: 'money', label: 'Balance ($)', type: 'number', value: s.money, required: true }], onSubmit: x => { s.money = x.money; log(`Balance set to ${money(x.money)}`, 'event'); } });
-    return `<div class="card hero sh-cyan"><small>${st.icon} ${st.label.toUpperCase()}</small><div class="count"><b>${key === 'money' ? money(v) : r1(v)}</b>${key === 'money' ? '' : `<span>/ ${CAP}<br>${Math.round(v / CAP * 100)}% of ceiling</span>`}</div>
+    return `${key === 'health' ? factorPanel('health') : ''}
+    <div class="card hero sh-cyan"><small>${st.icon} ${st.label.toUpperCase()}</small><div class="count"><b>${key === 'money' ? money(v) : r1(v)}</b>${key === 'money' ? '' : `<span>/ ${CAP}<br>${Math.round(v / CAP * 100)}% of ceiling</span>`}</div>
       ${key === 'money' ? '' : bar(v / CAP * 100, key === 'fear' ? 'red' : 'cyan')}<p>${st.desc}</p></div>
     ${key === 'vibe' ? row({ icon: '✦', title: 'The Entity', desc: 'Vibe is computed there. Raise the parts.', val: r1(vibe()) + '%', fn: () => go('vibe') })
       : key === 'money' ? `<div class="btns">${btn('Set balance', setMoney, 'good')}${btn('Money world', () => go('money'))}</div>`
       : `${sect('ADJUST — be honest')}<div class="btns">${adj(-1)}${adj(1)}</div>`}
-    ${key === 'health' ? factorQuestSect('health') : ''}
     ${sect('WHAT FEEDS IT')}
     ${feeders.length ? feeders.map(a => row({ icon: esc(a.cat.emoji), title: esc(a.item.name), desc: esc(a.cat.name), val: (a.item.statEffects[key] > 0 ? '+' : '') + a.item.statEffects[key], fn: () => go('activities') })).join('') : empty(key === 'vibe' ? 'Vibe is the mean of your lead bar and every Entity component.' : `No slotted activity moves ${st.label}. Slot one that does.`)}
     ${key !== 'vibe' ? term('', [['SCHEDULED THIS WEEK', hrs + 'h']]) : ''}`;
