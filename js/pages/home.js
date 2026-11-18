@@ -10,7 +10,8 @@ import { modal, closeModal, toast, btn } from '../ui.js';
 import { gain } from '../game.js';
 import { allocBar } from './time.js';
 import { storyBlock, storyNow } from '../story.js';
-import { isReady, missingReqs } from '../reqs.js';
+import { isReady, missingReqs, lockTag } from '../reqs.js';
+import { goalForm } from './plan.js';
 import { waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
@@ -80,6 +81,7 @@ function engineSheet() {
     return `<h2>${esc(p.label)}</h2><p class="msub">System work. Counted from the Engine time slots in your week.</p>
       ${attnPanel('engine', engineSheet)}
       ${storyBlock(D.factorStory.engine, 'f-engine', p.label, engineSheet)}
+      ${factorQuests('engine', engineSheet)}
       <div class="fstate ${e.over ? 'off' : 'on'}"><b>${e.over ? 'OVER LIMIT' : 'WITHIN LIMIT'}</b><span>${e.over ? `${r1(e.week - e.limit)}h over this week` : `${r1(e.limit - e.week)}h left this week`}</span></div>
       ${term('THIS WEEK', [['PLANNED', `${r1(e.week)}h of ${r1(e.limit)}h`, e.over ? 'red' : ''], ['SHARE OF PLANNED TIME', `${Math.round(e.share)}%`], ['TODAY', `${r1(e.today)}h`]])}
       <div class="panel"><div class="pt">WEEKLY LIMIT</div><div class="lvlset">${btn('−', () => step(-1))}<div><b>${r1(D.engineLimit)}</b><span>h / week</span></div>${btn('+', () => step(1), 'good')}</div></div>
@@ -111,6 +113,7 @@ function factorSheet(key) {
     return `<h2>${esc(p.label)}</h2>
       ${attnPanel(key, () => factorSheet(key))}
       ${storyBlock(D.factorStory[key], 'f-' + key, p.label, () => factorSheet(key))}
+      ${factorQuests(key, () => factorSheet(key))}
       <div class="fstate ${act ? 'on' : 'off'}"><b>${act ? 'ACTIVE' : 'INACTIVE'}</b><span>${last ? 'last logged ' + fmtDate(last) : 'nothing ever logged'} · active means something real in the last ${ACTIVE_DAYS} days${key === 'girls' ? ', or a girlfriend / recurring girl' : ''}</span></div>
       ${term('YOUR NUMBERS', [['THIS WEEK', tg ? `${unit(wk)} / ${unit(tg)}` : unit(wk), tg && wk >= tg ? 'green' : ''], ['LAST WEEK', unit(weekGain(key, 1))], ['PER WEEK · 4-week average', unit(r.perWeek)], ['LAST 30 DAYS', unit(r.month)], ['IN TOTAL', unit(totalGain(key)), 'gold'], ['SHARE OF PLANNED TIME', `${Math.round(t.pct(key))}% · ${t.h[key]}h of ${t.total}h`]])}
       <div class="panel"><div class="pt">WEEK BY WEEK${tg ? ` · target ${unit(tg)}` : ''}</div><div class="wkbars">${weeks.map((v, i) => `<div><i style="height:${Math.max(3, v / wmax * 100)}%;background:${tg && v >= tg ? 'var(--green)' : p.color};opacity:${i === 7 ? 1 : .55}"></i><small>${i === 7 ? 'now' : '-' + (7 - i)}</small></div>`).join('')}</div></div>
@@ -122,12 +125,21 @@ function factorSheet(key) {
   });
 }
 
+const edge = x => { const c = PILLARS.find(p => p.key === x.pillar); return c ? `style="border-left:4px solid ${c.color}"` : ''; };
+// The quests filed under one life factor, with + Quest preset to it. reopen: the sheet to come back to.
+function factorQuests(key, reopen) {
+  const qs = D.manifests.filter(m => m.pillar === key && !m.achievedAt);
+  return `<div class="panel"><div class="pt fqh">QUESTS · ${qs.length}<button class="sbtn ghost" ${on(() => goalForm(null, key, reopen))}>+ Quest</button></div>
+    ${qs.map(m => { const pr = progress(tasksOf(m)), next = tasksOf(m).find(t => !t.done);
+      return `<div class="move fq" ${on(() => { closeModal(); go('manifest'); })}><span>${esc(m.emoji)} ${esc(m.name)} ${lockTag(m)}${next ? `<small class="dim"> ▸ ${esc(next.name)}</small>` : ''}</span><b>${Math.round(pr)}%</b></div>`; }).join('') || '<p>No quests for this yet.</p>'}</div>`;
+}
+
 // Quests and experiences in full: used by the third page of Home and by the Quests & Experiences page.
 const questsBody = () => {
     const quests = D.manifests.filter(m => !m.achievedAt), exp = waitingExp().sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
     return `<div class="qcard" ${on(() => go('manifest'))}><div class="qrow"><b>◎ Quests</b><span>${quests.length} open</span></div><em>All quests →</em></div>
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
-      return `<div class="quest" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
+      return `<div class="quest" ${edge(m)} ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
     <div class="qcard" ${on(() => go('adventures'))}><div class="qrow"><b>✧ Experiences</b><span>${exp.length} waiting</span></div><em>All experiences →</em></div>
     ${exp.slice(0, 5).map(a => `<div class="quest" ${on(() => go('experience', { id: a.id }))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet.')}`;
 };
@@ -184,7 +196,7 @@ page('questlog', {
     const moves = [...D.manifests.filter(m => !m.achievedAt).map(m => ({ x: m, kind: 'quest', name: `${m.emoji} ${m.name}`, open: () => go('manifest'), next: tasksOf(m).find(t => !t.done)?.name })),
       ...waitingExp().map(a => ({ x: a, kind: 'exp', name: `✧ ${a.name}`, open: () => go('experience', { id: a.id }), next: a.steps.find(t => !t.done)?.text }))];
     const ready = moves.filter(v => isReady(v.x)), locked = moves.filter(v => !isReady(v.x));
-    const card = v => `<div class="quest" ${on(v.open)}><div class="split"><b>${esc(v.name)} ${v.x.regret ? '<em class="rtag">REGRET</em>' : ''}</b><span>${v.kind === 'quest' ? 'quest' : 'experience'}</span></div>
+    const card = v => `<div class="quest" ${edge(v.x)} ${on(v.open)}><div class="split"><b>${esc(v.name)} ${v.x.regret ? '<em class="rtag">REGRET</em>' : ''}</b><span>${v.kind === 'quest' ? 'quest' : 'experience'}</span></div>
       ${isReady(v.x) ? (v.next ? `<small>▸ ${esc(v.next)}</small>` : '') : `<small class="needs">needs: ${missingReqs(v.x).map(r => esc(r.text)).join(' · ')}</small>`}</div>`;
     return `<div class="btns">${btn('All quests →', () => go('manifest'))}${btn('All experiences →', () => go('adventures'))}</div>
     <div class="sect"><span class="green">READY NOW · ${ready.length}</span></div>

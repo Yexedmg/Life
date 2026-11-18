@@ -9,11 +9,13 @@ import { storyBlock, storyNow } from '../story.js';
 import { reqPanel, lockTag } from '../reqs.js';
 
 // ── Manifest
-function goalForm(m) {
-  form({ title: m ? 'Edit goal' : 'New goal', sub: "Set a goal, detach, and do your best on what's required.",
-    fields: [{ name: 'name', label: 'What do you want?', value: m?.name, required: true }, { name: 'emoji', label: 'Tag', value: m?.emoji || '◎' }],
+// pillar: preset the life factor when the quest is started from that factor; after: runs once it is saved.
+export function goalForm(m, pillar = '', after) {
+  form({ title: m ? 'Edit quest' : 'New quest', sub: "Set a goal, detach, and do your best on what's required.",
+    fields: [{ name: 'name', label: 'What do you want?', value: m?.name, required: true }, { name: 'emoji', label: 'Tag', value: m?.emoji || '◎' },
+      { name: 'pillar', label: 'Which part of life is it for?', type: 'seg', value: m ? m.pillar : pillar, options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] }],
     submit: m ? 'Lock it in' : 'Call it',
-    onSubmit: v => { if (m) Object.assign(m, v); else D.manifests.push({ ...BLANK.manifest(), ...v }); },
+    onSubmit: v => { if (m) Object.assign(m, v); else D.manifests.push({ ...BLANK.manifest(), ...v }); if (after) setTimeout(after); },
     onDelete: m ? () => destroy(`"${m.name}" — dropped.`, () => { D.manifests = D.manifests.filter(x => x !== m); }) : null, del: 'Drop it' });
 }
 const nameForm = (title, label, obj, list, blank, after) => form({ title, fields: [{ name: 'name', label, value: obj?.name, required: true }],
@@ -29,7 +31,8 @@ page('manifest', {
   title: 'MANIFEST',
   render() {
     const goal = m => { const all = tasksOf(m), pr = progress(all), closed = isCol(m.id);
-      return `<div class="card ${m.achievedAt ? 'sh-green' : ''}"><div class="cathead" ${on(() => toggleCol(m.id))}><b>${esc(m.emoji)} ${esc(m.name)} ${m.achievedAt ? '' : lockTag(m)}</b><span>${Math.round(pr)}%</span><i>${closed ? '▸' : '▾'}</i></div>${bar(pr, 'green')}
+      const col = PILLARS.find(p => p.key === m.pillar);
+      return `<div class="card ${m.achievedAt ? 'sh-green' : ''}" ${col ? `style="border-left:4px solid ${col.color}"` : ''}><div class="cathead" ${on(() => toggleCol(m.id))}><b>${esc(m.emoji)} ${esc(m.name)} ${m.achievedAt ? '' : lockTag(m)}</b><span>${Math.round(pr)}%</span><i>${closed ? '▸' : '▾'}</i></div>${bar(pr, 'green')}
       ${m.achievedAt ? `<div class="split dim"><span>🎯 ACHIEVED</span><span>${fmtDate(m.achievedAt)}</span></div>` : ''}
       ${closed ? (storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : '') : `${storyBlock(m.story, m.id, m.name)}${m.achievedAt ? '' : reqPanel(m)}${m.milestones.map(ms => { const mp = progress(ms.tasks), mc = isCol(ms.id), done = ms.tasks.length && mp === 100;
         return `<div class="ms"><div class="mshead"><span ${on(() => toggleCol(ms.id))}>${mc ? '▸' : '▾'} ${done ? '✓ ' : ''}${esc(ms.name)}</span><em>${ms.tasks.filter(t => t.done).length}/${ms.tasks.length}</em>
@@ -39,8 +42,9 @@ page('manifest', {
     const open = D.manifests.filter(m => !m.achievedAt), done = D.manifests.filter(m => m.achievedAt);
     return `<div class="card hero"><small>◎ SIDE QUESTS</small><p>Set a goal, detach, and do your best on what's required.</p></div>
     ${sect('INFORMATION')}<textarea class="info" rows="3" placeholder="Rules and notes that apply across every goal." ${onChange(v => { D.manifestInfo = v; commit(); })}>${esc(D.manifestInfo)}</textarea>
-    ${sect(`GOALS · ${open.length}`, '+ Goal', () => goalForm())}
-    ${open.map(goal).join('') || empty('No goals. What do you want? Call it.')}
+    ${sect(`QUESTS · ${open.length}`, '+ Quest', () => goalForm())}
+    ${[...PILLARS, { key: '', label: 'No factor', color: 'var(--muted)' }].map(p => { const g = open.filter(m => (m.pillar || '') === p.key);
+      return g.length ? `<div class="fgroup" style="color:${p.color}">${esc(p.label.toUpperCase())} · ${g.length}</div>${g.map(goal).join('')}` : ''; }).join('') || empty('No quests. What do you want? Call it.')}
     ${done.length ? sect(`ACHIEVED · ${done.length}`) + done.map(goal).join('') : ''}`;
   },
 });

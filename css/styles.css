@@ -645,3 +645,8 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .tl-ctl { display: flex; gap: 2px; margin-left: -6px; } .tl-ctl .x { width: 32px; height: 28px; color: var(--muted); font-size: 14px; } .tl-ctl .mv[disabled] { opacity: .2; pointer-events: none; }
 .tl-i.goal { padding-bottom: 0; } .tl-i.goal .tl-dot { border-color: var(--gold); color: var(--gold); cursor: default; font-size: 16px; }
 .tl-i.goal .tl-body > span { color: var(--text); font: 800 17px var(--sans); cursor: default; } .tl-i.goal.done .tl-dot { background: var(--gold); color: #000; } .tl-i.goal.done .tl-body > span { text-decoration: none; }
+
+/* quests filed by life factor */
+.fgroup { font: 800 11px var(--sans); letter-spacing: .12em; margin: 18px 2px 0 !important; }
+.fqh { display: flex; justify-content: space-between; align-items: center; }
+.move.fq { display: flex; flex-direction: row; justify-content: space-between; align-items: center; gap: 10px; cursor: pointer; padding: 10px 0; } .move.fq span { flex: 1; min-width: 0; font: 600 15px var(--sans); overflow-wrap: anywhere; } .move.fq small { display: block; font: 500 12px var(--mono); color: var(--text2); margin-top: 3px; } .move.fq b { font: 700 13px var(--mono); }
