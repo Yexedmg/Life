@@ -5,6 +5,7 @@ import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, 
 import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, taken, waitingExp } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
 import { northstarForm, principlesSheet } from './home.js';
+import { factorQuestSect } from './plan.js';
 
 // ── Rated element: { title, desc, level 0–25, levelUp[], history[] }
 const listOf = kind => (kind === 'me' ? D.meStats : D.socialMedia);
@@ -119,6 +120,7 @@ page('stat', {
     ${key === 'vibe' ? row({ icon: '✦', title: 'The Entity', desc: 'Vibe is computed there. Raise the parts.', val: r1(vibe()) + '%', fn: () => go('vibe') })
       : key === 'money' ? `<div class="btns">${btn('Set balance', setMoney, 'good')}${btn('Money world', () => go('money'))}</div>`
       : `${sect('ADJUST — be honest')}<div class="btns">${adj(-1)}${adj(1)}</div>`}
+    ${key === 'health' ? factorQuestSect('health') : ''}
     ${sect('WHAT FEEDS IT')}
     ${feeders.length ? feeders.map(a => row({ icon: esc(a.cat.emoji), title: esc(a.item.name), desc: esc(a.cat.name), val: (a.item.statEffects[key] > 0 ? '+' : '') + a.item.statEffects[key], fn: () => go('activities') })).join('') : empty(key === 'vibe' ? 'Vibe is the mean of your lead bar and every Entity component.' : `No slotted activity moves ${st.label}. Slot one that does.`)}
     ${key !== 'vibe' ? term('', [['SCHEDULED THIS WEEK', hrs + 'h']]) : ''}`;

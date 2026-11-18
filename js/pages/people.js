@@ -5,6 +5,7 @@ import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, 
 import { girl, chasers, taken, meetBar, meetParts, expectedRarity, vibe, vibeCeiling, leadBar, r1, leadMethods, girlfriendsEver } from '../calc.js';
 import { addXP, applyEffects, log, setStatus, gain } from '../game.js';
 import { openElement, elementForm, lastChange } from './me.js';
+import { factorQuestSect } from './plan.js';
 
 const rar = n => `<span class="rar r${n}">${'★'.repeat(n)}${'☆'.repeat(5 - n)}</span>`;
 const STATUS = { Talking: 'Talking', Dating: 'Dating', Common: 'Girlfriend', TheOne: 'Girlfriend', Sidelined: 'Sidelined' };
@@ -104,6 +105,7 @@ page('life', {
     <div class="card dex" ${on(poolForm)}><small>REGISTERED · women ${POOL_MIN_AGE}–${P.maxAge} where you live</small>
       <div class="dexn"><b>${had}</b><i>/</i><span>${P.size ? P.size.toLocaleString('en-US') : '?'}</span></div>
       ${P.size ? `${bar(Math.max(share, had ? 0.5 : 0), 'pink')}<div class="split dim"><span>${had === 1 ? 'girlfriend' : 'girlfriends'}, now and before</span><span>${share < 0.01 && had ? '<0.01' : r1(share * 100) / 100}% of them</span></div>` : '<p>Tap and enter how many are out there. Then you see your number against it.</p>'}</div>
+    ${factorQuestSect('girls')}
     ${sect(`GIRLFRIENDS · ${r.commons.length}`)}
     ${list(r.commons) || empty('None right now. Affinity 60 makes it official.')}
     ${sect(`IN PLAY · ${ch.length}`, '+ Met someone', () => girlForm())}
@@ -138,6 +140,7 @@ page('social', {
       ${area('!', 'Meet', `${Math.round(meetBar())}% meet bar`, () => go('meet'))}
       ${area('◉', 'Events & Parties', 'Host. Be the reason people gather.', () => (ev ? go('leadmethod', { id: ev.id }) : go('leadgen')))}
     </div>
+    ${factorQuestSect('social')}
     ${sect('YOUR SOCIAL STATS')}
     ${soc.length ? term('', soc.map(m => [esc(m.title), `${m.level} / ${CAP}`])) : empty('No body-map stat named social / circle / friends yet.')}`;
   },

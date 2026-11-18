@@ -49,6 +49,14 @@ page('manifest', {
   },
 });
 
+// The quests filed under one life factor, as a section on that factor's own page.
+export function factorQuestSect(key) {
+  const qs = D.manifests.filter(m => m.pillar === key && !m.achievedAt), col = PILLARS.find(p => p.key === key)?.color;
+  return `${sect(`QUESTS · ${qs.length}`, '+ Quest', () => goalForm(null, key))}
+  ${qs.map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
+    return `<div class="quest" style="border-left:4px solid ${col}" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)} ${lockTag(m)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests for this yet.')}`;
+}
+
 // ── Experiences (stored as `adventures`): things you want to live, not tasks to finish
 function adventureForm(a) {
   form({ title: a ? `Edit ${a.name}` : 'New experience', sub: 'Something you want to experience. Put it here so it stops being a maybe.',
