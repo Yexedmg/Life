@@ -131,7 +131,7 @@ function factorQuests(key, reopen) {
   const qs = D.manifests.filter(m => m.pillar === key && !m.achievedAt);
   return `<div class="panel"><div class="pt fqh">QUESTS · ${qs.length}<button class="sbtn ghost" ${on(() => goalForm(null, key, reopen))}>+ Quest</button></div>
     ${qs.map(m => { const pr = progress(tasksOf(m)), next = tasksOf(m).find(t => !t.done);
-      return `<div class="move fq" ${on(() => { closeModal(); go('manifest'); })}><span>${esc(m.emoji)} ${esc(m.name)} ${lockTag(m)}${next ? `<small class="dim"> ▸ ${esc(next.name)}</small>` : ''}</span><b>${Math.round(pr)}%</b></div>`; }).join('') || '<p>No quests for this yet.</p>'}</div>`;
+      return `<div class="move fq" ${on(() => { closeModal(); go('quest', { id: m.id }); })}><span>${esc(m.emoji)} ${esc(m.name)} ${lockTag(m)}${next ? `<small class="dim"> ▸ ${esc(next.name)}</small>` : ''}</span><b>${Math.round(pr)}%</b></div>`; }).join('') || '<p>No quests for this yet.</p>'}</div>`;
 }
 
 // Quests and experiences in full: used by the third page of Home and by the Quests & Experiences page.
@@ -139,7 +139,7 @@ const questsBody = () => {
     const quests = D.manifests.filter(m => !m.achievedAt), exp = waitingExp().sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
     return `<div class="qcard" ${on(() => go('manifest'))}><div class="qrow"><b>◎ Quests</b><span>${quests.length} open</span></div><em>All quests →</em></div>
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
-      return `<div class="quest" ${edge(m)} ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
+      return `<div class="quest" ${edge(m)} ${on(() => go('quest', { id: m.id }))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
     <div class="qcard" ${on(() => go('adventures'))}><div class="qrow"><b>✧ Experiences</b><span>${exp.length} waiting</span></div><em>All experiences →</em></div>
     ${exp.slice(0, 5).map(a => `<div class="quest" ${on(() => go('experience', { id: a.id }))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet.')}`;
 };
@@ -193,7 +193,7 @@ page('home', {
 page('questlog', {
   title: 'QUESTS & EXPERIENCES',
   render() {
-    const moves = [...D.manifests.filter(m => !m.achievedAt).map(m => ({ x: m, kind: 'quest', name: `${m.emoji} ${m.name}`, open: () => go('manifest'), next: tasksOf(m).find(t => !t.done)?.name })),
+    const moves = [...D.manifests.filter(m => !m.achievedAt).map(m => ({ x: m, kind: 'quest', name: `${m.emoji} ${m.name}`, open: () => go('quest', { id: m.id }), next: tasksOf(m).find(t => !t.done)?.name })),
       ...waitingExp().map(a => ({ x: a, kind: 'exp', name: `✧ ${a.name}`, open: () => go('experience', { id: a.id }), next: a.steps.find(t => !t.done)?.text }))];
     const ready = moves.filter(v => isReady(v.x)), locked = moves.filter(v => !isReady(v.x));
     const card = v => `<div class="quest" ${edge(v.x)} ${on(v.open)}><div class="split"><b>${esc(v.name)} ${v.x.regret ? '<em class="rtag">REGRET</em>' : ''}</b><span>${v.kind === 'quest' ? 'quest' : 'experience'}</span></div>

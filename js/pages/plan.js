@@ -27,6 +27,14 @@ function toggleTask(m, t) {
   if (all.length && all.every(x => x.done) && !m.achievedAt) { m.achievedAt = Date.now(); log(`🎯 Goal "${m.name}" ACHIEVED!`, 'manifest'); addXP(50, `goal: ${m.name}`); toast(`🎯 Goal "${m.name}" ACHIEVED!`); }
   commit();
 }
+// What a quest holds: where it stands, requirements, milestones with their tasks. Used in the list and on the quest's own page.
+const questInner = m => `${storyBlock(m.story, m.id, m.name)}${m.achievedAt ? '' : reqPanel(m)}${m.milestones.map(ms => { const mp = progress(ms.tasks), mc = isCol(ms.id), done = ms.tasks.length && mp === 100;
+        return `<div class="ms"><div class="mshead"><span ${on(() => toggleCol(ms.id))}>${mc ? '▸' : '▾'} ${done ? '✓ ' : ''}${esc(ms.name)}</span><em>${ms.tasks.filter(t => t.done).length}/${ms.tasks.length}</em>
+          <button class="sbtn ghost" ${on(() => nameForm('Edit milestone', 'Milestone', ms, m.milestones, BLANK.milestone))}>✎</button><button class="sbtn" ${on(() => nameForm('New task', "What's required?", null, ms.tasks, BLANK.task, () => { m.achievedAt = null; }))}>+ Task</button></div>
+          ${mc ? '' : ms.tasks.map(t => `<div class="task ${t.done ? 'done' : ''}"><button ${on(() => toggleTask(m, t))}>${t.done ? '■' : '□'}</button><span ${on(() => toggleTask(m, t))}>${esc(t.name)}</span><button class="x" ${on(() => nameForm('Edit task', 'Task', t, ms.tasks, BLANK.task))}>✎</button></div>`).join('') || '<p class="hint">No tasks. What does this milestone actually require?</p>'}</div>`; }).join('')}
+        <div class="catfoot"><button class="sbtn ghost" ${on(() => goalForm(m))}>✎ Quest</button><button class="sbtn" ${on(() => nameForm('New milestone', 'A checkpoint on the way', null, m.milestones, BLANK.milestone))}>+ Milestone</button></div>`;
+const getQuest = id => D.manifests.find(m => m.id === id) || null;
+
 page('manifest', {
   title: 'MANIFEST',
   render() {
@@ -34,11 +42,7 @@ page('manifest', {
       const col = PILLARS.find(p => p.key === m.pillar);
       return `<div class="card ${m.achievedAt ? 'sh-green' : ''}" ${col ? `style="border-left:4px solid ${col.color}"` : ''}><div class="cathead" ${on(() => toggleCol(m.id))}><b>${esc(m.emoji)} ${esc(m.name)} ${m.achievedAt ? '' : lockTag(m)}</b><span>${Math.round(pr)}%</span><i>${closed ? '▸' : '▾'}</i></div>${bar(pr, 'green')}
       ${m.achievedAt ? `<div class="split dim"><span>🎯 ACHIEVED</span><span>${fmtDate(m.achievedAt)}</span></div>` : ''}
-      ${closed ? (storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : '') : `${storyBlock(m.story, m.id, m.name)}${m.achievedAt ? '' : reqPanel(m)}${m.milestones.map(ms => { const mp = progress(ms.tasks), mc = isCol(ms.id), done = ms.tasks.length && mp === 100;
-        return `<div class="ms"><div class="mshead"><span ${on(() => toggleCol(ms.id))}>${mc ? '▸' : '▾'} ${done ? '✓ ' : ''}${esc(ms.name)}</span><em>${ms.tasks.filter(t => t.done).length}/${ms.tasks.length}</em>
-          <button class="sbtn ghost" ${on(() => nameForm('Edit milestone', 'Milestone', ms, m.milestones, BLANK.milestone))}>✎</button><button class="sbtn" ${on(() => nameForm('New task', "What's required?", null, ms.tasks, BLANK.task, () => { m.achievedAt = null; }))}>+ Task</button></div>
-          ${mc ? '' : ms.tasks.map(t => `<div class="task ${t.done ? 'done' : ''}"><button ${on(() => toggleTask(m, t))}>${t.done ? '■' : '□'}</button><span ${on(() => toggleTask(m, t))}>${esc(t.name)}</span><button class="x" ${on(() => nameForm('Edit task', 'Task', t, ms.tasks, BLANK.task))}>✎</button></div>`).join('') || '<p class="hint">No tasks. What does this milestone actually require?</p>'}</div>`; }).join('')}
-        <div class="catfoot"><button class="sbtn ghost" ${on(() => goalForm(m))}>✎ Goal</button><button class="sbtn" ${on(() => nameForm('New milestone', 'A checkpoint on the way', null, m.milestones, BLANK.milestone))}>+ Milestone</button></div>`}</div>`; };
+      ${closed ? (storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : '') : questInner(m)}</div>`; };
     const open = D.manifests.filter(m => !m.achievedAt), done = D.manifests.filter(m => m.achievedAt);
     return `<div class="card hero"><small>◎ SIDE QUESTS</small><p>Set a goal, detach, and do your best on what's required.</p></div>
     ${sect('INFORMATION')}<textarea class="info" rows="3" placeholder="Rules and notes that apply across every goal." ${onChange(v => { D.manifestInfo = v; commit(); })}>${esc(D.manifestInfo)}</textarea>
@@ -49,12 +53,25 @@ page('manifest', {
   },
 });
 
+page('quest', {
+  title: p => (getQuest(p.id)?.name || 'Quest').toUpperCase(),
+  render({ id }) {
+    const m = getQuest(id); if (!m) return null;
+    const pr = progress(tasksOf(m)), col = PILLARS.find(p => p.key === m.pillar);
+    return `<div class="card hero ${m.achievedAt ? 'sh-green' : ''}" ${col ? `style="border-left:4px solid ${col.color}"` : ''}><small>◎ QUEST${col ? ` · <span style="color:${col.color}">${esc(col.short.toUpperCase())}</span>` : ''}</small>
+      <div class="split"><h2>${esc(m.emoji)} ${esc(m.name)} ${m.achievedAt ? '' : lockTag(m)}</h2><b>${Math.round(pr)}%</b></div>${bar(pr, 'green')}
+      ${m.achievedAt ? `<div class="split dim"><span>🎯 ACHIEVED</span><span>${fmtDate(m.achievedAt)}</span></div>` : ''}</div>
+    ${questInner(m)}
+    <div class="btns">${btn('All quests →', () => go('manifest'))}</div>`;
+  },
+});
+
 // The quests filed under one life factor, as a section on that factor's own page.
 export function factorQuestSect(key) {
   const qs = D.manifests.filter(m => m.pillar === key && !m.achievedAt), col = PILLARS.find(p => p.key === key)?.color;
   return `${sect(`QUESTS · ${qs.length}`, '+ Quest', () => goalForm(null, key))}
   ${qs.map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
-    return `<div class="quest" style="border-left:4px solid ${col}" ${on(() => go('manifest'))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)} ${lockTag(m)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests for this yet.')}`;
+    return `<div class="quest" style="border-left:4px solid ${col}" ${on(() => go('quest', { id: m.id }))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)} ${lockTag(m)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests for this yet.')}`;
 }
 
 // ── Experiences (stored as `adventures`): things you want to live, not tasks to finish
