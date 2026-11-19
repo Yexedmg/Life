@@ -660,3 +660,4 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .rn.empty { border-style: dashed; border-top-width: 1px; align-items: center; justify-content: center; background: none; } .rn.empty i { font: 400 26px var(--sans); font-style: normal; color: var(--muted); }
 .rn.done b { color: var(--muted); text-decoration: line-through; }
 .rn:active { transform: scale(.97); }
+.kgh { font: 800 10.5px var(--sans); letter-spacing: .12em; margin-top: 14px !important; } .kgh + .kgrid { margin-top: 6px; }

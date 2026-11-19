@@ -130,7 +130,11 @@ export function factorPanel(key) {
       ${factorKeySect(key)}`;
 }
 
-const keysByFactor = () => { const at = k => { const i = PILLARS.findIndex(p => p.key === k.pillar); return i < 0 ? 99 : i; }; return [...D.keyItems].sort((a, b) => at(a) - at(b)); };
+// Home key items: one small grid per factor, with the factor's name above it.
+const keyGroups = () => { if (!D.keyItems.length) return '<p>No key items yet.</p>';
+  return [...PILLARS, { key: '', label: 'Other', color: 'var(--muted)' }].map(p => { const g = D.keyItems.filter(k => (PILLARS.some(x => x.key === k.pillar) ? k.pillar : '') === p.key);
+    return g.length ? `<div class="kgh" style="color:${p.color}">${esc(p.short || p.label).toUpperCase()} · ${g.filter(k => k.has).length}/${g.length}</div>
+    <div class="kgrid" ${on(() => go('keyitems'))}>${g.map(k => `<div class="${k.has ? 'has' : ''}" ${kedge(k)}><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('')}</div>` : ''; }).join(''); };
 const kedge = k => { const c = PILLARS.find(p => p.key === k.pillar); return c ? `style="border-top:3px solid ${c.color}"` : ''; };
 const edge = x => { const c = PILLARS.find(p => p.key === x.pillar); return c ? `style="border-left:4px solid ${c.color}"` : ''; };
 // Quests and experiences in full: used by the third page of Home and by the Quests & Experiences page.
@@ -158,7 +162,7 @@ page('home', {
       </section>
       <section class="slide">
         <div class="sect"><span>KEY ITEMS</span><span>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length}</span></div>
-    <div class="kgrid" ${on(() => go('keyitems'))}>${keysByFactor().map(k => `<div class="${k.has ? 'has' : ''}" ${kedge(k)}><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>
+    ${keyGroups()}
       </section>
       <section class="slide">
         <div class="sect"><span>QUESTS &amp; EXPERIENCES</span><span>${openQ} open · ${waitE} waiting</span></div>
