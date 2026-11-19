@@ -21,7 +21,7 @@ export function goalForm(m, pillar = '', after) {
 const nameForm = (title, label, obj, list, blank, after) => form({ title, fields: [{ name: 'name', label, value: obj?.name, required: true }],
   onSubmit: v => { if (obj) obj.name = v.name; else list.push({ ...blank(), name: v.name }); after?.(); },
   onDelete: obj ? () => destroy(`"${obj.name}" — cut.`, () => { list.splice(list.indexOf(obj), 1); }) : null });
-function toggleTask(m, t) {
+export function toggleTask(m, t) {
   t.done = !t.done;
   const all = tasksOf(m);
   if (all.length && all.every(x => x.done) && !m.achievedAt) { m.achievedAt = Date.now(); log(`🎯 Goal "${m.name}" ACHIEVED!`, 'manifest'); addXP(50, `goal: ${m.name}`); toast(`🎯 Goal "${m.name}" ACHIEVED!`); }

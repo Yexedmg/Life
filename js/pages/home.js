@@ -12,6 +12,7 @@ import { allocBar } from './time.js';
 import { storyBlock, storyNow } from '../story.js';
 import { isReady, missingReqs, lockTag } from '../reqs.js';
 import { factorQuestSect } from './plan.js';
+import { rightNow } from '../rightnow.js';
 import { waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
@@ -143,7 +144,7 @@ page('home', {
     const p = D.player, need = xpForLevel(p.level), ns = D.northstar, era = currentEra();
     const bd = birthday(), nsDays = ns?.targetDate ? daysTo(ns.targetDate) : null, quests = D.manifests.filter(m => !m.achievedAt), openQ = quests.length, waitE = waitingExp().length, adv = D.adventures.filter(a => !a.doneAt).sort((a, b) => (a.when || '9999').localeCompare(b.when || '9999'));
     const all = [...PILLARS, TIME], counted = all.filter(f => !f.limit), active = counted.filter(f => factorActive(f.key)).length, attnN = PILLARS.filter(f => D.attention[f.key]).length; // Engine has a limit, not an active state
-    return `
+    return `${rightNow()}
     <div class="carousel" id="hcar">
       <section class="slide">
         <div class="sect"><span>YOUR LIFE</span><span>${active} / ${counted.length} active${attnN ? ` · <b class="attnc">${attnN} need${attnN === 1 ? 's' : ''} attention</b>` : ''}</span></div>

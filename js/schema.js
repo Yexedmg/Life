@@ -144,6 +144,7 @@ export function defaults() {
     pool: { size: 0, maxAge: 24, exes: 0 },   // women aged 18–maxAge where you live (you enter it), and girlfriends you had before
     factorStory: { social: [], girls: [], money: [], looks: [], health: [], engine: [] },
     engineLimit: ENGINE_LIMIT,   // hours of Engine per week before it is too much
+    rightNow: [null, null, null], // three things to do right now: null | { text, kind: 'own'|'quest'|'exp', id, ref }
     principles: [],              // how you see the journey, in your own words: { id, text }
     inspirations: [],            // great days you lived (a holiday…) and the moments you bring home from them
     maps: [],                    // your maps, each with places you create (Home → Bedroom, City → Gym…)
@@ -278,6 +279,8 @@ export function normalize(raw) {
   o.girlsRecurring = Math.max(0, Math.round(num(o.girlsRecurring)));
   o.engineLimit = clamp(r1(num(o.engineLimit, ENGINE_LIMIT)), 0.5, 168);
   o.attention = Object.fromEntries(Object.entries(obj(o.attention)).filter(([k, v]) => PILLARS.some(p => p.key === k) && v && typeof v === 'object').map(([k, v]) => [k, { note: String(v.note || ''), since: num(v.since, Date.now()) }]));
+  o.rightNow = [0, 1, 2].map(i => { const x = arr(o.rightNow)[i]; return x && typeof x === 'object' && String(x.text || '').trim() && ['own', 'quest', 'exp'].includes(x.kind)
+    ? { text: String(x.text).trim(), kind: x.kind, id: String(x.id || ''), ref: String(x.ref || '') } : null; });
   o.principles = arr(o.principles).filter(x => x && String(x.text || '').trim()).map(x => ({ id: x.id || uid(), text: String(x.text).trim() }));
   o.inspirations = fit(BLANK.inspiration, o.inspirations).map(x => ({ ...x, img: typeof x.img === 'string' && x.img.startsWith('data:image/') ? x.img : '',
     moments: arr(x.moments).filter(m => m && String(m.text || '').trim()).map(m => ({ id: m.id || uid(), text: String(m.text).trim(), uses: arr(m.uses).filter(u => u && ['experience', 'place', 'ideal', 'principle'].includes(u.kind) && u.ref) })) }));
