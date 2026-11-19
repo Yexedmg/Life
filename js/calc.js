@@ -199,6 +199,20 @@ export const currentEra = () => D.eras.filter(e => eraStatus(e) === 'current').s
 export const nextEra = () => D.eras.filter(e => eraStatus(e) === 'planned').sort((a, b) => dts(a.start) - dts(b.start))[0] || null;
 export const daysTo = s => Math.round((dts(s) - today0()) / DAY);
 export const tasksOf = m => m.milestones.flatMap(ms => ms.tasks);
+// Time costs: 45 → "45m", 90 → "1h 30m", 120 → "2h".
+export const fmtMins = n => { n = Math.round(n); const h = Math.floor(n / 60), m = n % 60; return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`; };
+// "45m", "2h", "1h30", "1h 30m", "2" or "1.5" (hours), "90" (minutes) → minutes. Empty → 0. Not readable → null.
+export function parseMins(s) {
+  s = String(s || '').trim().toLowerCase().replace(',', '.'); if (!s) return 0;
+  let m = s.match(/^(\d+(?:\.\d+)?)\s*h(?:ours?|rs?)?\s*(?:(\d+)\s*m?(?:in(?:utes?)?)?)?$/); if (m) return Math.round(+m[1] * 60 + (+m[2] || 0));
+  m = s.match(/^(\d+)\s*m(?:in(?:utes?)?)?$/); if (m) return +m[1];
+  m = s.match(/^(\d+):(\d{1,2})$/); if (m) return +m[1] * 60 + +m[2];
+  m = s.match(/^\d+(?:\.\d+)?$/); if (m) return +s <= 12 ? Math.round(+s * 60) : Math.round(+s); // a bare 2 or 1.5 is hours, 90 is minutes
+  return null;
+}
+// Time left on a quest: the time of the tasks not ticked off yet. null when no task has a time.
+export const timeLeft = m => { const t = tasksOf(m); return t.some(x => x.mins) ? sum(t.filter(x => !x.done).map(x => x.mins || 0)) : null; };
+export const leftTag = m => { const l = timeLeft(m); return l ? `<em class="qleft">${fmtMins(l)} left</em>` : ''; };
 export const progress = tasks => (tasks.length ? tasks.filter(t => t.done).length / tasks.length * 100 : 0);
 export function birthday() {
   if (!D.settings.birthday) return null;

@@ -14,7 +14,7 @@ import { isReady, missingReqs, lockTag } from '../reqs.js';
 import { factorQuestSect } from './plan.js';
 import { rightNow } from '../rightnow.js';
 import { factorKeySect } from './worlds.js';
-import { waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
+import { leftTag, waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
   const n = D.northstar;
@@ -142,7 +142,7 @@ const questsBody = () => {
     const quests = D.manifests.filter(m => !m.achievedAt), exp = waitingExp().sort((x, y) => (x.when || '9999').localeCompare(y.when || '9999'));
     return `<div class="qcard" ${on(() => go('manifest'))}><div class="qrow"><b>◎ Quests</b><span>${quests.length} open</span></div><em>All quests →</em></div>
     ${quests.slice(0, 4).map(m => { const t = tasksOf(m), pr = progress(t), next = t.find(x => !x.done);
-      return `<div class="quest" ${edge(m)} ${on(() => go('quest', { id: m.id }))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
+      return `<div class="quest" ${edge(m)} ${on(() => go('quest', { id: m.id }))}><div class="split"><b>${esc(m.emoji)} ${esc(m.name)}</b><span>${leftTag(m)} ${Math.round(pr)}%</span></div>${bar(pr, 'green')}${storyNow(m.story) ? `<p class="qdesc">${esc(storyNow(m.story))}</p>` : ''}${next ? `<small>▸ ${esc(next.name)}</small>` : ''}</div>`; }).join('') || empty('No quests. What are you going after?')}
     <div class="qcard" ${on(() => go('adventures'))}><div class="qrow"><b>✧ Experiences</b><span>${exp.length} waiting</span></div><em>All experiences →</em></div>
     ${exp.slice(0, 5).map(a => `<div class="quest" ${on(() => go('experience', { id: a.id }))}><div class="split"><b>✧ ${esc(a.name)}</b><span>${a.when ? (daysTo(a.when) < 0 ? 'overdue' : daysTo(a.when) === 0 ? 'today' : 'in ' + daysTo(a.when) + 'd') : ''}</span></div></div>`).join('') || empty('Nothing you want to live yet.')}`;
 };
@@ -199,7 +199,7 @@ page('questlog', {
     const moves = [...D.manifests.filter(m => !m.achievedAt).map(m => ({ x: m, kind: 'quest', name: `${m.emoji} ${m.name}`, open: () => go('quest', { id: m.id }), next: tasksOf(m).find(t => !t.done)?.name })),
       ...waitingExp().map(a => ({ x: a, kind: 'exp', name: `✧ ${a.name}`, open: () => go('experience', { id: a.id }), next: a.steps.find(t => !t.done)?.text }))];
     const ready = moves.filter(v => isReady(v.x)), locked = moves.filter(v => !isReady(v.x));
-    const card = v => `<div class="quest" ${edge(v.x)} ${on(v.open)}><div class="split"><b>${esc(v.name)} ${v.x.regret ? '<em class="rtag">REGRET</em>' : ''}</b><span>${v.kind === 'quest' ? 'quest' : 'experience'}</span></div>
+    const card = v => `<div class="quest" ${edge(v.x)} ${on(v.open)}><div class="split"><b>${esc(v.name)} ${v.x.regret ? '<em class="rtag">REGRET</em>' : ''}</b><span>${v.kind === 'quest' ? `${leftTag(v.x)} quest` : 'experience'}</span></div>
       ${isReady(v.x) ? (v.next ? `<small>▸ ${esc(v.next)}</small>` : '') : `<small class="needs">needs: ${missingReqs(v.x).map(r => esc(r.text)).join(' · ')}</small>`}</div>`;
     return `<div class="btns">${btn('All quests →', () => go('manifest'))}${btn('All experiences →', () => go('adventures'))}</div>
     <div class="sect"><span class="green">READY NOW · ${ready.length}</span></div>

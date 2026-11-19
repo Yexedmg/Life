@@ -661,3 +661,8 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .rn.done b { color: var(--muted); text-decoration: line-through; }
 .rn:active { transform: scale(.97); }
 .kgh { font: 800 10.5px var(--sans); letter-spacing: .12em; margin-top: 14px !important; } .kgh + .kgrid { margin-top: 6px; }
+
+/* time costs on quests */
+.qleft { font: 700 11px var(--mono); font-style: normal; color: var(--text2); white-space: nowrap; margin-right: 6px; }
+.task .tmins { font: 600 11px var(--mono); color: var(--muted); white-space: nowrap; } .task.done .tmins { text-decoration: line-through; opacity: .6; }
+.hero .qleft { display: block; margin-top: 8px; font-size: 13px; color: var(--text); }

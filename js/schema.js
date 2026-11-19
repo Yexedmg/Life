@@ -80,7 +80,7 @@ export const BLANK = {
   era: () => ({ id: uid(), name: '', start: '', end: '', color: ERA_COLORS[0], createdAt: Date.now() }),
   manifest: () => ({ id: uid(), name: '', emoji: '◎', pillar: '', milestones: [], story: [], reqs: [], achievedAt: null, createdAt: Date.now() }),   // reqs: what must be in place first { id, text, done }
   milestone: () => ({ id: uid(), name: '', tasks: [] }),
-  task: () => ({ id: uid(), name: '', done: false }),
+  task: () => ({ id: uid(), name: '', done: false, mins: 0 }),   // mins: the time it takes (0 = not set)
   lifestyle: () => ({ id: uid(), name: '', emoji: '◈', activities: [], schedule: emptyWeek(), createdAt: Date.now() }),
   entry: () => ({ id: uid(), time: '', name: '', catId: null, activityItemId: null, pillar: '', placeId: '' }),
   timeAlloc: (name = 'Default day') => ({ id: uid(), name, slots: [] }),
@@ -265,7 +265,7 @@ export function normalize(raw) {
   const steps = l => arr(l).filter(e => e && e.text).map(e => ({ id: e.id || uid(), t: num(e.t, Date.now()), text: String(e.text) }));
   for (const p of PILLARS) o.factorStory[p.key] = steps(o.factorStory[p.key]);
   const reqs = l => arr(l).filter(r => r && String(r.text || '').trim()).map(r => ({ id: r.id || uid(), text: String(r.text).trim(), done: !!r.done }));
-  o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, reqs: reqs(m.reqs), story: steps(m.story), milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks) })) }));
+  o.manifests = fit(BLANK.manifest, o.manifests).map(m => ({ ...m, reqs: reqs(m.reqs), story: steps(m.story), milestones: fit(BLANK.milestone, m.milestones).map(ms => ({ ...ms, tasks: fit(BLANK.task, ms.tasks).map(t => ({ ...t, mins: Math.max(0, Math.round(num(t.mins))) })) })) }));
   o.abilities = fit(BLANK.ability, o.abilities).map(a => ({ ...a, assignments: arr(a.assignments) }));
   o.lifestyles = fit(BLANK.lifestyle, o.lifestyles).map(l => ({ ...l, activities: arr(l.activities), schedule: shapeWeek(l.schedule) }));
   o.schedule = shapeWeek(o.schedule);
