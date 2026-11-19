@@ -1,6 +1,6 @@
 // Worlds: Ratings (⭐) and Money (balance and goal only — no career detail).
 import { D, commit } from '../store.js';
-import { BLANK, TIER_COLOR, TIERS, TIER_VAL, uid, CAP } from '../schema.js';
+import { BLANK, TIER_COLOR, TIERS, TIER_VAL, uid, CAP, PILLARS } from '../schema.js';
 import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, tierBadge } from '../ui.js';
 import { nodePct, ratingsPct, findRating, money, fmtDate, clamp } from '../calc.js';
 import { log, gain } from '../game.js';
@@ -95,13 +95,15 @@ page('wardrobe', {
 
 // ════════ KEY ITEMS ════════
 // Crucial equipment. Like a game's key items: you either have it or you don't, and some doors stay shut until you do.
-function keyItemForm(k) {
+// pillar: preset the life factor when the key item is added from that factor's page.
+export function keyItemForm(k, pillar = '') {
   form({ title: k ? k.name : 'New key item', sub: 'A piece of equipment that changes what you can do.',
-    fields: [{ name: 'name', label: 'What is it?', value: k?.name, required: true, placeholder: 'Car, licence, own place…' }, { name: 'icon', label: 'Icon', value: k?.icon || '◆' },
+    fields: [{ name: 'name', label: 'What is it?', value: k?.name, required: true, placeholder: 'Car, licence, own place, watch…' }, { name: 'icon', label: 'Icon', value: k?.icon || '◆' },
+      { name: 'pillar', label: 'Which part of life is it for?', type: 'seg', value: k ? k.pillar : pillar, options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
       { name: 'has', label: 'I have it', type: 'check', value: k?.has }, { name: 'transport', label: 'This is a mode of transport', type: 'check', value: k?.transport }, { name: 'detail', label: 'Which one do you have?', value: k?.detail, placeholder: 'VW Polo 2015' }, { name: 'tier', label: 'How good is it, really?', type: 'tier', value: k?.tier || 'C' },
       { name: 'wantName', label: k?.has ? 'The upgrade you want' : 'The one you want', value: k?.wantName, placeholder: 'BMW 1 Series' }, { name: 'wantPrice', label: 'What does it cost? ($)', type: 'number', min: 0, value: k?.wantPrice || '' },
       { name: 'notes', label: 'Notes', type: 'textarea', value: k?.notes }],
-    onSubmit: v => { const data = { name: v.name, icon: v.icon || '◆', has: v.has, detail: v.has ? v.detail : '', tier: v.tier || 'C', wantName: v.wantName, wantPrice: Math.max(0, v.wantPrice || 0), notes: v.notes, transport: !!v.transport };
+    onSubmit: v => { const data = { name: v.name, icon: v.icon || '◆', has: v.has, detail: v.has ? v.detail : '', tier: v.tier || 'C', wantName: v.wantName, wantPrice: Math.max(0, v.wantPrice || 0), notes: v.notes, transport: !!v.transport, pillar: v.pillar || '' };
       if (k) { if (v.has && !k.has) data.gotAt = Date.now(); Object.assign(k, data); } else D.keyItems.push({ ...BLANK.keyItem(), ...data, gotAt: v.has ? Date.now() : null }); },
     onDelete: k ? () => destroy(`${k.name} — removed from key items.`, () => { D.keyItems = D.keyItems.filter(x => x !== k); }) : null });
 }
@@ -116,16 +118,25 @@ page('keyitems', {
   render() {
     const have = D.keyItems.filter(k => k.has), bal = D.player.stats.money;
     const card = k => { const pct = k.wantPrice ? clamp(bal / k.wantPrice * 100) : 0;
-      return `<div class="card kitem ${k.has ? 'has' : 'dashed'}"><div class="split" ${on(() => keyItemForm(k))}><h3><i>${esc(k.icon)}</i> ${esc(k.name)}</h3><b class="${k.has ? 'green' : 'red'}">${k.has ? 'OBTAINED' : 'MISSING'}</b></div>
+      const col = PILLARS.find(p => p.key === k.pillar);
+      return `<div class="card kitem ${k.has ? 'has' : 'dashed'}" ${col ? `style="border-left:4px solid ${col.color}"` : ''}><div class="split" ${on(() => keyItemForm(k))}><h3><i>${esc(k.icon)}</i> ${esc(k.name)}</h3><b class="${k.has ? 'green' : 'red'}">${k.has ? 'OBTAINED' : 'MISSING'}</b></div>
         ${k.has ? `<div class="split dim" ${on(() => keyItemForm(k))}><span>${tierBadge(k.tier)} ${esc(k.detail || 'no detail')}</span><span>${k.gotAt ? fmtDate(k.gotAt) : ''}</span></div>` : ''}
         ${k.wantName || (!k.has && k.wantPrice) ? `<div class="split"><span>${k.has ? 'upgrade' : 'want'}: ${esc(k.wantName || k.name)}</span><b>${k.wantPrice ? money(k.wantPrice) : ''}</b></div>${k.wantPrice ? `${bar(pct, 'gold')}<div class="split dim"><span>${bal >= k.wantPrice ? 'You can afford it.' : money(k.wantPrice - bal) + ' to go'}</span><span>${Math.round(pct)}%</span></div>` : ''}` : ''}
         ${k.notes ? `<p>${esc(k.notes)}</p>` : ''}
         <div class="catfoot"><button class="sbtn ghost" ${on(() => keyItemForm(k))}>✎ Edit</button>${!k.has || k.wantName ? `<button class="sbtn" ${on(() => gotKeyItem(k))}>Got it</button>` : ''}</div></div>`; };
     return `<div class="card hero sh-gold"><small>◆ KEY ITEMS — crucial equipment</small><div class="count"><b>${have.length}</b><span>/ ${D.keyItems.length} obtained</span></div>${bar(D.keyItems.length ? have.length / D.keyItems.length * 100 : 0, 'gold')}</div>
     <div class="btns">${btn('+ Key item', () => keyItemForm(), 'good')}</div>
-    ${D.keyItems.map(card).join('') || empty('No key items. What equipment changes what you can do? A car, a licence, your own place.')}`;
+    ${[...PILLARS, { key: '', label: 'No factor', color: 'var(--muted)' }].map(p => { const g = D.keyItems.filter(k => (k.pillar || '') === p.key);
+      return g.length ? `<div class="fgroup" style="color:${p.color}">${esc(p.label.toUpperCase())} · ${g.filter(k => k.has).length} / ${g.length}</div>${g.map(card).join('')}` : ''; }).join('') || empty('No key items. What equipment changes what you can do? A car, a licence, your own place.')}`;
   },
 });
+
+// The key items filed under one life factor, as a section on that factor's own page.
+export function factorKeySect(key) {
+  const ks = D.keyItems.filter(k => k.pillar === key), col = PILLARS.find(p => p.key === key)?.color;
+  return `${sect(`KEY ITEMS · ${ks.filter(k => k.has).length} / ${ks.length}`, '+ Key item', () => keyItemForm(null, key))}
+  ${ks.length ? `<div class="kgrid">${ks.map(k => `<div class="${k.has ? 'has' : ''}" style="border-top:3px solid ${col}" ${on(() => keyItemForm(k))}><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('')}</div>` : empty('No key items for this yet.')}`;
+}
 
 // ════════ MONEY ════════
 const goalForm = () => form({ title: 'Money goal', sub: 'How much are you chasing?', fields: [{ name: 'goal', label: 'The number ($)', type: 'number', min: 0, value: D.moneyGoal ?? '' }], submit: 'Call it', onSubmit: v => { D.moneyGoal = v.goal || null; } });

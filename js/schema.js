@@ -91,7 +91,7 @@ export const BLANK = {
   income: () => ({ id: uid(), title: '', desc: '', amount: 0, hoursPerWeek: 0, status: 'active', projections: [], createdAt: Date.now() }),
   rating: (name = '') => ({ id: uid(), name, desc: '', rating: null, routine: null, children: [], items: [] }),
   adventure: () => ({ id: uid(), name: '', when: '', withWho: '', pillar: '', notes: '', img: '', steps: [], regret: false, regretState: '', lesson: '', placeId: '', reqs: [], doneAt: null, createdAt: Date.now() }),   // regret: something you missed out on; regretState: '' | 'possible' | 'gone'   // steps: what it takes to get there { id, text, done }
-  keyItem: (name = '', icon = '◆') => ({ id: uid(), name, icon, has: false, detail: '', tier: 'C', wantName: '', wantPrice: 0, notes: '', gotAt: null, transport: false }),
+  keyItem: (name = '', icon = '◆') => ({ id: uid(), name, icon, has: false, detail: '', tier: 'C', wantName: '', wantPrice: 0, notes: '', gotAt: null, transport: false, pillar: '' }),
   inspiration: () => ({ id: uid(), title: '', date: '', img: '', description: '', good: '', moments: [], createdAt: Date.now() }),   // a great day to learn from; moments: { id, text, uses: [{ kind, ref }] }
   outfit: () => ({ id: uid(), name: '', tier: 'C', occasion: '', pieces: '', createdAt: Date.now() }),
   ratingItem: () => ({ id: uid(), name: '', tier: 'C', later: false, upgrade: null, upgrades: [] }),

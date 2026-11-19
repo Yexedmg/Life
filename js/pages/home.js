@@ -13,6 +13,7 @@ import { storyBlock, storyNow } from '../story.js';
 import { isReady, missingReqs, lockTag } from '../reqs.js';
 import { factorQuestSect } from './plan.js';
 import { rightNow } from '../rightnow.js';
+import { factorKeySect } from './worlds.js';
 import { waitingExp, parseRange, todayKey, taken, pillarTime, pillarRate, factorActive, lastGain, gainSum, weekStats, weekGain, totalGain, engineHours } from '../calc.js';
 
 export function northstarForm() {
@@ -88,7 +89,8 @@ page('engine', {
       ${term('THIS WEEK', [['PLANNED', `${r1(e.week)}h of ${r1(e.limit)}h`, e.over ? 'red' : ''], ['SHARE OF PLANNED TIME', `${Math.round(e.share)}%`], ['TODAY', `${r1(e.today)}h`]])}
       <div class="panel"><div class="pt">WEEKLY LIMIT</div><div class="lvlset">${btn('−', () => step(-1))}<div><b>${r1(D.engineLimit)}</b><span>h / week</span></div>${btn('+', () => step(1), 'good')}</div></div>
       <div class="btns">${btn('Open the week', () => go('schedule'))}</div>
-      ${factorQuestSect('engine')}`;
+      ${factorQuestSect('engine')}
+      ${factorKeySect('engine')}`;
   },
 });
 function factorRow(p) {
@@ -124,9 +126,12 @@ export function factorPanel(key) {
       <div class="btns">${btn(tg ? `Weekly target: ${unit(tg)}` : 'Set a weekly target', setup)}</div>
       ${key === 'girls' ? `<div class="panel"><div class="pt">RECURRING GIRLS — you set this</div><div class="lvlset">${btn('−', () => { D.girlsRecurring = Math.max(0, D.girlsRecurring - 1); commit(); })}<div><b>${D.girlsRecurring}</b></div>${btn('+', () => { D.girlsRecurring++; commit(); }, 'good')}</div></div>` : ''}
       <div class="panel"><div class="pt">LAST LOGGED</div>${recent.map(g => `<div class="move"><span>${fmtDate(g.t)} · ${key === 'money' ? money(g.amount) : '+' + g.amount}${g.note ? ' · ' + esc(g.note) : ''}</span><button ${on(() => destroy('Entry removed.', () => { D.gains = D.gains.filter(x => x.id !== g.id); if (key === 'money') D.player.stats.money -= g.amount; }))}>×</button></div>`).join('') || '<p>Nothing logged yet.</p>'}</div>
-      ${factorQuestSect(key)}`;
+      ${factorQuestSect(key)}
+      ${factorKeySect(key)}`;
 }
 
+const keysByFactor = () => { const at = k => { const i = PILLARS.findIndex(p => p.key === k.pillar); return i < 0 ? 99 : i; }; return [...D.keyItems].sort((a, b) => at(a) - at(b)); };
+const kedge = k => { const c = PILLARS.find(p => p.key === k.pillar); return c ? `style="border-top:3px solid ${c.color}"` : ''; };
 const edge = x => { const c = PILLARS.find(p => p.key === x.pillar); return c ? `style="border-left:4px solid ${c.color}"` : ''; };
 // Quests and experiences in full: used by the third page of Home and by the Quests & Experiences page.
 const questsBody = () => {
@@ -153,7 +158,7 @@ page('home', {
       </section>
       <section class="slide">
         <div class="sect"><span>KEY ITEMS</span><span>${D.keyItems.filter(k => k.has).length} / ${D.keyItems.length}</span></div>
-    <div class="kgrid" ${on(() => go('keyitems'))}>${D.keyItems.map(k => `<div class="${k.has ? 'has' : ''}"><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>
+    <div class="kgrid" ${on(() => go('keyitems'))}>${keysByFactor().map(k => `<div class="${k.has ? 'has' : ''}" ${kedge(k)}><i>${esc(k.icon)}</i><span>${esc(k.name)}</span></div>`).join('') || '<p>No key items yet.</p>'}</div>
       </section>
       <section class="slide">
         <div class="sect"><span>QUESTS &amp; EXPERIENCES</span><span>${openQ} open · ${waitE} waiting</span></div>
