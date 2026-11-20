@@ -152,10 +152,10 @@ page('portal', {
       t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'), t('Σ', 'Total stats', `level ${D.player.level}`, 'totalstats'),
       t('≣', 'Log', `${D.log.length} entries`, 'log'), t('⇅', 'Save / load', 'backup & import', 'saveload')])
     + grp('TIME & GOALS', 'var(--text2)', [
-      t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('✧', 'Experiences', `${waitingExp().length} waiting`, 'adventures'),
+      t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('◇', 'Next moves', `${D.nextMoves.filter(m => !m.doneAt).length} open`, 'moves'), t('✧', 'Experiences', `${waitingExp().length} waiting`, 'adventures'),
       t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`, `<div class="mt" ${on(principlesSheet)}><i>❖</i><b>Principles</b><small>${D.principles.length || 'none yet'}</small></div>`])
     + grp('WORLD', 'var(--text2)', [
-      t('⌖', 'Maps', n(D.maps.length, 'map'), 'maps'), t('⬢', 'World map', 'cities & moves', 'world')]);
+      t('⌖', 'Maps', n(D.maps.length, 'map'), 'maps'), t('⬢', 'World map', 'cities', 'world')]);
   },
 });

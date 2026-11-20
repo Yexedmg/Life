@@ -666,3 +666,9 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .qleft { font: 700 11px var(--mono); font-style: normal; color: var(--text2); white-space: nowrap; margin-right: 6px; }
 .task .tmins { font: 600 11px var(--mono); color: var(--muted); white-space: nowrap; } .task.done .tmins { text-decoration: line-through; opacity: .6; }
 .hero .qleft { display: block; margin-top: 8px; font-size: 13px; color: var(--text); }
+
+/* next moves: one list for your whole life */
+.nmove .nmh { display: flex; align-items: center; gap: 10px; } .nmove .nmh .sn { font: 700 13px var(--mono); font-style: normal; color: var(--muted); min-width: 18px; }
+.nmove .nmh b { flex: 1; min-width: 0; font: 700 16px var(--sans); color: var(--text2); overflow-wrap: anywhere; cursor: pointer; } .nmove.top .nmh b { color: var(--text); font-size: 18px; }
+.nmove .nmm { font: 500 12px var(--mono); color: var(--text2); } .nmove .catfoot .mv { width: 34px; color: var(--muted); font-size: 15px; } .nmove .catfoot .mv[disabled] { opacity: .2; pointer-events: none; }
+.nmove.top { border-color: var(--gold); }

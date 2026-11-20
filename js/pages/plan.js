@@ -1,7 +1,7 @@
 // Planning: Manifest, Eras + Calendar, Abilities, World map + Next Moves.
 import { D, commit, ui } from '../store.js';
 import { BLANK, ERA_COLORS, CAP, PILLARS, DAYS } from '../schema.js';
-import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi, tabs, shrinkImage, setPicture } from '../ui.js';
+import { page, go, on, onChange, esc, form, modal, closeModal, destroy, toast, bar, sect, row, term, empty, btn, isCol, toggleCol, setUi, tabs, fold, shrinkImage, setPicture } from '../ui.js';
 import { fmtMins, parseMins, timeLeft, leftTag, findMapPlace, todayKey, waitingExp, birthday, eraStatus, dts, daysTo, fmtDate, tasksOf, progress, MONTHS, iso, today0, scopes, findActivity, findLeadItem, curBorough, sum } from '../calc.js';
 import { addXP, applyEffects, log, fxText, gain } from '../game.js';
 import { birthdayForm } from './home.js';
@@ -248,11 +248,38 @@ page('abilities', {
 
 // ── World
 const unlocked = c => sum(c.boroughs.map(b => { const o = b.id === D.world.mainBoroughId ? D : b; return o.activityCategories.reduce((n, x) => n + x.inventory.length, 0) + o.leadgen.methods.reduce((n, x) => n + x.inventory.length, 0) + b.places.length; }));
-function moveForm() {
-  form({ title: 'Next move', sub: 'One concrete action. What does it change?', fields: [{ name: 'name', label: 'The move', required: true },
-    { name: 'city', label: 'Where?', type: 'select', value: '', options: [['', '— Anywhere —'], ...D.world.cities.map(c => [c.id, c.name])] }, { name: 'statEffects', label: 'What it changes when you execute', type: 'fx', value: {} }],
-    onSubmit: v => { D.nextMoves.push({ ...BLANK.nextMove(), name: v.name, city: v.city || null, statEffects: v.statEffects }); } });
+function moveForm(m) {
+  form({ title: m ? 'Edit move' : 'Next move', sub: m ? '' : 'Your next move. Just what you do next.', fields: [{ name: 'name', label: 'The move', value: m?.name, required: true },
+    { name: 'pillar', label: 'Which part of life? (optional)', type: 'seg', value: m?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
+    { name: 'city', label: 'Where? (optional)', type: 'select', value: m?.city || '', options: [['', '— Anywhere —'], ...D.world.cities.map(c => [c.id, c.name])] }, { name: 'statEffects', label: 'What it changes when you make it (optional)', type: 'fx', value: m?.statEffects || {} }],
+    onSubmit: v => { const data = { name: v.name, pillar: v.pillar || '', city: v.city || null, statEffects: v.statEffects }; if (m) Object.assign(m, data); else D.nextMoves.push({ ...BLANK.nextMove(), ...data }); },
+    onDelete: m ? () => destroy('Move dropped.', () => { D.nextMoves = D.nextMoves.filter(x => x !== m); }) : null, del: 'Drop it' });
 }
+// Made it: the move happened. Applies what it changes, +10 XP, and keeps it in the history with the date.
+function madeIt(m) {
+  const snap = JSON.stringify(D.player), logN = D.log.length;
+  applyEffects(m.statEffects); log(`Made a move: ${m.name}`, 'world'); addXP(10, m.name); m.doneAt = Date.now(); commit();
+  toast(`Made it: ${m.name}. +10 XP`, () => { D.player = JSON.parse(snap); D.log.splice(0, D.log.length - logN); m.doneAt = null; commit(); });
+}
+const moveMove = (list, i, d) => { const a = list[i], b = list[i + d]; if (!a || !b) return; const ia = D.nextMoves.indexOf(a), ib = D.nextMoves.indexOf(b); [D.nextMoves[ia], D.nextMoves[ib]] = [b, a]; commit(); };
+
+// NEXT MOVES — one list for your whole life: what you do next, in order. The top one is your next move.
+page('moves', {
+  title: 'NEXT MOVES',
+  render() {
+    const open = D.nextMoves.filter(m => !m.doneAt), made = D.nextMoves.filter(m => m.doneAt).sort((a, b) => b.doneAt - a.doneAt);
+    const card = (m, i) => { const col = PILLARS.find(p => p.key === m.pillar), city = D.world.cities.find(c => c.id === m.city), fx = fxText(m.statEffects);
+      return `<div class="card nmove ${i === 0 ? 'top' : ''}" ${col ? `style="border-left:4px solid ${col.color}"` : ''}>
+        <div class="nmh"><i class="sn">${i + 1}</i><b ${on(() => moveForm(m))}>${esc(m.name)}</b>${i === 0 ? '<em class="nexttag">NEXT</em>' : ''}</div>
+        ${col || city || fx ? `<div class="nmm">${[col ? `<span style="color:${col.color}">${esc(col.short)}</span>` : '', city ? '⬢ ' + esc(city.name) : '', fx ? esc(fx) : ''].filter(Boolean).join(' · ')}</div>` : ''}
+        <div class="catfoot"><button class="x mv" ${i ? '' : 'disabled'} ${on(() => moveMove(open, i, -1))} aria-label="Move up">↑</button><button class="x mv" ${i < open.length - 1 ? '' : 'disabled'} ${on(() => moveMove(open, i, 1))} aria-label="Move down">↓</button>
+          <button class="sbtn ghost" ${on(() => moveForm(m))}>✎</button><button class="sbtn" ${on(() => madeIt(m))}>✓ Made it</button></div></div>`; };
+    return `<div class="card hero"><small>◇ NEXT MOVES</small><div class="count"><b>${open.length}</b><span>open<br>${made.length} made</span></div></div>
+    <div class="btns">${btn('+ Move', () => moveForm(), 'good')}</div>
+    ${open.map(card).join('') || empty('No moves yet. What do you do next?')}
+    ${made.length ? fold('moves-made', `Made · ${made.length}`, () => made.map(m => `<div class="move"><span>✓ ${esc(m.name)} · ${fmtDate(m.doneAt)}</span><button ${on(() => destroy('Removed from the history.', () => { D.nextMoves = D.nextMoves.filter(x => x !== m); }))}>×</button></div>`).join('')) : ''}`;
+  },
+});
 const cityForm = c => form({ title: c ? 'Edit city' : 'New city', fields: [{ name: 'name', label: 'City', value: c?.name, required: true }],
   onSubmit: v => { if (c) c.name = v.name; else D.world.cities.push({ ...BLANK.city(), name: v.name, boroughs: [{ ...BLANK.borough(), name: 'Center' }] }); },
   onDelete: c && D.world.cities.length > 1 ? () => destroy(`${c.name} — off the map.`, () => { D.world.cities = D.world.cities.filter(x => x !== c); }) : null, del: 'Take it off' });
@@ -263,10 +290,7 @@ page('world', {
     return `<div class="card sh-green"><small>⬢ YOU ARE IN</small><h3>${esc(b?.name || 'Nowhere')}${b && b.id === D.world.mainBoroughId ? ' ★' : ''}</h3><p>${b && b.id !== D.world.mainBoroughId ? 'This borough runs its own activities and lead methods.' : 'Your main borough. Global activities and lead methods live here.'}</p></div>
     ${sect('CITIES', '+ City', () => cityForm())}
     <div class="grid2">${D.world.cities.map(c => `<div class="qa tall" ${on(() => go('citydetail', { id: c.id }))}><i>⬢</i><b>${esc(c.name)}</b><small>${c.boroughs.length} boroughs · ${sum(c.boroughs.map(x => x.places.length))} places<br>${unlocked(c)} unlocked</small></div>`).join('')}</div>
-    ${sect('NEXT MOVES', '+ Move', moveForm)}
-    ${D.nextMoves.map(m => `<div class="card"><div class="split"><h3>${esc(m.name)}</h3><b>${esc(D.world.cities.find(c => c.id === m.city)?.name || '')}</b></div><div class="chips"><em class="chip cyan">${fxText(m.statEffects) || 'no stat change'}</em><em class="chip">+10 XP</em></div>
-      <div class="catfoot"><button class="sbtn ghost" ${on(() => destroy('Move dropped.', () => { D.nextMoves = D.nextMoves.filter(x => x !== m); }))}>Drop it</button>
-      <button class="sbtn" ${on(() => { applyEffects(m.statEffects); log(`Executed: ${m.name}`, 'world'); addXP(10, m.name); D.nextMoves = D.nextMoves.filter(x => x !== m); commit(); toast('Executed. +10 XP'); })}>Execute</button></div></div>`).join('') || empty('No moves queued. What is the next concrete thing?')}`;
+    ${sect('NEXT MOVES')}${row({ icon: '◇', title: 'Next moves', desc: `${D.nextMoves.filter(m => !m.doneAt).length} open · one list for your whole life`, fn: () => go('moves') })}`;
   },
 });
 page('citydetail', {

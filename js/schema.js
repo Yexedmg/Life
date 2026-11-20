@@ -75,7 +75,7 @@ export const BLANK = {
   city: () => ({ id: uid(), name: '', boroughs: [] }),
   borough: () => ({ id: uid(), name: '', activityCategories: defaultCategories(), activitySections: [], leadgen: { methods: defaultMethods(false) }, places: [] }),
   place: () => ({ id: uid(), name: '', type: '', notes: '', visited: false }),
-  nextMove: () => ({ id: uid(), name: '', statEffects: {}, city: null }),
+  nextMove: () => ({ id: uid(), name: '', statEffects: {}, city: null, pillar: '', doneAt: null }),   // a next move in your life; doneAt: when you made it
   ability: () => ({ id: uid(), name: '', desc: '', unlocked: false, assignments: [] }),
   era: () => ({ id: uid(), name: '', start: '', end: '', color: ERA_COLORS[0], createdAt: Date.now() }),
   manifest: () => ({ id: uid(), name: '', emoji: '◎', pillar: '', milestones: [], story: [], reqs: [], achievedAt: null, createdAt: Date.now() }),   // reqs: what must be in place first { id, text, done }
@@ -259,7 +259,7 @@ export function normalize(raw) {
       leadgen: { methods: shapeMethods(obj(b.leadgen).methods) }, places: fit(BLANK.place, b.places),
     })),
   }));
-  o.nextMoves = fit(BLANK.nextMove, o.nextMoves).filter(m => !m.done).map(m => ({ ...m, statEffects: obj(m.statEffects) }));
+  o.nextMoves = fit(BLANK.nextMove, o.nextMoves).filter(m => !m.done).map(m => ({ ...m, statEffects: obj(m.statEffects), doneAt: Number.isFinite(m.doneAt) ? m.doneAt : null }));
   o.northstar = o.northstar && typeof o.northstar === 'object' && o.northstar.text ? { text: String(o.northstar.text), targetDate: o.northstar.targetDate || null, updatedAt: num(o.northstar.updatedAt) } : null;
   o.eras = fit(BLANK.era, o.eras).filter(e => e.start && e.end);
   const steps = l => arr(l).filter(e => e && e.text).map(e => ({ id: e.id || uid(), t: num(e.t, Date.now()), text: String(e.text) }));
