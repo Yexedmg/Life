@@ -672,3 +672,11 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .nmove .nmh b { flex: 1; min-width: 0; font: 700 16px var(--sans); color: var(--text2); overflow-wrap: anywhere; cursor: pointer; } .nmove.top .nmh b { color: var(--text); font-size: 18px; }
 .nmove .nmm { font: 500 12px var(--mono); color: var(--text2); } .nmove .catfoot .mv { width: 34px; color: var(--muted); font-size: 15px; } .nmove .catfoot .mv[disabled] { opacity: .2; pointer-events: none; }
 .nmove.top { border-color: var(--gold); }
+
+/* work & play: the two day parts */
+#tleft { cursor: pointer; } #tleft b { font-weight: 800; color: var(--text2); } #tleft b.play { color: var(--green); opacity: .8; }
+.dprow { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r); border: 1px solid var(--line); margin-top: 8px !important; flex-wrap: wrap; }
+.dprow > b { flex: 0 0 92px; font: 700 15px var(--sans); color: var(--text2); } .dprow.on > b { color: var(--text); }
+.dprow .chk { flex: 0 0 auto; margin: 0; } .dpt { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; } .dpt i { color: var(--muted); font-style: normal; }
+.dpt input { min-height: 40px; padding: 6px 8px; font-size: 15px; min-width: 0; flex: 1; } .dpplay { flex: 1; text-align: right; font: 600 12px var(--mono); color: var(--green); opacity: .8; }
+.dprow > b { flex: 1 1 auto; } .dpt { flex: 1 0 100%; } .dpt input { text-align: center; } .dpplay { flex: 0 0 auto; }

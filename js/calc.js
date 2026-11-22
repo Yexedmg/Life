@@ -198,6 +198,13 @@ export const eraStatus = e => (dts(e.end) < today0() ? 'past' : dts(e.start) > t
 export const currentEra = () => D.eras.filter(e => eraStatus(e) === 'current').sort((a, b) => dts(a.start) - dts(b.start))[0] || null;
 export const nextEra = () => D.eras.filter(e => eraStatus(e) === 'planned').sort((a, b) => dts(a.start) - dts(b.start))[0] || null;
 export const daysTo = s => Math.round((dts(s) - today0()) / DAY);
+// The two day parts: income work, then play. Weekend and days without work are all play.
+// → { part: 'before' (work starts later today) | 'work' | 'play', left: seconds until that part ends (or until work starts) }
+export function dayPart(n = new Date()) {
+  const p = D.dayParts?.[DAYS[(n.getDay() + 6) % 7]], secs = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds(), s = t => { const [h, m] = t.split(':'); return h * 3600 + m * 60; };
+  if (p?.work) { const f = s(p.from), t = s(p.to); if (secs < f) return { part: 'before', left: f - secs }; if (secs < t) return { part: 'work', left: t - secs }; }
+  return { part: 'play', left: 86400 - secs };
+}
 export const tasksOf = m => m.milestones.flatMap(ms => ms.tasks);
 // Time costs: 45 → "45m", 90 → "1h 30m", 120 → "2h".
 export const fmtMins = n => { n = Math.round(n); const h = Math.floor(n / 60), m = n % 60; return h ? (m ? `${h}h ${m}m` : `${h}h`) : `${m}m`; };

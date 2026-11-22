@@ -5,6 +5,7 @@ import { page, go, on, esc, form, modal, closeModal, destroy, toast, bar, sect, 
 import { moveUsage, fmtDate, money, girl, chasers, slottedActivities, weekStats, r1, clamp, ratingsPct, leadBar, vibe, meetBar, currentEra, taken, waitingExp } from '../calc.js';
 import { setLevel, applyEffects, log } from '../game.js';
 import { northstarForm, principlesSheet, factorPanel } from './home.js';
+import { workWeek } from './time.js';
 
 // ── Rated element: { title, desc, level 0–25, levelUp[], history[] }
 const listOf = kind => (kind === 'me' ? D.meStats : D.socialMedia);
@@ -152,7 +153,7 @@ page('portal', {
       t('◈', 'Lifestyles', `${D.lifestyles.length} builds`, 'lifestyle'), t('Σ', 'Total stats', `level ${D.player.level}`, 'totalstats'),
       t('≣', 'Log', `${D.log.length} entries`, 'log'), t('⇅', 'Save / load', 'backup & import', 'saveload')])
     + grp('TIME & GOALS', 'var(--text2)', [
-      t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('◇', 'Next moves', `${D.nextMoves.filter(m => !m.doneAt).length} open`, 'moves'), t('✧', 'Experiences', `${waitingExp().length} waiting`, 'adventures'),
+      t('◐', 'Work & play', `${r1(workWeek())}h work a week`, 'dayparts'), t('➜', 'Ideal day', 'your ideal day', 'future'), t('◎', 'Quests', `${open} open`, 'manifest'), t('◇', 'Next moves', `${D.nextMoves.filter(m => !m.doneAt).length} open`, 'moves'), t('✧', 'Experiences', `${waitingExp().length} waiting`, 'adventures'),
       t('▮', 'Calendar', currentEra() ? esc(currentEra().name) : 'eras & year', 'calendar'),
       `<div class="mt" ${on(northstarForm)}><i>✧</i><b>Northstar</b><small>${D.northstar ? 'set' : 'not set'}</small></div>`, `<div class="mt" ${on(principlesSheet)}><i>❖</i><b>Principles</b><small>${D.principles.length || 'none yet'}</small></div>`])
     + grp('WORLD', 'var(--text2)', [

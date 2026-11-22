@@ -1,7 +1,7 @@
 // LIFE — ui. Router, modal, forms, toast, and the small HTML components every page shares.
 // No inline handlers anywhere: on(fn) registers a closure and returns a data attribute.
 import { D, commit, hooks, snapshot, replace, ui, saveUi } from './store.js';
-import { nowNext, isoWeek } from './calc.js';
+import { nowNext, isoWeek, dayPart } from './calc.js';
 import { STATS, TIERS, TIER_COLOR } from './schema.js';
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -152,7 +152,8 @@ function tickTop() {
   const day = d => at(d).toLocaleDateString('en-GB', { weekday: 'short' }).toUpperCase(), col = (a, b, c) => `<span class="tcol"><i>${a}</i><b>${b}</b><i>${c}</i></span>`;
   const html = col(wk(-7), wk(0), wk(7)) + col(day(-1), day(0), day(1)), el = $('#tweek');
   if (el.dataset.k !== html) { el.innerHTML = html; el.dataset.k = html; } // rebuild only when the day changes
-  $('#tleft').textContent = `${Math.floor(left / 3600)}h ${p2(Math.floor(left % 3600 / 60))}m ${p2(left % 60)}s left`;
+  const dp = dayPart(n), hms = s => `${Math.floor(s / 3600)}h ${p2(Math.floor(s % 3600 / 60))}m ${p2(s % 60)}s`; // tap it: Work & play
+  $('#tleft').innerHTML = dp.part === 'before' ? `<b>WORK</b> in ${hms(dp.left)}` : `<b class="${dp.part}">${dp.part.toUpperCase()}</b> · ${hms(dp.left)} left`;
   $('#tbar').style.width = secs / 864 + '%';
   const nn = nowNext();
   $('#tnow').textContent = nn.cur ? `NOW ${nn.cur.e.name} · until ${nn.cur.r.to}` : nn.next ? `NEXT ${nn.next.r.from} ${nn.next.e.name}` : nn.count ? 'Nothing else planned today' : 'Nothing planned today';
@@ -188,6 +189,7 @@ export function initUi() {
     const el = e.target.closest('[data-h]'); if (!el) return;
     const fn = find(el.dataset.h); if (fn) fn(el, e);
   });
+  document.addEventListener('click', e => { if (e.target.closest('#tleft')) go('dayparts'); });
   document.addEventListener('change', e => {
     const el = e.target.closest('[data-c]'); if (!el) return;
     const fn = find(el.dataset.c); if (fn) fn(el.type === 'checkbox' ? el.checked : el.value, el);

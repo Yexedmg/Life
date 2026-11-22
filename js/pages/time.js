@@ -1,8 +1,8 @@
 // TIME: Time Allocation (the ideal day), the weekly schedule + analytics, and Lifestyles.
 import { D, commit, ui } from '../store.js';
 import { BLANK, DAYS, STAT, SLOT_COLORS, PILLARS } from '../schema.js';
-import { page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol, fold } from '../ui.js';
-import { weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime, fmtDate, dts, daysTo, entryPillar, findMapPlace } from '../calc.js';
+import { onChange, page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol, fold } from '../ui.js';
+import { dayPart, weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime, fmtDate, dts, daysTo, entryPillar, findMapPlace } from '../calc.js';
 import { log } from '../game.js';
 
 const placeOptions = () => [['', '— Nowhere in particular —'], ...D.maps.filter(m => m.places.length).map(m => ({ group: m.name, options: m.places.map(x => [x.id, x.name]) }))];
@@ -122,6 +122,25 @@ const dayView = (blocks, emptyText, onAdd) => `<div class="card dayc">${dayStrip
 const allocForm = ta => form({ title: ta ? 'Edit day type' : 'New day type', fields: [{ name: 'name', label: 'What kind of day?', value: ta?.name, required: true, placeholder: 'Work day, Weekend, Monk day…' }],
   onSubmit: v => { if (ta) ta.name = v.name; else { const n = BLANK.timeAlloc(v.name); D.timeAllocs.push(n); D.currentTimeAllocId = n.id; } },
   onDelete: ta && D.timeAllocs.length > 1 ? () => destroy(`${ta.name} — wiped.`, () => { D.timeAllocs = D.timeAllocs.filter(x => x !== ta); }) : null, del: 'Wipe it' });
+
+// WORK & PLAY — the two day parts. Income work in set hours, then play. Shown in the top bar, always running.
+const DNAME = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+const hrs = p => { const m = t => +t.slice(0, 2) * 60 + +t.slice(3); return (m(p.to) - m(p.from)) / 60; };
+export const workWeek = () => sum(DAYS.filter(d => D.dayParts[d].work).map(d => hrs(D.dayParts[d])));
+page('dayparts', {
+  title: 'WORK & PLAY',
+  render() {
+    const dp = dayPart(), h = s => `${Math.floor(s / 3600)}h ${String(Math.floor(s % 3600 / 60)).padStart(2, '0')}m`, wk = workWeek();
+    const set = (d, k) => onChange(v => { const p = D.dayParts[d], old = p[k]; p[k] = v; if (p.from >= p.to) { p[k] = old; toast('Work has to end after it starts.'); } commit(); });
+    return `<div class="card hero ${dp.part === 'work' ? '' : 'sh-green'}"><small>◐ RIGHT NOW</small><div class="count"><b>${dp.part === 'before' ? 'WORK' : dp.part.toUpperCase()}</b><span>${dp.part === 'before' ? `starts in ${h(dp.left)}` : `${h(dp.left)} left`}</span></div>
+      <p>Income work in its hours. When work is over, it's play.</p></div>
+    ${sect(`YOUR WEEK · ${r1(wk)}h work`)}
+    ${DAYS.map(d => { const p = D.dayParts[d];
+      return `<div class="dprow ${p.work ? 'on' : ''}"><b>${DNAME[d]}</b>
+        <label class="chk"><input type="checkbox" ${p.work ? 'checked' : ''} ${set(d, 'work')}><span>Work</span></label>
+        ${p.work ? `<span class="dpt"><input type="time" value="${p.from}" ${set(d, 'from')}><i>–</i><input type="time" value="${p.to}" ${set(d, 'to')}></span>` : '<span class="dpplay">all play</span>'}</div>`; }).join('')}`;
+  },
+});
 
 page('schedule', {
   title: 'PLAN',
