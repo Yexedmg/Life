@@ -200,6 +200,22 @@ export const nextEra = () => D.eras.filter(e => eraStatus(e) === 'planned').sort
 export const daysTo = s => Math.round((dts(s) - today0()) / DAY);
 // The two day parts: income work, then play. Weekend and days without work are all play.
 // → { part: 'before' (work starts later today) | 'work' | 'play', left: seconds until that part ends (or until work starts) }
+// Work and play: the colours, the brackets of a day, and whether a block in the week is work or play.
+export const MODE = { work: { label: 'Work', color: '#FF9F43' }, play: { label: 'Play', color: '#A3E635' } };
+const hm = t => +t.slice(0, 2) * 60 + +t.slice(3);
+// The day split into brackets: [{ mode, start, end }] in minutes. A day without work is one play bracket.
+export function dayBrackets(day) {
+  const p = D.dayParts?.[day]; if (!p?.work) return [{ mode: 'play', start: 0, end: 1440 }];
+  const f = hm(p.from), t = hm(p.to);
+  return [f > 0 && { mode: 'play', start: 0, end: f }, { mode: 'work', start: f, end: t }, t < 1440 && { mode: 'play', start: t, end: 1440 }].filter(Boolean);
+}
+// A block is what you set it to; otherwise what most of it overlaps: the work bracket, or play.
+export function entryMode(e, day) {
+  if (e.mode === 'work' || e.mode === 'play') return e.mode;
+  const r = parseRange(e.time), p = D.dayParts?.[day]; if (!r || !p?.work) return 'play';
+  const end = r.end <= r.start ? 1440 : r.end, inWork = Math.max(0, Math.min(end, hm(p.to)) - Math.max(r.start, hm(p.from)));
+  return inWork * 2 >= end - r.start ? 'work' : 'play';
+}
 export function dayPart(n = new Date()) {
   const p = D.dayParts?.[DAYS[(n.getDay() + 6) % 7]], secs = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds(), s = t => { const [h, m] = t.split(':'); return h * 3600 + m * 60; };
   if (p?.work) { const f = s(p.from), t = s(p.to); if (secs < f) return { part: 'before', left: f - secs }; if (secs < t) return { part: 'work', left: t - secs }; }

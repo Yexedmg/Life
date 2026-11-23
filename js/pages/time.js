@@ -2,7 +2,7 @@
 import { D, commit, ui } from '../store.js';
 import { BLANK, DAYS, STAT, SLOT_COLORS, PILLARS } from '../schema.js';
 import { onChange, page, go, on, esc, form, destroy, toast, bar, sect, row, term, empty, btn, tabs, setUi, isCol, toggleCol, fold } from '../ui.js';
-import { dayPart, weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime, fmtDate, dts, daysTo, entryPillar, findMapPlace } from '../calc.js';
+import { MODE, dayBrackets, entryMode, dayPart, weekStats, parseRange, toMin, todayKey, actCats, elements, resolveMove, findActivity, lifestyleContrib, lifestyleRank, r1, sum, pillarTime, fmtDate, dts, daysTo, entryPillar, findMapPlace } from '../calc.js';
 import { log } from '../game.js';
 
 const placeOptions = () => [['', '— Nowhere in particular —'], ...D.maps.filter(m => m.places.length).map(m => ({ group: m.name, options: m.places.map(x => [x.id, x.name]) }))];
@@ -18,7 +18,8 @@ function entryForm(schedule, day, e) {
       ...actCats().filter(c => c.inventory.length).map(c => ({ group: c.name, options: c.inventory.map(i => [`a|${c.id}|${i.id}`, i.name + (i.time ? ` (${i.time})` : '')]) })), ...moveOptions()] },
       { name: 'name', label: 'Custom name', value: cur ? '' : e?.name },
       { name: 'placeId', label: 'Where?', type: 'select', value: e?.placeId || '', options: placeOptions() },
-      { name: 'pillar', label: 'Which category is it?', type: 'seg', value: e?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] }, { name: 'from', label: 'From (empty = the activity\'s own time)', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' }],
+      { name: 'pillar', label: 'Which category is it?', type: 'seg', value: e?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
+      { name: 'mode', label: 'Work or play?', type: 'seg', value: e?.mode || '', options: [['', 'By its time'], ['work', 'Work'], ['play', 'Play']] }, { name: 'from', label: 'From (empty = the activity\'s own time)', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' }],
     submit: 'Save',
     onSubmit: v => {
       const [t, a, b] = v.src.split('|'), f = t === 'a' ? findActivity(b) : null, mv = t === 'm' ? resolveMove({ statId: a, moveId: b }) : null;
@@ -27,7 +28,7 @@ function entryForm(schedule, day, e) {
       const name = f ? f.item.name : mv ? mv.move.text : v.name;
       if (!name) { toast('Name it, or pick something.'); return false; }
       if (!parseRange(time) || v.from && v.from === v.to) { toast('From and until — both, and not the same.'); return false; }
-      const data = { time, name, catId: f ? a : null, activityItemId: f ? b : null, pillar: v.pillar || '', placeId: v.placeId || '' };
+      const data = { time, name, catId: f ? a : null, activityItemId: f ? b : null, pillar: v.pillar || '', placeId: v.placeId || '', mode: v.mode || '' };
       if (e) { Object.assign(e, data); delete e.levelUpRef; if (mv) e.levelUpRef = refOf(v.src); }
       else schedule[day].push({ ...BLANK.entry(), ...data, ...(mv ? { levelUpRef: refOf(v.src) } : {}) });
     },
@@ -45,10 +46,10 @@ export function weekPanel(schedule, key) {
       return `<div class="wrow" ${on(() => toggleCol(id))}><div class="split"><span>${open ? '▾' : '▸'} ${esc(label(k))}</span><b>${by[k]}h · ${pct(by[k], W.hours)}%</b></div>${bar(pct(by[k], W.hours), 'cyan')}
         <div class="chips">${ds.map(x => `<em class="chip">${x}</em>`).join('')}</div>${open ? detail[k].map(a => `<div class="trow"><span>${a.day} · ${esc(a.name)}</span><b>${a.hrs}h</b></div>`).join('') : ''}</div>`; }).join('') || '<p>Nothing yet.</p>'}</div>`; };
   const blocks = d.acts.filter(a => parseRange(a.e.time)).map(a => { const r = parseRange(a.e.time), pl = PILLARS.find(p => p.key === entryPillar(a.e));
-    return { title: a.name, start: r.start, end: r.end, from: r.from, to: r.to, label: `${r.from}–${r.to}`, hrs: a.hrs, color: pl ? pl.color : '#9A9A9A', tag: pl ? pl.short : '', fn: () => entryForm(schedule, day, a.e),
+    return { title: a.name, start: r.start, end: r.end, from: r.from, to: r.to, label: `${r.from}–${r.to}`, hrs: a.hrs, color: pl ? pl.color : '#9A9A9A', tag: pl ? pl.short : '', mode: entryMode(a.e, day), fn: () => entryForm(schedule, day, a.e),
       sub: [findMapPlace(a.e.placeId) ? '⌖ ' + esc(findMapPlace(a.e.placeId).place.name) : '', a.cat !== 'Custom' ? esc(a.cat) : '', a.e.levelUpRef ? `⤴ ${esc(resolveMove(a.e.levelUpRef)?.el.title || '')}` : ''].filter(Boolean).join(' · ') }; });
   return `${tabs(DAYS.map(k => [k, `${k.toUpperCase()}${k === todayKey() ? '•' : ''}`]), day, k => setUi('day-' + key, k))}
-    ${dayView(blocks, `Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`, () => entryForm(schedule, day))}
+    ${dayView(blocks, `Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`, () => entryForm(schedule, day), dayBrackets(day))}
     ${fold('wk-' + key, `Week analytics · ${W.hours}h planned`, () => `${sect('WEEK OVERVIEW')}
     <div class="wdays">${DAYS.map(k => { const x = st.days[k];
       return `<div class="wday ${k === day ? 'active' : ''}" ${on(() => setUi('day-' + key, k))}><b>${k.toUpperCase()}</b><div class="dots">${'●'.repeat(Math.min(x.acts.length, 8)) || '○'}</div><span>${x.acts.length} · ${x.hours}h</span>
@@ -106,17 +107,22 @@ function slotForm(ta, s) {
   });
 }
 // One picture for any day, lived or wanted: a 24-hour bar with labelled blocks.
-function dayStrip(blocks) {
-  const X = m => 10 + m / 1440 * 340, list = [...blocks].sort((a, b) => a.start - b.start);
-  return `<svg class="strip" viewBox="0 0 360 170"><rect class="track" x="10" y="118" width="340" height="28"/>
+// brackets: the day's work / play parts, drawn as brackets above the strip (only for the real week).
+function dayStrip(blocks, brackets) {
+  const X = m => 10 + m / 1440 * 340, list = [...blocks].sort((a, b) => a.start - b.start), top = brackets ? 24 : 0;
+  const br = (brackets || []).map(b => { const c = MODE[b.mode].color, x1 = X(b.start) + 1.5, x2 = X(b.end) - 1.5, w = x2 - x1;
+    return `<g class="brk"><path d="M${x1} 18 V12 H${x2} V18" stroke="${c}" fill="none" stroke-width="1.5"/>${w > 30 ? `<text x="${(x1 + x2) / 2}" y="8" text-anchor="middle" fill="${c}">${MODE[b.mode].label.toUpperCase()}${w > 90 ? ` ${Math.floor(b.start / 60)}–${b.end === 1440 ? 24 : Math.floor(b.end / 60)}` : ''}</text>` : ''}</g>`; }).join('');
+  return `<svg class="strip" viewBox="0 0 360 ${170 + top}">${br}<g transform="translate(0 ${top})"><rect class="track" x="10" y="118" width="340" height="28"/>
     ${[0, 3, 6, 9, 12, 15, 18, 21, 24].map(h => `<line class="tick" x1="${X(h * 60)}" y1="${h % 6 ? 146 : 114}" x2="${X(h * 60)}" y2="${h % 6 ? 151 : 154}"/>${h % 6 ? '' : `<text class="tk" x="${X(h * 60)}" y="166" text-anchor="${h === 0 ? 'start' : h === 24 ? 'end' : 'middle'}">${h === 24 ? '23:59' : h + ':00'}</text>`}`).join('')}
     ${list.map((s, i) => { const end = s.end <= s.start ? 1440 : s.end, x1 = X(s.start), x2 = X(end), cx = (x1 + x2) / 2, ly = 18 + (i % 3) * 32, t = s.title.length > 16 ? s.title.slice(0, 15) + '…' : s.title;
       return `<g ${on(s.fn)}><rect x="${x1}" y="118" width="${Math.max(2, x2 - x1)}" height="28" fill="${esc(s.color)}"/><line x1="${cx}" y1="${ly + 16}" x2="${cx}" y2="118" stroke="${esc(s.color)}" stroke-width="1.5"/><circle cx="${cx}" cy="118" r="3" fill="${esc(s.color)}"/>
-        <text x="${Math.max(40, Math.min(320, cx))}" y="${ly}" text-anchor="middle" fill="${esc(s.color)}" class="sl">${esc(t)}</text><text x="${Math.max(40, Math.min(320, cx))}" y="${ly + 11}" text-anchor="middle" class="st">${esc((s.tag ? s.tag.toUpperCase() + ' · ' : '') + s.label)}</text></g>`; }).join('')}</svg>`;
+        ${s.mode ? `<rect x="${x1}" y="146" width="${Math.max(2, x2 - x1)}" height="3" fill="${MODE[s.mode].color}"/>` : ''}
+        <text x="${Math.max(40, Math.min(320, cx))}" y="${ly}" text-anchor="middle" fill="${esc(s.color)}" class="sl">${esc(t)}</text><text x="${Math.max(40, Math.min(320, cx))}" y="${ly + 11}" text-anchor="middle" class="st">${esc((s.tag ? s.tag.toUpperCase() + ' · ' : '') + s.label)}</text></g>`; }).join('')}</g></svg>`;
 }
 // …and one list under it. Same rows for both.
-const dayRows = blocks => [...blocks].sort((a, b) => a.start - b.start).map(s => `<div class="row dayrow" style="--c:${esc(s.color)}" ${on(s.fn)}><div class="ric time" style="color:${esc(s.color)}">${esc(s.from)}<br><small>${esc(s.to)}</small></div><div class="rbody"><b>${esc(s.title)}</b>${s.sub ? `<small>${s.sub}</small>` : ''}</div><div class="rval">${s.hrs}h</div></div>`).join('');
-const dayView = (blocks, emptyText, onAdd) => `<div class="card dayc">${dayStrip(blocks)}<div class="split dim"><span>${blocks.length} block${blocks.length === 1 ? '' : 's'}</span><span>${r1(sum(blocks.map(x => x.hrs)))}h filled · ${r1(24 - sum(blocks.map(x => x.hrs)))}h open</span></div></div>
+const dayRows = blocks => [...blocks].sort((a, b) => a.start - b.start).map(s => `<div class="row dayrow" style="--c:${esc(s.color)}" ${on(s.fn)}><div class="ric time" style="color:${esc(s.color)}">${esc(s.from)}<br><small>${esc(s.to)}</small></div><div class="rbody"><b>${esc(s.title)}${s.mode ? ` <em class="mtag" style="--m:${MODE[s.mode].color}">${MODE[s.mode].label.toUpperCase()}</em>` : ''}</b>${s.sub ? `<small>${s.sub}</small>` : ''}</div><div class="rval">${s.hrs}h</div></div>`).join('');
+const modeHrs = (blocks, m) => r1(sum(blocks.filter(b => b.mode === m).map(b => b.hrs)));
+const dayView = (blocks, emptyText, onAdd, brackets) => `<div class="card dayc">${dayStrip(blocks, brackets)}${brackets ? `<div class="split dim mtot"><span><i style="color:${MODE.work.color}">■</i> Work ${modeHrs(blocks, 'work')}h · <i style="color:${MODE.play.color}">■</i> Play ${modeHrs(blocks, 'play')}h</span></div>` : ''}<div class="split dim"><span>${blocks.length} block${blocks.length === 1 ? '' : 's'}</span><span>${r1(sum(blocks.map(x => x.hrs)))}h filled · ${r1(24 - sum(blocks.map(x => x.hrs)))}h open</span></div></div>
   ${dayRows(blocks) || empty(emptyText)}
   <div class="btns">${btn('+ Add', onAdd, 'good')}</div>`;
 const allocForm = ta => form({ title: ta ? 'Edit day type' : 'New day type', fields: [{ name: 'name', label: 'What kind of day?', value: ta?.name, required: true, placeholder: 'Work day, Weekend, Monk day…' }],

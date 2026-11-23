@@ -82,7 +82,7 @@ export const BLANK = {
   milestone: () => ({ id: uid(), name: '', tasks: [] }),
   task: () => ({ id: uid(), name: '', done: false, mins: 0 }),   // mins: the time it takes (0 = not set)
   lifestyle: () => ({ id: uid(), name: '', emoji: '◈', activities: [], schedule: emptyWeek(), createdAt: Date.now() }),
-  entry: () => ({ id: uid(), time: '', name: '', catId: null, activityItemId: null, pillar: '', placeId: '' }),
+  entry: () => ({ id: uid(), time: '', name: '', catId: null, activityItemId: null, pillar: '', placeId: '', mode: '' }),   // mode: 'work' | 'play' | '' (by its time)
   timeAlloc: (name = 'Default day') => ({ id: uid(), name, slots: [] }),
   timeSlot: () => ({ id: uid(), title: '', start: '', end: '', color: SLOT_COLORS[0], pillar: '', placeId: '' }),
   lifeMap: (name = '') => ({ id: uid(), name, bg: '', places: [], transport: [], createdAt: Date.now() }),   // a map you make: Home, City…
