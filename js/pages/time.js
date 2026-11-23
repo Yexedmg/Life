@@ -50,7 +50,7 @@ export function weekPanel(schedule, key) {
     return { title: a.name, start: r.start, end: r.end, from: r.from, to: r.to, label: `${r.from}–${r.to}`, hrs: a.hrs, color: pl ? pl.color : '#9A9A9A', tag: pl ? pl.short : '', mode: entryMode(a.e), fn: () => entryForm(schedule, day, a.e),
       sub: [findMapPlace(a.e.placeId) ? '⌖ ' + esc(findMapPlace(a.e.placeId).place.name) : '', a.cat !== 'Custom' ? esc(a.cat) : '', a.e.levelUpRef ? `⤴ ${esc(resolveMove(a.e.levelUpRef)?.el.title || '')}` : ''].filter(Boolean).join(' · ') }; });
   return `${tabs(DAYS.map(k => [k, `${k.toUpperCase()}${k === todayKey() ? '•' : ''}`]), day, k => setUi('day-' + key, k))}
-    ${dayView(blocks, `Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`, () => entryForm(schedule, day), dayBrackets(day))}
+    ${dayView(blocks, `Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`, () => entryForm(schedule, day), dayBrackets(day), wpPanel(st, day))}
     ${fold('wk-' + key, `Week analytics · ${W.hours}h planned`, () => `${sect('WEEK OVERVIEW')}
     <div class="wdays">${DAYS.map(k => { const x = st.days[k];
       return `<div class="wday ${k === day ? 'active' : ''}" ${on(() => setUi('day-' + key, k))}><b>${k.toUpperCase()}</b><div class="dots">${'●'.repeat(Math.min(x.acts.length, 8)) || '○'}</div><span>${x.acts.length} · ${x.hours}h</span>
@@ -122,8 +122,18 @@ function dayStrip(blocks, brackets) {
 }
 // …and one list under it. Same rows for both.
 const dayRows = blocks => [...blocks].sort((a, b) => a.start - b.start).map(s => `<div class="row dayrow" style="--c:${esc(s.color)}" ${on(s.fn)}><div class="ric time" style="color:${esc(s.color)}">${esc(s.from)}<br><small>${esc(s.to)}</small></div><div class="rbody"><b>${esc(s.title)}${s.mode ? ` <em class="mtag" style="--m:${MODE[s.mode].color}">${MODE[s.mode].label.toUpperCase()}</em>` : ''}</b>${s.sub ? `<small>${s.sub}</small>` : ''}</div><div class="rval">${s.hrs}h</div></div>`).join('');
-const modeHrs = (blocks, m) => r1(sum(blocks.filter(b => b.mode === m).map(b => b.hrs)));
-const dayView = (blocks, emptyText, onAdd, brackets) => `<div class="card dayc">${dayStrip(blocks, brackets)}${brackets ? `<div class="split dim mtot"><span><i style="color:${MODE.work.color}">■</i> Work ${modeHrs(blocks, 'work')}h · <i style="color:${MODE.play.color}">■</i> Play ${modeHrs(blocks, 'play')}h</span></div>` : ''}<div class="split dim"><span>${blocks.length} block${blocks.length === 1 ? '' : 's'}</span><span>${r1(sum(blocks.map(x => x.hrs)))}h filled · ${r1(24 - sum(blocks.map(x => x.hrs)))}h open</span></div></div>
+// Work and play: time allocated (activities you set to work / play) against time available (the length of that part of the day).
+const bracketHrs = (day, m) => sum(dayBrackets(day).filter(b => b.mode === m).map(b => (b.end - b.start) / 60));
+const modeAlloc = (acts, m) => sum(acts.filter(a => entryMode(a.e) === m).map(a => a.hrs));
+function wpPanel(st, day) {
+  const line = (m, alloc, avail) => { const over = alloc > avail, c = MODE[m].color;
+    return `<div class="wpl"><div class="split"><span style="color:${c}">${MODE[m].label.toUpperCase()}</span><b class="${over ? 'red' : ''}">${r1(alloc)}h <i>of ${r1(avail)}h</i>${over ? ` · ${r1(alloc - avail)}h over` : ` · ${r1(avail - alloc)}h free`}</b></div>
+      <div class="bar"><i style="width:${avail ? Math.min(100, alloc / avail * 100) : alloc ? 100 : 0}%;background:${over ? 'var(--red)' : c}"></i></div></div>`; };
+  const wk = m => [sum(DAYS.map(k => modeAlloc(st.days[k].acts, m))), sum(DAYS.map(k => bracketHrs(k, m)))];
+  return `<div class="wpp"><div class="pt">${day.toUpperCase()} · ALLOCATED VS AVAILABLE</div>${['work', 'play'].map(m => line(m, modeAlloc(st.days[day].acts, m), bracketHrs(day, m))).join('')}
+    <div class="pt">THIS WEEK</div>${['work', 'play'].map(m => line(m, ...wk(m))).join('')}</div>`;
+}
+const dayView = (blocks, emptyText, onAdd, brackets, extra = '') => `<div class="card dayc">${dayStrip(blocks, brackets)}${extra}<div class="split dim"><span>${blocks.length} block${blocks.length === 1 ? '' : 's'}</span><span>${r1(sum(blocks.map(x => x.hrs)))}h filled · ${r1(24 - sum(blocks.map(x => x.hrs)))}h open</span></div></div>
   ${dayRows(blocks) || empty(emptyText)}
   <div class="btns">${btn('+ Add', onAdd, 'good')}</div>`;
 const allocForm = ta => form({ title: ta ? 'Edit day type' : 'New day type', fields: [{ name: 'name', label: 'What kind of day?', value: ta?.name, required: true, placeholder: 'Work day, Weekend, Monk day…' }],

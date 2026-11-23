@@ -686,3 +686,6 @@ label.sbtn { display: inline-flex; align-items: center; cursor: pointer; }
 .mtag { font: 800 8.5px var(--sans); font-style: normal; letter-spacing: .08em; color: #000; background: var(--m); border-radius: 99px; padding: 1px 6px; vertical-align: middle; margin-left: 4px; }
 .mtot i { font-style: normal; }
 #tleft b.play { color: #A3E635; } #tleft b.work { color: #FF9F43; }
+.wpp { display: flex; flex-direction: column; gap: 8px; margin: 4px 0 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.wpp .pt { font: 700 10.5px var(--mono); letter-spacing: .12em; color: var(--muted); margin-top: 4px; }
+.wpl .split span { font: 800 11px var(--sans); letter-spacing: .1em; } .wpl .split b { font: 700 13px var(--mono); } .wpl .split b i { font-style: normal; color: var(--muted); font-weight: 500; } .wpl .bar { height: 6px; margin-top: 5px; }
