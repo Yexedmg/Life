@@ -209,13 +209,8 @@ export function dayBrackets(day) {
   const f = hm(p.from), t = hm(p.to);
   return [f > 0 && { mode: 'play', start: 0, end: f }, { mode: 'work', start: f, end: t }, t < 1440 && { mode: 'play', start: t, end: 1440 }].filter(Boolean);
 }
-// A block is what you set it to; otherwise what most of it overlaps: the work bracket, or play.
-export function entryMode(e, day) {
-  if (e.mode === 'work' || e.mode === 'play') return e.mode;
-  const r = parseRange(e.time), p = D.dayParts?.[day]; if (!r || !p?.work) return 'play';
-  const end = r.end <= r.start ? 1440 : r.end, inWork = Math.max(0, Math.min(end, hm(p.to)) - Math.max(r.start, hm(p.from)));
-  return inWork * 2 >= end - r.start ? 'work' : 'play';
-}
+// A block is work or play because you say so: its time doesn't decide it. '' = not set yet.
+export const entryMode = e => (e.mode === 'work' || e.mode === 'play' ? e.mode : '');
 export function dayPart(n = new Date()) {
   const p = D.dayParts?.[DAYS[(n.getDay() + 6) % 7]], secs = n.getHours() * 3600 + n.getMinutes() * 60 + n.getSeconds(), s = t => { const [h, m] = t.split(':'); return h * 3600 + m * 60; };
   if (p?.work) { const f = s(p.from), t = s(p.to); if (secs < f) return { part: 'before', left: f - secs }; if (secs < t) return { part: 'work', left: t - secs }; }

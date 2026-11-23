@@ -19,7 +19,7 @@ function entryForm(schedule, day, e) {
       { name: 'name', label: 'Custom name', value: cur ? '' : e?.name },
       { name: 'placeId', label: 'Where?', type: 'select', value: e?.placeId || '', options: placeOptions() },
       { name: 'pillar', label: 'Which category is it?', type: 'seg', value: e?.pillar || '', options: [['', 'None'], ...PILLARS.map(p => [p.key, p.short])] },
-      { name: 'mode', label: 'Work or play?', type: 'seg', value: e?.mode || '', options: [['', 'By its time'], ['work', 'Work'], ['play', 'Play']] }, { name: 'from', label: 'From (empty = the activity\'s own time)', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' }],
+      { name: 'mode', label: 'Work or play?', type: 'seg', value: e?.mode || '', options: [['work', 'Work'], ['play', 'Play']] }, { name: 'from', label: 'From (empty = the activity\'s own time)', type: 'time', value: r?.from || '' }, { name: 'to', label: 'Until', type: 'time', value: r?.to || '' }],
     submit: 'Save',
     onSubmit: v => {
       const [t, a, b] = v.src.split('|'), f = t === 'a' ? findActivity(b) : null, mv = t === 'm' ? resolveMove({ statId: a, moveId: b }) : null;
@@ -27,6 +27,7 @@ function entryForm(schedule, day, e) {
       if (!time && f?.item.time) time = f.item.time;
       const name = f ? f.item.name : mv ? mv.move.text : v.name;
       if (!name) { toast('Name it, or pick something.'); return false; }
+      if (!v.mode) { toast('Work or play? Pick one.'); return false; }
       if (!parseRange(time) || v.from && v.from === v.to) { toast('From and until — both, and not the same.'); return false; }
       const data = { time, name, catId: f ? a : null, activityItemId: f ? b : null, pillar: v.pillar || '', placeId: v.placeId || '', mode: v.mode || '' };
       if (e) { Object.assign(e, data); delete e.levelUpRef; if (mv) e.levelUpRef = refOf(v.src); }
@@ -46,7 +47,7 @@ export function weekPanel(schedule, key) {
       return `<div class="wrow" ${on(() => toggleCol(id))}><div class="split"><span>${open ? '▾' : '▸'} ${esc(label(k))}</span><b>${by[k]}h · ${pct(by[k], W.hours)}%</b></div>${bar(pct(by[k], W.hours), 'cyan')}
         <div class="chips">${ds.map(x => `<em class="chip">${x}</em>`).join('')}</div>${open ? detail[k].map(a => `<div class="trow"><span>${a.day} · ${esc(a.name)}</span><b>${a.hrs}h</b></div>`).join('') : ''}</div>`; }).join('') || '<p>Nothing yet.</p>'}</div>`; };
   const blocks = d.acts.filter(a => parseRange(a.e.time)).map(a => { const r = parseRange(a.e.time), pl = PILLARS.find(p => p.key === entryPillar(a.e));
-    return { title: a.name, start: r.start, end: r.end, from: r.from, to: r.to, label: `${r.from}–${r.to}`, hrs: a.hrs, color: pl ? pl.color : '#9A9A9A', tag: pl ? pl.short : '', mode: entryMode(a.e, day), fn: () => entryForm(schedule, day, a.e),
+    return { title: a.name, start: r.start, end: r.end, from: r.from, to: r.to, label: `${r.from}–${r.to}`, hrs: a.hrs, color: pl ? pl.color : '#9A9A9A', tag: pl ? pl.short : '', mode: entryMode(a.e), fn: () => entryForm(schedule, day, a.e),
       sub: [findMapPlace(a.e.placeId) ? '⌖ ' + esc(findMapPlace(a.e.placeId).place.name) : '', a.cat !== 'Custom' ? esc(a.cat) : '', a.e.levelUpRef ? `⤴ ${esc(resolveMove(a.e.levelUpRef)?.el.title || '')}` : ''].filter(Boolean).join(' · ') }; });
   return `${tabs(DAYS.map(k => [k, `${k.toUpperCase()}${k === todayKey() ? '•' : ''}`]), day, k => setUi('day-' + key, k))}
     ${dayView(blocks, `Empty ${day.toUpperCase()} — tap '+ Add' and decide what this day is for.`, () => entryForm(schedule, day), dayBrackets(day))}
